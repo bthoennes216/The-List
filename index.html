@@ -574,6 +574,10 @@ function renderHome(){
   document.getElementById("homeSummary").textContent=
     `${data.home.location} • ${data.home.squareFeet} sq ft home • Built ${data.home.yearBuilt}`;
 
+document.getElementById("homeSummary").insertAdjacentHTML("afterend",
+  `<button onclick="showPage('homeInfo')">✏️ Edit Home Information</button>`
+);
+  
   document.getElementById("homeProjects").innerHTML=
     data.projects.map(p=>`
       <div class="item">
