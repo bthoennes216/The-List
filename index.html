@@ -3,83 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#315b3a">
-
 <title>The List</title>
 
 <style>
 *{box-sizing:border-box}
-
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#f5f5f2;
-  color:#202420;
+  background:#f5f7f5;
+  color:#243024;
 }
-
 header{
-  background:#315b3a;
+  background:#2f6b45;
   color:white;
-  padding:22px 18px 18px;
+  padding:18px 16px;
   position:sticky;
   top:0;
   z-index:10;
 }
+header h1{margin:0;font-size:24px}
+header p{margin:4px 0 0;opacity:.85;font-size:13px}
 
-.header-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-header h1{
-  margin:0;
-  font-size:29px;
-}
-
-header p{
-  margin:4px 0 0;
-  opacity:.85;
-}
-
-.menu-btn{
-  width:auto;
-  margin:0;
-  padding:8px 12px;
-  background:rgba(255,255,255,.18);
-}
-
-.container{
-  max-width:760px;
-  margin:auto;
-  padding:18px 16px 100px;
-}
+main{padding:18px 16px 90px;max-width:700px;margin:auto}
 
 .page{display:none}
 .page.active{display:block}
 
+h2{margin-top:5px}
+h3{margin-bottom:8px}
+
 .card{
   background:white;
-  border-radius:17px;
-  padding:18px;
-  margin-bottom:15px;
-  box-shadow:0 3px 12px rgba(0,0,0,.07);
+  border-radius:16px;
+  padding:16px;
+  margin:12px 0;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);
 }
 
-.card h2{
-  margin:0 0 8px;
+button{
+  border:0;
+  border-radius:10px;
+  padding:11px 14px;
+  background:#2f6b45;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
 }
 
-.card h3{
-  margin:4px 0 8px;
+button.secondary{
+  background:#e8eee9;
+  color:#2f6b45;
 }
 
-.subtitle{
-  color:#68706a;
-  font-size:14px;
+button.danger{background:#b83b3b}
+
+input,textarea,select{
+  width:100%;
+  padding:12px;
+  margin:6px 0 12px;
+  border:1px solid #ccd5cc;
+  border-radius:10px;
+  font:inherit;
 }
+
+textarea{min-height:100px}
 
 .grid{
   display:grid;
@@ -89,152 +76,60 @@ header p{
 
 .tile{
   background:white;
-  border:0;
   border-radius:16px;
-  padding:18px 12px;
-  text-align:left;
-  box-shadow:0 3px 12px rgba(0,0,0,.07);
+  padding:18px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);
   cursor:pointer;
 }
 
-.tile .icon{
-  font-size:28px;
-  display:block;
-  margin-bottom:8px;
-}
+.tile strong{display:block;margin-top:8px}
 
-.tile strong{
-  display:block;
-  font-size:16px;
-}
-
-.tile span{
-  display:block;
-  color:#737973;
-  font-size:12px;
-  margin-top:4px;
-}
-
-button{
-  border:0;
-  border-radius:11px;
-  background:#315b3a;
-  color:white;
-  padding:13px 16px;
-  font-size:15px;
-  font-weight:600;
-  cursor:pointer;
-}
-
-button.secondary{
-  background:#e8ece8;
-  color:#315b3a;
-}
-
-button.danger{
-  background:#9b3d35;
-}
-
-button.small{
-  padding:8px 11px;
-  font-size:13px;
-}
-
-input,textarea,select{
-  width:100%;
-  padding:12px;
-  border:1px solid #d7dcd7;
-  border-radius:10px;
-  font-size:16px;
-  margin:6px 0 10px;
+.project{
   background:white;
+  padding:16px;
+  border-radius:16px;
+  margin:12px 0;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);
+  cursor:pointer;
 }
 
-textarea{
-  min-height:100px;
-  resize:vertical;
-}
-
-label{
-  font-size:13px;
-  font-weight:600;
-}
+.project small{color:#687468}
 
 .row{
   display:flex;
-  gap:8px;
-  align-items:center;
-}
-
-.row>*{
-  flex:1;
-}
-
-.list-item{
-  display:flex;
+  justify-content:space-between;
   align-items:center;
   gap:10px;
-  padding:13px 0;
-  border-bottom:1px solid #e4e7e4;
-}
-
-.list-item:last-child{
-  border-bottom:0;
-}
-
-.list-item input[type=checkbox]{
-  width:20px;
-  height:20px;
-  margin:0;
-}
-
-.list-item .grow{
-  flex:1;
-}
-
-.completed{
-  text-decoration:line-through;
-  color:#8b918c;
 }
 
 .progress{
   height:10px;
-  background:#e4e8e4;
+  background:#e4e9e4;
   border-radius:20px;
   overflow:hidden;
-  margin:12px 0;
+  margin:10px 0;
 }
 
-.progress-bar{
+.progress div{
   height:100%;
-  width:0%;
-  background:#315b3a;
-  transition:.3s;
+  background:#2f6b45;
 }
 
-.stat-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
+.task{
+  display:flex;
   gap:10px;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid #eee;
 }
 
-.stat{
-  background:#f0f3f0;
-  border-radius:13px;
-  padding:14px;
-}
-
-.stat strong{
-  display:block;
-  font-size:24px;
-}
+.task input{width:auto;margin:0}
 
 .back{
   margin-bottom:14px;
-  background:#777;
 }
 
-.nav{
+.bottom{
   position:fixed;
   bottom:0;
   left:0;
@@ -247,463 +142,225 @@ label{
   z-index:20;
 }
 
-.nav button{
+.bottom button{
   background:none;
   color:#555;
-  padding:6px;
+  padding:7px 5px;
   font-size:11px;
 }
 
-.nav button.active{
-  color:#315b3a;
-  font-weight:700;
+.bottom button.active{
+  color:#2f6b45;
+  font-weight:bold;
 }
 
 .badge{
   display:inline-block;
-  padding:5px 8px;
+  padding:5px 9px;
   border-radius:20px;
-  background:#e4eee5;
-  color:#315b3a;
+  background:#e7f0e9;
+  color:#2f6b45;
   font-size:12px;
-  font-weight:600;
 }
 
-.photo-box{
-  border:2px dashed #c8cec8;
-  border-radius:14px;
-  padding:25px;
-  text-align:center;
-  color:#737973;
-}
-
-.empty{
-  padding:20px;
-  text-align:center;
-  color:#777;
-}
-
-.menu{
-  display:none;
-  position:absolute;
-  right:15px;
-  top:65px;
-  background:white;
-  border-radius:13px;
-  box-shadow:0 5px 20px rgba(0,0,0,.18);
-  padding:8px;
-}
-
-.menu.open{
-  display:block;
-}
-
-.menu button{
-  display:block;
-  width:100%;
-  background:white;
-  color:#222;
-  text-align:left;
-}
-
-@media(max-width:500px){
-  .grid{grid-template-columns:1fr 1fr}
-}
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 
 <header>
-  <div class="header-row">
-    <div>
-      <h1>🏠 The List</h1>
-      <p>Our Home Project Planner</p>
-    </div>
-
-    <button class="menu-btn" onclick="toggleMenu()">☰</button>
-  </div>
-
-  <div id="menu" class="menu">
-    <button onclick="showPage('family');toggleMenu()">👨‍👩‍👧‍👦 Family</button>
-    <button onclick="showPage('maintenance');toggleMenu()">🔧 Maintenance</button>
-    <button onclick="resetData();toggleMenu()">Reset Test Data</button>
-  </div>
+  <h1>🏠 The List</h1>
+  <p>Your family's home project headquarters</p>
 </header>
 
-<div class="container">
+<main>
 
-<!-- DASHBOARD -->
-
+<!-- HOME -->
 <section id="home" class="page active">
-
-  <div class="card">
-    <h2>Good morning 👋</h2>
-    <p class="subtitle">Everything for the home, all in one place.</p>
-
-    <div class="progress">
-      <div id="overallProgress" class="progress-bar"></div>
-    </div>
-
-    <p id="progressText" class="subtitle">0% home progress</p>
-  </div>
-
-  <div class="stat-grid">
-    <div class="stat">
-      <strong id="projectCount">0</strong>
-      Projects
-    </div>
-
-    <div class="stat">
-      <strong id="taskCount">0</strong>
-      Open Tasks
-    </div>
-
-    <div class="stat">
-      <strong id="shoppingCount">0</strong>
-      Shopping Items
-    </div>
-
-    <div class="stat">
-      <strong id="maintenanceCount">0</strong>
-      Maintenance
-    </div>
-  </div>
-
-  <br>
+  <h2>Good morning 👋</h2>
+  <p>Keep your home projects organized.</p>
 
   <div class="grid">
-
-    <button class="tile" onclick="showPage('projects')">
-      <span class="icon">📋</span>
+    <div class="tile" onclick="showPage('projects')">
+      📋
       <strong>Projects</strong>
-      <span>Plan and organize</span>
-    </button>
+      <span id="homeProjects">0</span> projects
+    </div>
 
-    <button class="tile" onclick="showPage('ai')">
-      <span class="icon">🧠</span>
-      <strong>AI Project Builder</strong>
-      <span>Turn ideas into plans</span>
-    </button>
+    <div class="tile" onclick="showPage('shopping')">
+      🛒
+      <strong>Shopping</strong>
+      <span id="homeShopping">0</span> items
+    </div>
 
-    <button class="tile" onclick="showPage('shopping')">
-      <span class="icon">🛒</span>
-      <strong>Shopping List</strong>
-      <span>Materials & supplies</span>
-    </button>
-
-    <button class="tile" onclick="showPage('calendar')">
-      <span class="icon">📅</span>
+    <div class="tile" onclick="showPage('calendar')">
+      📅
       <strong>Calendar</strong>
-      <span>Tasks & maintenance</span>
-    </button>
+      Upcoming tasks
+    </div>
 
-    <button class="tile" onclick="showPage('budget')">
-      <span class="icon">💰</span>
-      <strong>Budget</strong>
-      <span>Track project costs</span>
-    </button>
-
-    <button class="tile" onclick="showPage('photos')">
-      <span class="icon">📷</span>
-      <strong>Photos</strong>
-      <span>Before & after</span>
-    </button>
-
-    <button class="tile" onclick="showPage('info')">
-      <span class="icon">📐</span>
-      <strong>Project Information</strong>
-      <span>Measurements & documents</span>
-    </button>
-
-    <button class="tile" onclick="showPage('maintenance')">
-      <span class="icon">🔧</span>
+    <div class="tile" onclick="showPage('maintenance')">
+      🔧
       <strong>Maintenance</strong>
-      <span>Keep the house running</span>
-    </button>
-
+      Home upkeep
+    </div>
   </div>
 
+  <div class="card">
+    <h3>🏠 Home Progress</h3>
+    <div class="progress">
+      <div id="homeProgressBar" style="width:0%"></div>
+    </div>
+    <strong id="homeProgressText">0% complete</strong>
+  </div>
+
+  <div class="card">
+    <h3>🚀 Quick Start</h3>
+    <button onclick="showPage('ai')">🧠 Build a Project</button>
+    <button class="secondary" onclick="showPage('shopping')">🛒 Shopping List</button>
+  </div>
 </section>
 
 
 <!-- PROJECTS -->
-
 <section id="projects" class="page">
+  <h2>📋 Projects</h2>
 
-  <button class="back" onclick="showPage('home')">← Home</button>
-
-  <div class="card">
-    <h2>📋 Projects</h2>
-    <p class="subtitle">Everything we're working on.</p>
-  </div>
+  <button onclick="newProject()">＋ New Project</button>
 
   <div id="projectList"></div>
+</section>
 
-  <div class="card">
-    <h3>➕ Add Project</h3>
 
-    <input id="projectName" placeholder="Project name">
+<!-- PROJECT WORKSPACE -->
+<section id="workspace" class="page">
 
-    <select id="projectCategory">
-      <option>Rooms</option>
-      <option>Exterior</option>
-      <option>Lawn</option>
-      <option>Garden</option>
-      <option>Maintenance</option>
-      <option>Custom</option>
-    </select>
+  <button class="secondary back" onclick="showPage('projects')">← Back to Projects</button>
 
-    <button onclick="addProject()">Add Project</button>
-  </div>
+  <div id="workspaceContent"></div>
 
 </section>
 
 
-<!-- AI BUILDER -->
-
+<!-- AI -->
 <section id="ai" class="page">
-
-  <button class="back" onclick="showPage('home')">← Home</button>
+  <h2>🧠 AI Project Builder</h2>
 
   <div class="card">
-    <h2>🧠 AI Project Builder</h2>
+    <p>Tell The List what you want to accomplish.</p>
 
-    <p>
-      Describe what you want to accomplish and The List will turn it
-      into a structured project plan.
-    </p>
+    <input id="aiProjectName" placeholder="Example: Paint the house">
 
-    <textarea id="aiIdea"
-      placeholder="Example: I want to redo my front yard with Zoysia grass."></textarea>
+    <textarea id="aiGoal"
+      placeholder="Describe what you want to do..."></textarea>
 
-    <button onclick="buildPlan()">Build Project Plan</button>
+    <button onclick="buildProject()">Build My Project</button>
   </div>
 
   <div id="aiResult"></div>
-
 </section>
 
 
 <!-- SHOPPING -->
-
 <section id="shopping" class="page">
-
-  <button class="back" onclick="showPage('home')">← Home</button>
-
-  <div class="card">
-    <h2>🛒 Smart Shopping List</h2>
-
-    <div class="row">
-      <input id="shoppingItem" placeholder="Add item">
-      <button onclick="addShopping()">Add</button>
-    </div>
-  </div>
+  <h2>🛒 Shopping List</h2>
 
   <div class="card">
-    <div id="shoppingList"></div>
+    <input id="shoppingInput" placeholder="Add an item">
+    <button onclick="addShopping()">Add Item</button>
   </div>
 
+  <div id="shoppingList"></div>
 </section>
 
 
 <!-- CALENDAR -->
-
 <section id="calendar" class="page">
-
-  <button class="back" onclick="showPage('home')">← Home</button>
-
-  <div class="card">
-    <h2>📅 Home Calendar</h2>
-
-    <p class="subtitle">
-      Project tasks, maintenance and family events will live here.
-    </p>
-
-    <label>Event</label>
-    <input id="eventName" placeholder="Example: Change HVAC filter">
-
-    <label>Date</label>
-    <input id="eventDate" type="date">
-
-    <button onclick="addEvent()">Add to Calendar</button>
-  </div>
+  <h2>📅 Home Calendar</h2>
 
   <div class="card">
-    <h3>Upcoming</h3>
-    <div id="calendarList"></div>
+    <p><strong>Calendar integration</strong></p>
+    <p>Apple Calendar syncing will be added as we continue building The List.</p>
   </div>
 
-  <div class="card">
-    <h3>🍎 Apple Calendar</h3>
-    <p>
-      Apple Calendar integration is planned for the next stage.
-      The app structure is ready for it.
-    </p>
-  </div>
-
+  <div id="calendarList"></div>
 </section>
 
 
 <!-- BUDGET -->
-
 <section id="budget" class="page">
-
-  <button class="back" onclick="showPage('home')">← Home</button>
+  <h2>💰 Budget</h2>
 
   <div class="card">
-    <h2>💰 Budget Tracker</h2>
-
-    <label>Estimated Cost</label>
-    <input id="estimated" type="number" placeholder="0">
-
-    <label>Actual Spending</label>
-    <input id="actual" type="number" placeholder="0">
-
-    <button onclick="calculateBudget()">Calculate</button>
+    <h3>Total Project Budget</h3>
+    <h2 id="totalBudget">$0</h2>
+    <p id="budgetDetails">No project budgets yet.</p>
   </div>
-
-  <div id="budgetResult"></div>
-
 </section>
 
 
 <!-- PHOTOS -->
-
 <section id="photos" class="page">
-
-  <button class="back" onclick="showPage('home')">← Home</button>
+  <h2>📷 Project Photos</h2>
 
   <div class="card">
-    <h2>📷 Project Photos</h2>
-
-    <p class="subtitle">
-      Keep before, during and after photos with each project.
-    </p>
-
-    <div class="photo-box">
-      📸<br><br>
-      Photo storage will connect to projects here.
-    </div>
-
+    <p>Photo organization will be connected to individual projects here.</p>
+    <p><span class="badge">Before</span>
+       <span class="badge">During</span>
+       <span class="badge">After</span></p>
   </div>
-
 </section>
 
 
-<!-- INFORMATION -->
-
+<!-- INFO -->
 <section id="info" class="page">
-
-  <button class="back" onclick="showPage('home')">← Home</button>
-
-  <div class="card">
-    <h2>📐 Project Information</h2>
-
-    <label>Measurements</label>
-    <textarea id="measurements"
-      placeholder="Example: Patio = 20' × 12'"></textarea>
-
-    <label>Notes</label>
-    <textarea id="notes"
-      placeholder="Project notes..."></textarea>
-
-    <button onclick="saveInfo()">Save Information</button>
-  </div>
+  <h2>📐 Project Information</h2>
 
   <div class="card">
-    <h3>📄 Documents</h3>
-    <p>Plans, manuals, receipts and other project documents will live here.</p>
+    <p>Store measurements, notes, documents, receipts and manuals with each project.</p>
   </div>
-
 </section>
 
 
 <!-- MAINTENANCE -->
-
 <section id="maintenance" class="page">
-
-  <button class="back" onclick="showPage('home')">← Home</button>
+  <h2>🔧 Maintenance</h2>
 
   <div class="card">
-    <h2>🔧 Home Maintenance</h2>
-
-    <label>Maintenance Task</label>
-    <input id="maintenanceName"
-      placeholder="Example: Change air filter">
-
-    <label>Next Due</label>
+    <input id="maintenanceInput" placeholder="Example: Change HVAC filter">
     <input id="maintenanceDate" type="date">
-
     <button onclick="addMaintenance()">Add Maintenance</button>
   </div>
 
-  <div class="card">
-    <div id="maintenanceList"></div>
-  </div>
-
+  <div id="maintenanceList"></div>
 </section>
 
 
 <!-- FAMILY -->
-
 <section id="family" class="page">
-
-  <button class="back" onclick="showPage('home')">← Home</button>
-
-  <div class="card">
-    <h2>👨‍👩‍👧‍👦 Family</h2>
-
-    <div class="list-item">
-      <div class="grow">
-        <strong>You</strong>
-        <div class="subtitle">Home owner</div>
-      </div>
-      <span class="badge">Admin</span>
-    </div>
-
-    <div class="list-item">
-      <div class="grow">
-        <strong>Wife</strong>
-        <div class="subtitle">Shared home</div>
-      </div>
-      <span class="badge">Member</span>
-    </div>
-
-    <button onclick="alert('Family invitations will be added in the next version.')">
-      + Invite Family Member
-    </button>
-
-  </div>
+  <h2>👨‍👩‍👧‍👦 Family</h2>
 
   <div class="card">
-    <h3>Shared Home</h3>
-    <p>
-      Projects, shopping lists, calendar events and maintenance
-      will eventually sync between family members.
-    </p>
+    <h3>Our Home</h3>
+    <p>👤 You</p>
+    <p>👤 Wife</p>
+    <p>🏠 Shared Home</p>
+    <small>Family sharing and real-time syncing will be added later.</small>
   </div>
-
 </section>
 
-</div>
+</main>
 
 
-<!-- NAVIGATION -->
-
-<div class="nav">
-
-  <button onclick="showPage('home')">🏠<br>Home</button>
-
-  <button onclick="showPage('projects')">📋<br>Projects</button>
-
-  <button onclick="showPage('shopping')">🛒<br>Shopping</button>
-
-  <button onclick="showPage('calendar')">📅<br>Calendar</button>
-
-  <button onclick="showPage('maintenance')">🔧<br>Maintenance</button>
-
-</div>
+<!-- BOTTOM NAV -->
+<nav class="bottom">
+  <button onclick="showPage('home')" id="nav-home">🏠<br>Home</button>
+  <button onclick="showPage('projects')" id="nav-projects">📋<br>Projects</button>
+  <button onclick="showPage('shopping')" id="nav-shopping">🛒<br>Shop</button>
+  <button onclick="showPage('calendar')" id="nav-calendar">📅<br>Calendar</button>
+  <button onclick="showPage('maintenance')" id="nav-maintenance">🔧<br>Maintenance</button>
+</nav>
 
 
 <script>
@@ -711,168 +368,559 @@ label{
 let data = JSON.parse(localStorage.getItem("theListData")) || {
 
   projects:[
-    {name:"House Painting",category:"Exterior"},
-    {name:"Front Yard",category:"Lawn"},
-    {name:"Garden",category:"Garden"},
-    {name:"Fence",category:"Exterior"}
+    {
+      id:1,
+      name:"House Painting",
+      category:"Exterior",
+      description:"Paint the exterior of the house.",
+      budget:0,
+      tasks:[
+        {name:"Choose exterior colors",done:false},
+        {name:"Calculate paint quantity",done:false},
+        {name:"Buy paint and supplies",done:false},
+        {name:"Prepare exterior",done:false},
+        {name:"Prime as needed",done:false},
+        {name:"Paint exterior",done:false},
+        {name:"Paint trim",done:false}
+      ],
+      notes:"",
+      measurements:"",
+      shopping:[]
+    },
+
+    {
+      id:2,
+      name:"Front Yard",
+      category:"Lawn",
+      description:"Grade and establish the front yard.",
+      budget:0,
+      tasks:[
+        {name:"Measure yard",done:false},
+        {name:"Plan grading",done:false},
+        {name:"Prepare soil",done:false},
+        {name:"Install grass",done:false}
+      ],
+      notes:"",
+      measurements:"",
+      shopping:[]
+    },
+
+    {
+      id:3,
+      name:"Garden",
+      category:"Garden",
+      description:"Build and maintain the family food garden.",
+      budget:0,
+      tasks:[
+        {name:"Prepare garden beds",done:false},
+        {name:"Plant vegetables",done:false},
+        {name:"Install irrigation",done:false},
+        {name:"Create planting calendar",done:false}
+      ],
+      notes:"",
+      measurements:"",
+      shopping:[]
+    },
+
+    {
+      id:4,
+      name:"Fence",
+      category:"Exterior",
+      description:"Plan and build the backyard fence.",
+      budget:0,
+      tasks:[
+        {name:"Measure property",done:false},
+        {name:"Plan fence layout",done:false},
+        {name:"Choose materials",done:false},
+        {name:"Purchase materials",done:false},
+        {name:"Build fence",done:false}
+      ],
+      notes:"",
+      measurements:"",
+      shopping:[]
+    }
   ],
 
   shopping:[],
-
-  events:[],
-
   maintenance:[],
-
-  tasks:[]
-
+  calendar:[]
 };
 
 
 function saveData(){
-
-  localStorage.setItem(
-    "theListData",
-    JSON.stringify(data)
-  );
-
-  updateDashboard();
+  localStorage.setItem("theListData",JSON.stringify(data));
 }
 
 
 function showPage(page){
 
-  document.querySelectorAll(".page").forEach(function(p){
-
+  document.querySelectorAll(".page").forEach(p=>{
     p.classList.remove("active");
-
   });
 
-  document.getElementById(page).classList.add("active");
+  const target=document.getElementById(page);
 
-  window.scrollTo(0,0);
+  if(target) target.classList.add("active");
 
-  renderAll();
+  document.querySelectorAll(".bottom button").forEach(b=>{
+    b.classList.remove("active");
+  });
 
+  const nav=document.getElementById("nav-"+page);
+
+  if(nav) nav.classList.add("active");
+
+  if(page==="home") renderHome();
+  if(page==="projects") renderProjects();
+  if(page==="shopping") renderShopping();
+  if(page==="calendar") renderCalendar();
+  if(page==="maintenance") renderMaintenance();
+  if(page==="budget") renderBudget();
 }
 
 
-function toggleMenu(){
+function renderHome(){
 
-  document.getElementById("menu").classList.toggle("open");
+  document.getElementById("homeProjects").textContent=data.projects.length;
 
-}
+  document.getElementById("homeShopping").textContent=data.shopping.length;
 
+  let total=0;
+  let done=0;
 
-function addProject(){
-
-  const name =
-    document.getElementById("projectName").value.trim();
-
-  const category =
-    document.getElementById("projectCategory").value;
-
-  if(!name)return;
-
-  data.projects.push({
-    name:name,
-    category:category
+  data.projects.forEach(p=>{
+    p.tasks.forEach(t=>{
+      total++;
+      if(t.done) done++;
+    });
   });
 
-  document.getElementById("projectName").value="";
+  let percent=total ? Math.round(done/total*100) : 0;
 
-  saveData();
+  document.getElementById("homeProgressBar").style.width=percent+"%";
 
-  renderProjects();
-
+  document.getElementById("homeProgressText").textContent=
+    percent+"% complete";
 }
 
 
 function renderProjects(){
 
-  const box =
-    document.getElementById("projectList");
+  const list=document.getElementById("projectList");
 
-  box.innerHTML="";
+  list.innerHTML="";
 
-  if(data.projects.length===0){
+  data.projects.forEach(project=>{
 
-    box.innerHTML=
-      '<div class="card empty">No projects yet.</div>';
+    let total=project.tasks.length;
 
-    return;
+    let done=project.tasks.filter(t=>t.done).length;
 
-  }
+    let percent=total ? Math.round(done/total*100) : 0;
 
-  data.projects.forEach(function(project,index){
+    const div=document.createElement("div");
 
-    box.innerHTML += `
+    div.className="project";
 
-      <div class="card">
-
-        <span class="badge">${project.category}</span>
-
-        <h3>${project.name}</h3>
-
-        <p class="subtitle">
-          Project plan, tasks, shopping, budget and photos.
-        </p>
-
-        <button class="small"
-          onclick="openProject('${escapeJS(project.name)}')">
-          Open Project
-        </button>
-
-        <button class="small danger"
-          onclick="deleteProject(${index})">
-          Delete
-        </button>
-
+    div.innerHTML=`
+      <div class="row">
+        <div>
+          <h3>${project.name}</h3>
+          <small>${project.category}</small>
+        </div>
+        <span class="badge">${percent}%</span>
       </div>
 
+      <div class="progress">
+        <div style="width:${percent}%"></div>
+      </div>
+
+      <small>${done} of ${total} tasks complete</small>
     `;
 
+    div.onclick=()=>openProject(project.id);
+
+    list.appendChild(div);
+  });
+}
+
+
+function openProject(id){
+
+  const project=data.projects.find(p=>p.id===id);
+
+  if(!project)return;
+
+  showPage("workspace");
+
+  renderWorkspace(project);
+}
+
+
+function renderWorkspace(project){
+
+  let done=project.tasks.filter(t=>t.done).length;
+
+  let percent=project.tasks.length ?
+    Math.round(done/project.tasks.length*100) : 0;
+
+  document.getElementById("workspaceContent").innerHTML=`
+
+    <h2>${project.name}</h2>
+
+    <span class="badge">${project.category}</span>
+
+    <p>${project.description}</p>
+
+    <div class="card">
+
+      <div class="row">
+        <strong>Project Progress</strong>
+        <strong>${percent}%</strong>
+      </div>
+
+      <div class="progress">
+        <div style="width:${percent}%"></div>
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>📋 Tasks</h3>
+
+      ${project.tasks.map((task,index)=>`
+
+        <div class="task">
+
+          <input
+            type="checkbox"
+            ${task.done ? "checked" : ""}
+            onchange="toggleTask(${project.id},${index})">
+
+          <span style="${task.done ? 'text-decoration:line-through;color:#888' : ''}">
+            ${task.name}
+          </span>
+
+        </div>
+
+      `).join("")}
+
+      <br>
+
+      <input id="newTask" placeholder="Add a task">
+
+      <button onclick="addTask(${project.id})">
+        ＋ Add Task
+      </button>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>🛒 Shopping</h3>
+
+      <p>
+        ${project.shopping.length ?
+          project.shopping.join(", ") :
+          "No project-specific shopping items yet."}
+      </p>
+
+      <button onclick="addProjectShopping(${project.id})">
+        ＋ Add Material
+      </button>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>💰 Budget</h3>
+
+      <input
+        type="number"
+        value="${project.budget || ""}"
+        placeholder="Estimated budget"
+        onchange="updateBudget(${project.id},this.value)">
+
+      <p>
+        Estimated budget:
+        <strong>$${Number(project.budget||0).toFixed(2)}</strong>
+      </p>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>📐 Measurements</h3>
+
+      <textarea
+        onchange="updateMeasurements(${project.id},this.value)"
+        placeholder="Store measurements here..."
+      >${project.measurements || ""}</textarea>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>📝 Notes</h3>
+
+      <textarea
+        onchange="updateNotes(${project.id},this.value)"
+        placeholder="Project notes..."
+      >${project.notes || ""}</textarea>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>📷 Photos</h3>
+
+      <p>Before / During / After photos will be connected here.</p>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>📄 Documents</h3>
+
+      <p>Receipts, manuals, plans and other documents will live here.</p>
+
+    </div>
+
+
+    <button
+      class="danger"
+      onclick="deleteProject(${project.id})">
+      Delete Project
+    </button>
+
+  `;
+}
+
+
+function toggleTask(projectId,index){
+
+  const project=data.projects.find(p=>p.id===projectId);
+
+  project.tasks[index].done=!project.tasks[index].done;
+
+  saveData();
+
+  renderWorkspace(project);
+}
+
+
+function addTask(projectId){
+
+  const input=document.getElementById("newTask");
+
+  if(!input.value.trim())return;
+
+  const project=data.projects.find(p=>p.id===projectId);
+
+  project.tasks.push({
+    name:input.value.trim(),
+    done:false
   });
 
+  saveData();
+
+  renderWorkspace(project);
 }
 
 
-function deleteProject(index){
+function addProjectShopping(projectId){
 
-  if(confirm("Delete this project?")){
+  const item=prompt("What material do you need?");
 
-    data.projects.splice(index,1);
+  if(!item)return;
 
-    saveData();
+  const project=data.projects.find(p=>p.id===projectId);
 
-    renderProjects();
+  project.shopping.push(item);
 
+  data.shopping.push({
+    name:item,
+    purchased:false,
+    project:project.name
+  });
+
+  saveData();
+
+  renderWorkspace(project);
+
+  renderShopping();
+}
+
+
+function updateBudget(id,value){
+
+  const project=data.projects.find(p=>p.id===id);
+
+  project.budget=Number(value)||0;
+
+  saveData();
+
+  renderBudget();
+}
+
+
+function updateMeasurements(id,value){
+
+  const project=data.projects.find(p=>p.id===id);
+
+  project.measurements=value;
+
+  saveData();
+}
+
+
+function updateNotes(id,value){
+
+  const project=data.projects.find(p=>p.id===id);
+
+  project.notes=value;
+
+  saveData();
+}
+
+
+function deleteProject(id){
+
+  if(!confirm("Delete this project?"))return;
+
+  data.projects=data.projects.filter(p=>p.id!==id);
+
+  saveData();
+
+  showPage("projects");
+}
+
+
+function newProject(){
+
+  const name=prompt("Project name:");
+
+  if(!name)return;
+
+  const category=prompt("Category:", "Home");
+
+  data.projects.push({
+    id:Date.now(),
+    name:name,
+    category:category || "Home",
+    description:"",
+    budget:0,
+    tasks:[],
+    notes:"",
+    measurements:"",
+    shopping:[]
+  });
+
+  saveData();
+
+  renderProjects();
+}
+
+
+function buildProject(){
+
+  const name=document.getElementById("aiProjectName").value.trim();
+
+  const goal=document.getElementById("aiGoal").value.trim();
+
+  if(!name){
+
+    alert("Enter a project name first.");
+
+    return;
   }
 
+  const result=document.getElementById("aiResult");
+
+  result.innerHTML=`
+
+    <div class="card">
+
+      <h3>🧠 Suggested Project Plan</h3>
+
+      <p><strong>${name}</strong></p>
+
+      <p>${goal || "Complete this home project."}</p>
+
+      <ul>
+        <li>Define the project scope</li>
+        <li>Measure the work area</li>
+        <li>Make a materials list</li>
+        <li>Set a budget</li>
+        <li>Complete preparation</li>
+        <li>Complete the project</li>
+        <li>Take before and after photos</li>
+      </ul>
+
+      <button onclick="addAIProject()">
+        ＋ Add to Projects
+      </button>
+
+    </div>
+  `;
+
+  window.lastAIProject={
+    name:name,
+    description:goal
+  };
 }
 
 
-function openProject(name){
+function addAIProject(){
 
-  alert(
-    name +
-    "\\n\\nProject workspace coming next.\\n\\nThis will contain tasks, shopping, budget, photos, measurements and documents."
-  );
+  if(!window.lastAIProject)return;
 
+  data.projects.push({
+    id:Date.now(),
+    name:window.lastAIProject.name,
+    category:"Custom",
+    description:window.lastAIProject.description,
+    budget:0,
+    tasks:[
+      {name:"Define project scope",done:false},
+      {name:"Measure work area",done:false},
+      {name:"Make materials list",done:false},
+      {name:"Set budget",done:false},
+      {name:"Prepare",done:false},
+      {name:"Complete project",done:false},
+      {name:"Take before and after photos",done:false}
+    ],
+    notes:"",
+    measurements:"",
+    shopping:[]
+  });
+
+  saveData();
+
+  alert("Project added to The List!");
+
+  showPage("projects");
 }
 
 
 function addShopping(){
 
-  const input =
-    document.getElementById("shoppingItem");
+  const input=document.getElementById("shoppingInput");
 
-  const item=input.value.trim();
-
-  if(!item)return;
+  if(!input.value.trim())return;
 
   data.shopping.push({
-    name:item,
-    purchased:false
+    name:input.value.trim(),
+    purchased:false,
+    project:"General"
   });
 
   input.value="";
@@ -880,63 +928,17 @@ function addShopping(){
   saveData();
 
   renderShopping();
-
-}
-
-
-function renderShopping(){
-
-  const box =
-    document.getElementById("shoppingList");
-
-  box.innerHTML="";
-
-  if(data.shopping.length===0){
-
-    box.innerHTML=
-      '<div class="empty">Your shopping list is empty.</div>';
-
-    return;
-
-  }
-
-  data.shopping.forEach(function(item,index){
-
-    box.innerHTML += `
-
-      <div class="list-item">
-
-        <input type="checkbox"
-          ${item.purchased?"checked":""}
-          onchange="toggleShopping(${index})">
-
-        <div class="grow ${item.purchased?"completed":""}">
-          ${item.name}
-        </div>
-
-        <button class="small danger"
-          onclick="deleteShopping(${index})">
-          ×
-        </button>
-
-      </div>
-
-    `;
-
-  });
-
 }
 
 
 function toggleShopping(index){
 
-  data.shopping[index].purchased =
+  data.shopping[index].purchased=
     !data.shopping[index].purchased;
 
   saveData();
 
   renderShopping();
-
 }
 
 
@@ -947,208 +949,129 @@ function deleteShopping(index){
   saveData();
 
   renderShopping();
-
 }
 
 
-function addEvent(){
+function renderShopping(){
 
-  const name =
-    document.getElementById("eventName").value.trim();
+  const list=document.getElementById("shoppingList");
 
-  const date =
-    document.getElementById("eventDate").value;
+  list.innerHTML="";
 
-  if(!name || !date)return;
+  if(!data.shopping.length){
 
-  data.events.push({
-    name:name,
-    date:date
-  });
-
-  document.getElementById("eventName").value="";
-  document.getElementById("eventDate").value="";
-
-  saveData();
-
-  renderCalendar();
-
-}
-
-
-function renderCalendar(){
-
-  const box =
-    document.getElementById("calendarList");
-
-  box.innerHTML="";
-
-  if(data.events.length===0){
-
-    box.innerHTML=
-      '<div class="empty">No upcoming events.</div>';
+    list.innerHTML=`
+      <div class="card">
+        Your shopping list is empty.
+      </div>
+    `;
 
     return;
-
   }
 
-  data.events.sort(function(a,b){
+  data.shopping.forEach((item,index)=>{
 
-    return a.date.localeCompare(b.date);
+    const div=document.createElement("div");
 
-  });
+    div.className="card";
 
-  data.events.forEach(function(event,index){
+    div.innerHTML=`
 
-    box.innerHTML += `
+      <div class="row">
 
-      <div class="list-item">
+        <div>
 
-        <div class="grow">
+          <strong style="${item.purchased ? 'text-decoration:line-through;color:#888' : ''}">
+            ${item.name}
+          </strong>
 
-          <strong>${event.name}</strong>
+          <br>
 
-          <div class="subtitle">
-            ${event.date}
-          </div>
+          <small>${item.project || "General"}</small>
 
         </div>
 
-        <button class="small danger"
-          onclick="deleteEvent(${index})">
-          ×
-        </button>
+        <div>
+
+          <button
+            class="secondary"
+            onclick="toggleShopping(${index})">
+            ${item.purchased ? "Undo" : "✓"}
+          </button>
+
+          <button
+            class="danger"
+            onclick="deleteShopping(${index})">
+            ×
+          </button>
+
+        </div>
 
       </div>
 
     `;
 
+    list.appendChild(div);
+
   });
-
-}
-
-
-function deleteEvent(index){
-
-  data.events.splice(index,1);
-
-  saveData();
-
-  renderCalendar();
-
-}
-
-
-function calculateBudget(){
-
-  const estimated =
-    Number(document.getElementById("estimated").value) || 0;
-
-  const actual =
-    Number(document.getElementById("actual").value) || 0;
-
-  const remaining =
-    estimated-actual;
-
-  document.getElementById("budgetResult").innerHTML=`
-
-    <div class="card">
-
-      <div class="stat-grid">
-
-        <div class="stat">
-          <strong>$${estimated.toFixed(2)}</strong>
-          Estimated
-        </div>
-
-        <div class="stat">
-          <strong>$${actual.toFixed(2)}</strong>
-          Spent
-        </div>
-
-        <div class="stat">
-          <strong>$${remaining.toFixed(2)}</strong>
-          Remaining
-        </div>
-
-      </div>
-
-    </div>
-
-  `;
-
 }
 
 
 function addMaintenance(){
 
-  const name =
-    document.getElementById("maintenanceName").value.trim();
+  const input=document.getElementById("maintenanceInput");
 
-  const date =
-    document.getElementById("maintenanceDate").value;
+  const date=document.getElementById("maintenanceDate");
 
-  if(!name || !date)return;
+  if(!input.value.trim())return;
 
   data.maintenance.push({
-    name:name,
-    date:date,
-    complete:false
+    name:input.value.trim(),
+    date:date.value
   });
 
-  document.getElementById("maintenanceName").value="";
-  document.getElementById("maintenanceDate").value="";
+  input.value="";
+  date.value="";
 
   saveData();
 
   renderMaintenance();
-
 }
 
 
 function renderMaintenance(){
 
-  const box =
-    document.getElementById("maintenanceList");
+  const list=document.getElementById("maintenanceList");
 
-  box.innerHTML="";
+  list.innerHTML="";
 
-  if(data.maintenance.length===0){
+  data.maintenance.forEach((item,index)=>{
 
-    box.innerHTML=
-      '<div class="empty">No maintenance tasks yet.</div>';
+    list.innerHTML+=`
 
-    return;
+      <div class="card">
 
-  }
+        <div class="row">
 
-  data.maintenance.forEach(function(item,index){
-
-    box.innerHTML += `
-
-      <div class="list-item">
-
-        <div class="grow">
-
-          <strong>${item.name}</strong>
-
-          <div class="subtitle">
-            Due ${item.date}
+          <div>
+            <strong>🔧 ${item.name}</strong>
+            <br>
+            <small>${item.date || "No date set"}</small>
           </div>
 
-        </div>
+          <button
+            class="danger"
+            onclick="deleteMaintenance(${index})">
+            ×
+          </button>
 
-        <button class="small danger"
-          onclick="deleteMaintenance(${index})">
-          ×
-        </button>
+        </div>
 
       </div>
 
     `;
 
   });
-
 }
 
 
@@ -1159,190 +1082,51 @@ function deleteMaintenance(index){
   saveData();
 
   renderMaintenance();
-
 }
 
 
-function buildPlan(){
+function renderCalendar(){
 
-  const idea =
-    document.getElementById("aiIdea").value.trim();
+  const list=document.getElementById("calendarList");
 
-  if(!idea){
+  list.innerHTML="";
 
-    alert("Describe the project first.");
+  if(!data.calendar.length)return;
 
-    return;
+  data.calendar.forEach(event=>{
 
-  }
-
-  document.getElementById("aiResult").innerHTML=`
-
-    <div class="card">
-
-      <span class="badge">Generated Project</span>
-
-      <h2>${idea}</h2>
-
-      <h3>Suggested Plan</h3>
-
-      <div class="list-item">
-        <div class="grow">
-          <strong>1. Plan</strong>
-          <div class="subtitle">
-            Define the project, measurements and desired result.
-          </div>
-        </div>
+    list.innerHTML+=`
+      <div class="card">
+        <strong>📅 ${event.name}</strong>
+        <br>
+        ${event.date}
       </div>
+    `;
 
-      <div class="list-item">
-        <div class="grow">
-          <strong>2. Prepare</strong>
-          <div class="subtitle">
-            Gather materials, tools and information.
-          </div>
-        </div>
-      </div>
-
-      <div class="list-item">
-        <div class="grow">
-          <strong>3. Build / Complete</strong>
-          <div class="subtitle">
-            Complete the work step by step.
-          </div>
-        </div>
-      </div>
-
-      <div class="list-item">
-        <div class="grow">
-          <strong>4. Finish</strong>
-          <div class="subtitle">
-            Inspect the work, clean up and document the result.
-          </div>
-        </div>
-      </div>
-
-      <button onclick="addAIProject('${escapeJS(idea)}')">
-        Add to Projects
-      </button>
-
-    </div>
-
-  `;
-
-}
-
-
-function addAIProject(name){
-
-  data.projects.push({
-    name:name,
-    category:"Custom"
   });
-
-  saveData();
-
-  alert("Project added to The List.");
-
-  showPage("projects");
-
 }
 
 
-function saveInfo(){
+function renderBudget(){
 
-  localStorage.setItem(
-    "theListMeasurements",
-    document.getElementById("measurements").value
+  const total=data.projects.reduce(
+    (sum,p)=>sum+Number(p.budget||0),0
   );
 
-  localStorage.setItem(
-    "theListNotes",
-    document.getElementById("notes").value
-  );
+  document.getElementById("totalBudget").textContent=
+    "$"+total.toFixed(2);
 
-  alert("Project information saved.");
-
+  document.getElementById("budgetDetails").textContent=
+    data.projects.length+
+    " projects currently tracked.";
 }
 
 
-function updateDashboard(){
-
-  document.getElementById("projectCount").textContent =
-    data.projects.length;
-
-  document.getElementById("shoppingCount").textContent =
-    data.shopping.filter(function(x){
-      return !x.purchased;
-    }).length;
-
-  document.getElementById("maintenanceCount").textContent =
-    data.maintenance.length;
-
-  const openTasks =
-    data.tasks.filter(function(x){
-      return !x.complete;
-    }).length;
-
-  document.getElementById("taskCount").textContent =
-    openTasks;
-
-  let progress=0;
-
-  if(data.projects.length){
-
-    progress=Math.round(
-      (data.projects.filter(function(x){
-        return x.complete;
-      }).length /
-      data.projects.length)*100
-    );
-
-  }
-
-  document.getElementById("overallProgress").style.width =
-    progress+"%";
-
-  document.getElementById("progressText").textContent =
-    progress+"% home progress";
-
-}
-
-
-function renderAll(){
-
-  renderProjects();
-  renderShopping();
-  renderCalendar();
-  renderMaintenance();
-  updateDashboard();
-
-}
-
-
-function resetData(){
-
-  if(confirm("Reset The List test data?")){
-
-    localStorage.removeItem("theListData");
-
-    location.reload();
-
-  }
-
-}
-
-
-function escapeJS(text){
-
-  return text
-    .replace(/\\/g,"\\\\")
-    .replace(/'/g,"\\'");
-
-}
-
-
-renderAll();
+renderHome();
+renderProjects();
+renderShopping();
+renderMaintenance();
+renderBudget();
 
 </script>
 
