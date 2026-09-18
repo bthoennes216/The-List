@@ -9,12 +9,12 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#f5f7f5;
-  color:#243024;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:#f4f6f4;
+  color:#26332b;
 }
 header{
-  background:#2f6b45;
+  background:#285943;
   color:white;
   padding:18px 16px;
   position:sticky;
@@ -22,19 +22,18 @@ header{
   z-index:10;
 }
 header h1{margin:0;font-size:24px}
-header p{margin:4px 0 0;opacity:.85;font-size:13px}
+header small{opacity:.85}
 
-main{padding:18px 16px 90px;max-width:700px;margin:auto}
-
+main{padding:16px 16px 90px}
 .page{display:none}
 .page.active{display:block}
 
-h2{margin-top:5px}
+h2{margin-top:4px}
 h3{margin-bottom:8px}
 
 .card{
   background:white;
-  border-radius:16px;
+  border-radius:14px;
   padding:16px;
   margin:12px 0;
   box-shadow:0 2px 8px rgba(0,0,0,.07);
@@ -44,92 +43,60 @@ button{
   border:0;
   border-radius:10px;
   padding:11px 14px;
-  background:#2f6b45;
+  background:#285943;
   color:white;
-  font-weight:600;
-  cursor:pointer;
+  font-size:15px;
+  margin:4px 2px;
 }
-
-button.secondary{
-  background:#e8eee9;
-  color:#2f6b45;
-}
-
-button.danger{background:#b83b3b}
+button.secondary{background:#e6ece8;color:#285943}
+button.danger{background:#b33a3a}
 
 input,textarea,select{
   width:100%;
   padding:12px;
+  border:1px solid #ccd5cf;
+  border-radius:9px;
   margin:6px 0 12px;
-  border:1px solid #ccd5cc;
-  border-radius:10px;
-  font:inherit;
-}
-
-textarea{min-height:100px}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-.tile{
+  font-size:16px;
   background:white;
-  border-radius:16px;
-  padding:18px;
-  box-shadow:0 2px 8px rgba(0,0,0,.07);
-  cursor:pointer;
 }
+textarea{min-height:100px;resize:vertical}
 
-.tile strong{display:block;margin-top:8px}
+.stat{
+  display:inline-block;
+  width:48%;
+  vertical-align:top;
+  background:#eef3ef;
+  border-radius:12px;
+  padding:14px;
+  margin:1%;
+}
+.stat strong{display:block;font-size:24px}
 
 .project{
-  background:white;
-  padding:16px;
-  border-radius:16px;
-  margin:12px 0;
-  box-shadow:0 2px 8px rgba(0,0,0,.07);
-  cursor:pointer;
-}
-
-.project small{color:#687468}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-}
-
-.progress{
-  height:10px;
-  background:#e4e9e4;
-  border-radius:20px;
-  overflow:hidden;
-  margin:10px 0;
-}
-
-.progress div{
-  height:100%;
-  background:#2f6b45;
+  border-left:5px solid #285943;
 }
 
 .task{
   display:flex;
-  gap:10px;
   align-items:center;
+  gap:10px;
+  padding:9px 0;
+  border-bottom:1px solid #eee;
+}
+.task input{width:20px;margin:0}
+.done{text-decoration:line-through;color:#89928c}
+
+.item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
   padding:10px 0;
   border-bottom:1px solid #eee;
 }
 
-.task input{width:auto;margin:0}
-
-.back{
-  margin-bottom:14px;
-}
-
-.bottom{
+nav{
   position:fixed;
   bottom:0;
   left:0;
@@ -138,32 +105,34 @@ textarea{min-height:100px}
   border-top:1px solid #ddd;
   display:flex;
   justify-content:space-around;
-  padding:8px 4px;
+  padding:7px 2px;
   z-index:20;
 }
-
-.bottom button{
+nav button{
   background:none;
-  color:#555;
-  padding:7px 5px;
+  color:#444;
   font-size:11px;
+  padding:6px 4px;
+  margin:0;
 }
+nav button.active{color:#285943;font-weight:bold}
 
-.bottom button.active{
-  color:#2f6b45;
-  font-weight:bold;
-}
+.back{margin-bottom:10px}
 
 .badge{
   display:inline-block;
-  padding:5px 9px;
+  background:#e5eee8;
+  color:#285943;
+  padding:4px 8px;
   border-radius:20px;
-  background:#e7f0e9;
-  color:#2f6b45;
   font-size:12px;
 }
 
-.hidden{display:none}
+.empty{
+  color:#7c867f;
+  text-align:center;
+  padding:20px;
+}
 </style>
 </head>
 
@@ -171,54 +140,41 @@ textarea{min-height:100px}
 
 <header>
   <h1>🏠 The List</h1>
-  <p>Your family's home project headquarters</p>
+  <small>Your Home • Your Projects • Your Plans</small>
 </header>
 
 <main>
 
 <!-- HOME -->
 <section id="home" class="page active">
-  <h2>Good morning 👋</h2>
-  <p>Keep your home projects organized.</p>
+  <h2>Home Dashboard</h2>
 
-  <div class="grid">
-    <div class="tile" onclick="showPage('projects')">
-      📋
-      <strong>Projects</strong>
-      <span id="homeProjects">0</span> projects
-    </div>
+  <div class="stat">
+    <strong id="projectCount">0</strong>
+    Projects
+  </div>
 
-    <div class="tile" onclick="showPage('shopping')">
-      🛒
-      <strong>Shopping</strong>
-      <span id="homeShopping">0</span> items
-    </div>
-
-    <div class="tile" onclick="showPage('calendar')">
-      📅
-      <strong>Calendar</strong>
-      Upcoming tasks
-    </div>
-
-    <div class="tile" onclick="showPage('maintenance')">
-      🔧
-      <strong>Maintenance</strong>
-      Home upkeep
-    </div>
+  <div class="stat">
+    <strong id="taskCount">0</strong>
+    Tasks
   </div>
 
   <div class="card">
-    <h3>🏠 Home Progress</h3>
-    <div class="progress">
-      <div id="homeProgressBar" style="width:0%"></div>
-    </div>
-    <strong id="homeProgressText">0% complete</strong>
+    <h3>🏠 Home</h3>
+    <p id="homeSummary"></p>
   </div>
 
   <div class="card">
-    <h3>🚀 Quick Start</h3>
-    <button onclick="showPage('ai')">🧠 Build a Project</button>
-    <button class="secondary" onclick="showPage('shopping')">🛒 Shopping List</button>
+    <h3>🚧 Active Projects</h3>
+    <div id="homeProjects"></div>
+  </div>
+
+  <div class="card">
+    <h3>📌 Quick Actions</h3>
+    <button onclick="showPage('projects')">📋 Projects</button>
+    <button onclick="showPage('shopping')">🛒 Shopping</button>
+    <button onclick="showPage('calendar')">📅 Calendar</button>
+    <button onclick="showPage('maintenance')">🔧 Maintenance</button>
   </div>
 </section>
 
@@ -229,36 +185,14 @@ textarea{min-height:100px}
 
   <button onclick="newProject()">＋ New Project</button>
 
-  <div id="projectList"></div>
+  <div id="projectsList"></div>
 </section>
 
 
-<!-- PROJECT WORKSPACE -->
+<!-- WORKSPACE -->
 <section id="workspace" class="page">
-
-  <button class="secondary back" onclick="showPage('projects')">← Back to Projects</button>
-
+  <button class="secondary back" onclick="showPage('projects')">← Projects</button>
   <div id="workspaceContent"></div>
-
-</section>
-
-
-<!-- AI -->
-<section id="ai" class="page">
-  <h2>🧠 AI Project Builder</h2>
-
-  <div class="card">
-    <p>Tell The List what you want to accomplish.</p>
-
-    <input id="aiProjectName" placeholder="Example: Paint the house">
-
-    <textarea id="aiGoal"
-      placeholder="Describe what you want to do..."></textarea>
-
-    <button onclick="buildProject()">Build My Project</button>
-  </div>
-
-  <div id="aiResult"></div>
 </section>
 
 
@@ -267,11 +201,14 @@ textarea{min-height:100px}
   <h2>🛒 Shopping List</h2>
 
   <div class="card">
-    <input id="shoppingInput" placeholder="Add an item">
-    <button onclick="addShopping()">Add Item</button>
+    <input id="shoppingItem" placeholder="What do you need?">
+    <input id="shoppingProject" placeholder="Project">
+    <button onclick="addShopping()">＋ Add Item</button>
   </div>
 
-  <div id="shoppingList"></div>
+  <div class="card">
+    <div id="shoppingList"></div>
+  </div>
 </section>
 
 
@@ -280,60 +217,66 @@ textarea{min-height:100px}
   <h2>📅 Home Calendar</h2>
 
   <div class="card">
-    <p><strong>Calendar integration</strong></p>
-    <p>Apple Calendar syncing will be added as we continue building The List.</p>
+    <input id="eventName" placeholder="Event or task">
+    <input id="eventDate" type="date">
+    <button onclick="addCalendarEvent()">＋ Add</button>
   </div>
 
-  <div id="calendarList"></div>
-</section>
-
-
-<!-- BUDGET -->
-<section id="budget" class="page">
-  <h2>💰 Budget</h2>
-
   <div class="card">
-    <h3>Total Project Budget</h3>
-    <h2 id="totalBudget">$0</h2>
-    <p id="budgetDetails">No project budgets yet.</p>
-  </div>
-</section>
-
-
-<!-- PHOTOS -->
-<section id="photos" class="page">
-  <h2>📷 Project Photos</h2>
-
-  <div class="card">
-    <p>Photo organization will be connected to individual projects here.</p>
-    <p><span class="badge">Before</span>
-       <span class="badge">During</span>
-       <span class="badge">After</span></p>
-  </div>
-</section>
-
-
-<!-- INFO -->
-<section id="info" class="page">
-  <h2>📐 Project Information</h2>
-
-  <div class="card">
-    <p>Store measurements, notes, documents, receipts and manuals with each project.</p>
+    <div id="calendarList"></div>
   </div>
 </section>
 
 
 <!-- MAINTENANCE -->
 <section id="maintenance" class="page">
-  <h2>🔧 Maintenance</h2>
+  <h2>🔧 Home Maintenance</h2>
 
   <div class="card">
-    <input id="maintenanceInput" placeholder="Example: Change HVAC filter">
+    <input id="maintenanceItem" placeholder="Maintenance item">
     <input id="maintenanceDate" type="date">
-    <button onclick="addMaintenance()">Add Maintenance</button>
+    <input id="maintenanceNotes" placeholder="Notes">
+    <button onclick="addMaintenance()">＋ Add</button>
   </div>
 
-  <div id="maintenanceList"></div>
+  <div class="card">
+    <div id="maintenanceList"></div>
+  </div>
+</section>
+
+
+<!-- HOME INFO -->
+<section id="info" class="page">
+  <h2>🏠 Home Information</h2>
+
+  <div class="card">
+    <h3>Property</h3>
+    <p><b>Location:</b> Palm Coast, Florida</p>
+    <p><b>Built:</b> 2001</p>
+    <p><b>Builder:</b> Holiday Builders, Inc.</p>
+    <p><b>Approx. size:</b> 1,700 sq ft</p>
+  </div>
+
+  <div class="card">
+    <h3>🎨 Exterior</h3>
+    <p><b>Preferred exterior:</b> Creamy white</p>
+    <p><b>Trim:</b> Dark brown</p>
+    <p><b>Roof:</b> Dark brown</p>
+  </div>
+
+  <div class="card">
+    <h3>🌱 Lawn</h3>
+    <p><b>Approx. area:</b> 7,000 sq ft</p>
+    <p><b>Current lawn:</b> Approximately 50% Zoysia / 50% Bahia</p>
+    <p><b>Goal:</b> Establish a dense Zoysia lawn with a carpet/golf-course appearance.</p>
+  </div>
+
+  <div class="card">
+    <h3>🥕 Garden</h3>
+    <p><b>Garden area:</b> 12' × 25'</p>
+    <p><b>Planting:</b> In-ground</p>
+    <p><b>Fruit trees planned:</b> Approximately 6</p>
+  </div>
 </section>
 
 
@@ -342,19 +285,16 @@ textarea{min-height:100px}
   <h2>👨‍👩‍👧‍👦 Family</h2>
 
   <div class="card">
-    <h3>Our Home</h3>
-    <p>👤 You</p>
-    <p>👤 Wife</p>
-    <p>🏠 Shared Home</p>
-    <small>Family sharing and real-time syncing will be added later.</small>
+    <h3>Shared Home</h3>
+    <p>The List is designed for you and your wife to manage the home together.</p>
+    <p class="badge">Cloud sharing coming later</p>
   </div>
 </section>
 
 </main>
 
 
-<!-- BOTTOM NAV -->
-<nav class="bottom">
+<nav>
   <button onclick="showPage('home')" id="nav-home">🏠<br>Home</button>
   <button onclick="showPage('projects')" id="nav-projects">📋<br>Projects</button>
   <button onclick="showPage('shopping')" id="nav-shopping">🛒<br>Shop</button>
@@ -365,43 +305,72 @@ textarea{min-height:100px}
 
 <script>
 
-let data = {
+/* =====================================================
+   THE LIST — PERMANENT DATABASE
+   ===================================================== */
+
+const STORAGE_KEY = "theListDataV2";
+
+const defaultData = {
+
+  schemaVersion: 2,
+
+  home:{
+    location:"Palm Coast, Florida",
+    yearBuilt:2001,
+    builder:"Holiday Builders, Inc.",
+    squareFeet:1700,
+    exteriorColor:"Creamy white",
+    trimColor:"Dark brown",
+    roofColor:"Dark brown"
+  },
 
   projects:[
+
     {
       id:1,
       name:"House Painting",
       category:"Exterior",
+      status:"Planning",
       description:"Paint the exterior of the house.",
       budget:0,
+      measurements:"Approx. 1,700 sq ft home. Exact exterior wall area TBD.",
+      notes:"Desired direction: creamy white exterior with dark brown trim and dark brown roof.",
       tasks:[
-        {name:"Choose exterior colors",done:false},
-        {name:"Calculate paint quantity",done:false},
-        {name:"Buy paint and supplies",done:false},
-        {name:"Prepare exterior",done:false},
-        {name:"Prime as needed",done:false},
-        {name:"Paint exterior",done:false},
-        {name:"Paint trim",done:false}
-      ],
-      notes:"",
-      measurements:"",
+        "Choose final colors",
+        "Calculate paint quantity",
+        "Purchase paint",
+        "Purchase preparation supplies",
+        "Prepare exterior",
+        "Repair and scrape as needed",
+        "Prime as needed",
+        "Paint exterior",
+        "Paint trim",
+        "Final inspection and touch-up"
+      ].map((name,i)=>({name,done:false})),
       shopping:[]
     },
 
     {
       id:2,
       name:"Front Yard",
-      category:"Lawn",
-      description:"Grade and establish the front yard.",
+      category:"Exterior",
+      status:"Planning",
+      description:"Grade the front yard and establish Zoysia.",
       budget:0,
+      measurements:"Approx. 2,200–2,400 sq ft.",
+      notes:"Drainage and grading are important. Plan is to use Zoysia plugs from the backyard if possible.",
       tasks:[
-        {name:"Measure yard",done:false},
-        {name:"Plan grading",done:false},
-        {name:"Prepare soil",done:false},
-        {name:"Install grass",done:false}
-      ],
-      notes:"",
-      measurements:"",
+        "Determine final grading",
+        "Plan drainage",
+        "Remove unwanted grass and weeds",
+        "Prepare soil",
+        "Grade yard",
+        "Establish Zoysia",
+        "Irrigate",
+        "Level and topdress",
+        "Monitor establishment"
+      ].map((name,i)=>({name,done:false})),
       shopping:[]
     },
 
@@ -409,16 +378,21 @@ let data = {
       id:3,
       name:"Garden",
       category:"Garden",
+      status:"Planning",
       description:"Build and maintain the family food garden.",
       budget:0,
+      measurements:"Main garden area: 12' × 25'. Carrot bed: 4' × 10'.",
+      notes:"In-ground garden with fruit trees and seasonal vegetables.",
       tasks:[
-        {name:"Prepare garden beds",done:false},
-        {name:"Plant vegetables",done:false},
-        {name:"Install irrigation",done:false},
-        {name:"Create planting calendar",done:false}
-      ],
-      notes:"",
-      measurements:"",
+        "Prepare garden soil",
+        "Build carrot bed",
+        "Plant carrots",
+        "Set irrigation",
+        "Add compost",
+        "Plan fruit trees",
+        "Plan seasonal crops",
+        "Set pest-control plan"
+      ].map((name,i)=>({name,done:false})),
       shopping:[]
     },
 
@@ -426,31 +400,136 @@ let data = {
       id:4,
       name:"Fence",
       category:"Exterior",
-      description:"Plan and build the backyard fence.",
+      status:"Planning",
+      description:"Build the home's DIY fence.",
       budget:0,
-      tasks:[
-        {name:"Measure property",done:false},
-        {name:"Plan fence layout",done:false},
-        {name:"Choose materials",done:false},
-        {name:"Purchase materials",done:false},
-        {name:"Build fence",done:false}
-      ],
-      notes:"",
       measurements:"",
+      notes:"First major exterior construction project. Exact measurements and style TBD.",
+      tasks:[
+        "Measure property",
+        "Choose fence style",
+        "Plan layout",
+        "Calculate materials",
+        "Purchase materials",
+        "Set posts",
+        "Install fence",
+        "Install gates",
+        "Final inspection"
+      ].map((name,i)=>({name,done:false})),
+      shopping:[]
+    },
+
+    {
+      id:5,
+      name:"Lawn — Zoysia",
+      category:"Lawn",
+      status:"Planning",
+      description:"Build a dense, healthy Zoysia lawn.",
+      budget:0,
+      measurements:"Approx. 7,000 sq ft total lawn.",
+      notes:"Existing lawn has been described as approximately 50% Zoysia and 50% Bahia. Possible small St. Augustine section.",
+      tasks:[
+        "Identify existing Zoysia variety",
+        "Identify Bahia areas",
+        "Determine mowing height",
+        "Improve irrigation",
+        "Develop fertilization plan",
+        "Control weeds",
+        "Control fire ants",
+        "Plan Zoysia plug nursery",
+        "Level and topdress",
+        "Establish dense turf"
+      ].map((name,i)=>({name,done:false})),
+      shopping:[]
+    },
+
+    {
+      id:6,
+      name:"Master Bathroom",
+      category:"Interior",
+      status:"Planning",
+      description:"Convert existing shower/tub area into one large shower.",
+      budget:0,
+      measurements:"Target shower space: 99\" × 44\" × 95\" high.",
+      notes:"Design directions include brighter charcoal stone-look / luxury spa and terracotta alternatives.",
+      tasks:[
+        "Plan demolition",
+        "Remove dividing wall",
+        "Plan plumbing",
+        "Install waterproofing",
+        "Install shower pan and drain",
+        "Install wall system",
+        "Install tile",
+        "Install fixtures",
+        "Install glass",
+        "Final inspection"
+      ].map((name,i)=>({name,done:false})),
+      shopping:[]
+    },
+
+    {
+      id:7,
+      name:"Patio / Screen Enclosure",
+      category:"Exterior",
+      status:"Planning",
+      description:"Extend patio and build screened enclosure.",
+      budget:0,
+      measurements:"",
+      notes:"Full house length. Clear-top awning/screen enclosure attached under soffit. DIY project.",
+      tasks:[
+        "Measure existing patio",
+        "Plan full-length extension",
+        "Plan enclosure",
+        "Plan clear-top awning",
+        "Plan screening",
+        "Plan middle rail",
+        "Convert back sliders to French doors",
+        "Convert left window to French doors",
+        "Build structure",
+        "Install screening"
+      ].map((name,i)=>({name,done:false})),
       shopping:[]
     }
+
   ],
 
   shopping:[],
-  maintenance:[],
+  maintenance:[
+    {
+      id:1,
+      item:"2015 Nissan Pathfinder oil change",
+      date:"2026-10-26",
+      notes:"Due at 130,521 miles or 10/26/2026."
+    }
+  ],
+
   calendar:[]
+
 };
 
 
-function saveData(){
-  localStorage.setItem("theListData",JSON.stringify(data));
+/* LOAD DATABASE ONCE — NEVER RESET ON RELOAD */
+
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+if(!data){
+  data = defaultData;
+  saveData();
 }
 
+
+/* =====================================================
+   DATABASE FUNCTIONS
+   ===================================================== */
+
+function saveData(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+
+
+/* =====================================================
+   NAVIGATION
+   ===================================================== */
 
 function showPage(page){
 
@@ -459,15 +538,13 @@ function showPage(page){
   });
 
   const target=document.getElementById(page);
-
   if(target) target.classList.add("active");
 
-  document.querySelectorAll(".bottom button").forEach(b=>{
+  document.querySelectorAll("nav button").forEach(b=>{
     b.classList.remove("active");
   });
 
   const nav=document.getElementById("nav-"+page);
-
   if(nav) nav.classList.add("active");
 
   if(page==="home") renderHome();
@@ -475,73 +552,71 @@ function showPage(page){
   if(page==="shopping") renderShopping();
   if(page==="calendar") renderCalendar();
   if(page==="maintenance") renderMaintenance();
-  if(page==="budget") renderBudget();
 }
 
+
+/* =====================================================
+   HOME
+   ===================================================== */
 
 function renderHome(){
 
-  document.getElementById("homeProjects").textContent=data.projects.length;
+  document.getElementById("projectCount").textContent=data.projects.length;
 
-  document.getElementById("homeShopping").textContent=data.shopping.length;
-
-  let total=0;
-  let done=0;
+  let tasks=0;
 
   data.projects.forEach(p=>{
-    p.tasks.forEach(t=>{
-      total++;
-      if(t.done) done++;
-    });
+    tasks+=p.tasks.length;
   });
 
-  let percent=total ? Math.round(done/total*100) : 0;
+  document.getElementById("taskCount").textContent=tasks;
 
-  document.getElementById("homeProgressBar").style.width=percent+"%";
+  document.getElementById("homeSummary").textContent=
+    `${data.home.location} • ${data.home.squareFeet} sq ft home • Built ${data.home.yearBuilt}`;
 
-  document.getElementById("homeProgressText").textContent=
-    percent+"% complete";
+  document.getElementById("homeProjects").innerHTML=
+    data.projects.map(p=>`
+      <div class="item">
+        <div>
+          <b>${escapeHTML(p.name)}</b><br>
+          <span class="badge">${escapeHTML(p.category)}</span>
+        </div>
+        <button onclick="openProject(${p.id})">Open</button>
+      </div>
+    `).join("");
 }
 
 
+/* =====================================================
+   PROJECTS
+   ===================================================== */
+
 function renderProjects(){
 
-  const list=document.getElementById("projectList");
+  const list=document.getElementById("projectsList");
 
-  list.innerHTML="";
+  list.innerHTML=data.projects.map(p=>{
 
-  data.projects.forEach(project=>{
+    const completed=p.tasks.filter(t=>t.done).length;
+    const total=p.tasks.length;
 
-    let total=project.tasks.length;
+    return `
+      <div class="card project">
 
-    let done=project.tasks.filter(t=>t.done).length;
+        <h3>${escapeHTML(p.name)}</h3>
 
-    let percent=total ? Math.round(done/total*100) : 0;
+        <span class="badge">${escapeHTML(p.category)}</span>
 
-    const div=document.createElement("div");
+        <p>${escapeHTML(p.description)}</p>
 
-    div.className="project";
+        <p><b>Progress:</b> ${completed}/${total} tasks</p>
 
-    div.innerHTML=`
-      <div class="row">
-        <div>
-          <h3>${project.name}</h3>
-          <small>${project.category}</small>
-        </div>
-        <span class="badge">${percent}%</span>
+        <button onclick="openProject(${p.id})">Open Project</button>
+
       </div>
-
-      <div class="progress">
-        <div style="width:${percent}%"></div>
-      </div>
-
-      <small>${done} of ${total} tasks complete</small>
     `;
 
-    div.onclick=()=>openProject(project.id);
-
-    list.appendChild(div);
-  });
+  }).join("");
 }
 
 
@@ -549,159 +624,107 @@ function openProject(id){
 
   const project=data.projects.find(p=>p.id===id);
 
-  if(!project)return;
-
-  showPage("workspace");
-
-  renderWorkspace(project);
-}
-
-
-function renderWorkspace(project){
-
-  let done=project.tasks.filter(t=>t.done).length;
-
-  let percent=project.tasks.length ?
-    Math.round(done/project.tasks.length*100) : 0;
+  if(!project) return;
 
   document.getElementById("workspaceContent").innerHTML=`
 
-    <h2>${project.name}</h2>
+    <h2>${escapeHTML(project.name)}</h2>
 
-    <span class="badge">${project.category}</span>
-
-    <p>${project.description}</p>
+    <span class="badge">${escapeHTML(project.category)}</span>
 
     <div class="card">
-
-      <div class="row">
-        <strong>Project Progress</strong>
-        <strong>${percent}%</strong>
-      </div>
-
-      <div class="progress">
-        <div style="width:${percent}%"></div>
-      </div>
-
-    </div>
-
-
-    <div class="card">
-
       <h3>📋 Tasks</h3>
 
-      ${project.tasks.map((task,index)=>`
-
-        <div class="task">
-
-          <input
-            type="checkbox"
-            ${task.done ? "checked" : ""}
-            onchange="toggleTask(${project.id},${index})">
-
-          <span style="${task.done ? 'text-decoration:line-through;color:#888' : ''}">
-            ${task.name}
-          </span>
-
-        </div>
-
-      `).join("")}
-
-      <br>
+      <div id="tasksArea">
+        ${project.tasks.map((task,i)=>`
+          <div class="task">
+            <input
+              type="checkbox"
+              ${task.done?"checked":""}
+              onchange="toggleTask(${project.id},${i})">
+            <span class="${task.done?"done":""}">
+              ${escapeHTML(task.name)}
+            </span>
+          </div>
+        `).join("")}
+      </div>
 
       <input id="newTask" placeholder="Add a task">
-
-      <button onclick="addTask(${project.id})">
-        ＋ Add Task
-      </button>
-
+      <button onclick="addTask(${project.id})">＋ Add Task</button>
     </div>
 
 
     <div class="card">
-
       <h3>🛒 Shopping</h3>
 
-      <p>
-        ${project.shopping.length ?
-          project.shopping.join(", ") :
-          "No project-specific shopping items yet."}
-      </p>
-
+      <input id="projectShopping" placeholder="Material or item">
       <button onclick="addProjectShopping(${project.id})">
         ＋ Add Material
       </button>
 
+      <div>
+        ${(project.shopping||[]).map((item,i)=>`
+          <div class="item">
+            <span>${escapeHTML(item)}</span>
+            <button class="danger"
+              onclick="deleteProjectShopping(${project.id},${i})">×</button>
+          </div>
+        `).join("")}
+      </div>
     </div>
 
 
     <div class="card">
-
       <h3>💰 Budget</h3>
 
       <input
         type="number"
-        value="${project.budget || ""}"
-        placeholder="Estimated budget"
-        onchange="updateBudget(${project.id},this.value)">
+        value="${project.budget||0}"
+        onchange="updateBudget(${project.id},this.value)"
+        placeholder="Estimated budget">
 
-      <p>
-        Estimated budget:
-        <strong>$${Number(project.budget||0).toFixed(2)}</strong>
-      </p>
-
+      <p>Estimated budget: <b>$${Number(project.budget||0).toFixed(2)}</b></p>
     </div>
 
 
     <div class="card">
-
       <h3>📐 Measurements</h3>
 
       <textarea
         onchange="updateMeasurements(${project.id},this.value)"
-        placeholder="Store measurements here..."
-      >${project.measurements || ""}</textarea>
-
+        placeholder="Measurements">${escapeHTML(project.measurements||"")}</textarea>
     </div>
 
 
     <div class="card">
-
       <h3>📝 Notes</h3>
 
       <textarea
         onchange="updateNotes(${project.id},this.value)"
-        placeholder="Project notes..."
-      >${project.notes || ""}</textarea>
-
+        placeholder="Project notes">${escapeHTML(project.notes||"")}</textarea>
     </div>
 
 
     <div class="card">
-
       <h3>📷 Photos</h3>
-
-      <p>Before / During / After photos will be connected here.</p>
-
+      <p class="empty">Photo storage will be added in the next stage.</p>
     </div>
 
 
     <div class="card">
-
       <h3>📄 Documents</h3>
-
-      <p>Receipts, manuals, plans and other documents will live here.</p>
-
+      <p class="empty">Document storage will be added in the next stage.</p>
     </div>
 
 
-    <button
-      class="danger"
-      onclick="deleteProject(${project.id})">
-      Delete Project
-    </button>
-
+    <div class="card">
+      <button class="danger" onclick="deleteProject(${project.id})">
+        Delete Project
+      </button>
+    </div>
   `;
+
+  showPage("workspace");
 }
 
 
@@ -709,54 +732,73 @@ function toggleTask(projectId,index){
 
   const project=data.projects.find(p=>p.id===projectId);
 
+  if(!project) return;
+
   project.tasks[index].done=!project.tasks[index].done;
 
   saveData();
 
-  renderWorkspace(project);
+  openProject(projectId);
 }
 
 
 function addTask(projectId){
 
   const input=document.getElementById("newTask");
+  const name=input.value.trim();
 
-  if(!input.value.trim())return;
+  if(!name) return;
 
   const project=data.projects.find(p=>p.id===projectId);
 
   project.tasks.push({
-    name:input.value.trim(),
+    name:name,
     done:false
   });
 
   saveData();
 
-  renderWorkspace(project);
+  openProject(projectId);
 }
 
 
 function addProjectShopping(projectId){
 
-  const item=prompt("What material do you need?");
+  const input=document.getElementById("projectShopping");
+  const item=input.value.trim();
 
-  if(!item)return;
+  if(!item) return;
 
   const project=data.projects.find(p=>p.id===projectId);
+
+  if(!project.shopping) project.shopping=[];
 
   project.shopping.push(item);
 
   data.shopping.push({
-    name:item,
-    purchased:false,
-    project:project.name
+    id:Date.now(),
+    item:item,
+    project:project.name,
+    purchased:false
   });
 
   saveData();
 
-  renderWorkspace(project);
+  openProject(projectId);
+}
 
-  renderShopping();
+
+function deleteProjectShopping(projectId,index){
+
+  const project=data.projects.find(p=>p.id===projectId);
+
+  if(!project) return;
+
+  project.shopping.splice(index,1);
+
+  saveData();
+
+  openProject(projectId);
 }
 
 
@@ -767,8 +809,6 @@ function updateBudget(id,value){
   project.budget=Number(value)||0;
 
   saveData();
-
-  renderBudget();
 }
 
 
@@ -794,7 +834,7 @@ function updateNotes(id,value){
 
 function deleteProject(id){
 
-  if(!confirm("Delete this project?"))return;
+  if(!confirm("Delete this project?")) return;
 
   data.projects=data.projects.filter(p=>p.id!==id);
 
@@ -808,21 +848,24 @@ function newProject(){
 
   const name=prompt("Project name:");
 
-  if(!name)return;
+  if(!name) return;
 
-  const category=prompt("Category:", "Home");
+  const category=prompt("Category: Exterior, Interior, Lawn, Garden, Maintenance, Other");
 
-  data.projects.push({
+  const project={
     id:Date.now(),
     name:name,
-    category:category || "Home",
+    category:category||"Other",
+    status:"Planning",
     description:"",
     budget:0,
-    tasks:[],
-    notes:"",
     measurements:"",
+    notes:"",
+    tasks:[],
     shopping:[]
-  });
+  };
+
+  data.projects.push(project);
 
   saveData();
 
@@ -830,100 +873,49 @@ function newProject(){
 }
 
 
-function buildProject(){
+function escapeHTML(value){
 
-  const name=document.getElementById("aiProjectName").value.trim();
-
-  const goal=document.getElementById("aiGoal").value.trim();
-
-  if(!name){
-
-    alert("Enter a project name first.");
-
-    return;
-  }
-
-  const result=document.getElementById("aiResult");
-
-  result.innerHTML=`
-
-    <div class="card">
-
-      <h3>🧠 Suggested Project Plan</h3>
-
-      <p><strong>${name}</strong></p>
-
-      <p>${goal || "Complete this home project."}</p>
-
-      <ul>
-        <li>Define the project scope</li>
-        <li>Measure the work area</li>
-        <li>Make a materials list</li>
-        <li>Set a budget</li>
-        <li>Complete preparation</li>
-        <li>Complete the project</li>
-        <li>Take before and after photos</li>
-      </ul>
-
-      <button onclick="addAIProject()">
-        ＋ Add to Projects
-      </button>
-
-    </div>
-  `;
-
-  window.lastAIProject={
-    name:name,
-    description:goal
-  };
+  return String(value??"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 
-function addAIProject(){
-
-  if(!window.lastAIProject)return;
-
-  data.projects.push({
-    id:Date.now(),
-    name:window.lastAIProject.name,
-    category:"Custom",
-    description:window.lastAIProject.description,
-    budget:0,
-    tasks:[
-      {name:"Define project scope",done:false},
-      {name:"Measure work area",done:false},
-      {name:"Make materials list",done:false},
-      {name:"Set budget",done:false},
-      {name:"Prepare",done:false},
-      {name:"Complete project",done:false},
-      {name:"Take before and after photos",done:false}
-    ],
-    notes:"",
-    measurements:"",
-    shopping:[]
-  });
-
-  saveData();
-
-  alert("Project added to The List!");
-
-  showPage("projects");
-}
-
+/* =====================================================
+   SHOPPING
+   ===================================================== */
 
 function addShopping(){
 
-  const input=document.getElementById("shoppingInput");
+  const item=document.getElementById("shoppingItem").value.trim();
+  const project=document.getElementById("shoppingProject").value.trim();
 
-  if(!input.value.trim())return;
+  if(!item) return;
 
   data.shopping.push({
-    name:input.value.trim(),
-    purchased:false,
-    project:"General"
+    id:Date.now(),
+    item:item,
+    project:project||"General",
+    purchased:false
   });
 
-  input.value="";
+  saveData();
+
+  document.getElementById("shoppingItem").value="";
+  document.getElementById("shoppingProject").value="";
+
+  renderShopping();
+}
+
+
+function toggleShopping(id){
+
+  const item=data.shopping.find(x=>x.id===id);
+
+  if(item) item.purchased=!item.purchased;
 
   saveData();
 
@@ -931,20 +923,9 @@ function addShopping(){
 }
 
 
-function toggleShopping(index){
+function deleteShopping(id){
 
-  data.shopping[index].purchased=
-    !data.shopping[index].purchased;
-
-  saveData();
-
-  renderShopping();
-}
-
-
-function deleteShopping(index){
-
-  data.shopping.splice(index,1);
+  data.shopping=data.shopping.filter(x=>x.id!==id);
 
   saveData();
 
@@ -956,84 +937,123 @@ function renderShopping(){
 
   const list=document.getElementById("shoppingList");
 
-  list.innerHTML="";
+  if(data.shopping.length===0){
 
-  if(!data.shopping.length){
-
-    list.innerHTML=`
-      <div class="card">
-        Your shopping list is empty.
-      </div>
-    `;
+    list.innerHTML=`<div class="empty">Your shopping list is empty.</div>`;
 
     return;
   }
 
-  data.shopping.forEach((item,index)=>{
+  list.innerHTML=data.shopping.map(item=>`
 
-    const div=document.createElement("div");
+    <div class="item">
 
-    div.className="card";
+      <div>
+        <input
+          type="checkbox"
+          ${item.purchased?"checked":""}
+          onchange="toggleShopping(${item.id})">
 
-    div.innerHTML=`
+        <span class="${item.purchased?"done":""}">
+          ${escapeHTML(item.item)}
+        </span>
 
-      <div class="row">
+        <br>
 
-        <div>
-
-          <strong style="${item.purchased ? 'text-decoration:line-through;color:#888' : ''}">
-            ${item.name}
-          </strong>
-
-          <br>
-
-          <small>${item.project || "General"}</small>
-
-        </div>
-
-        <div>
-
-          <button
-            class="secondary"
-            onclick="toggleShopping(${index})">
-            ${item.purchased ? "Undo" : "✓"}
-          </button>
-
-          <button
-            class="danger"
-            onclick="deleteShopping(${index})">
-            ×
-          </button>
-
-        </div>
-
+        <span class="badge">
+          ${escapeHTML(item.project)}
+        </span>
       </div>
 
-    `;
+      <button class="danger"
+        onclick="deleteShopping(${item.id})">×</button>
 
-    list.appendChild(div);
+    </div>
 
-  });
+  `).join("");
 }
 
 
-function addMaintenance(){
+/* =====================================================
+   CALENDAR
+   ===================================================== */
 
-  const input=document.getElementById("maintenanceInput");
+function addCalendarEvent(){
 
-  const date=document.getElementById("maintenanceDate");
+  const name=document.getElementById("eventName").value.trim();
+  const date=document.getElementById("eventDate").value;
 
-  if(!input.value.trim())return;
+  if(!name || !date) return;
 
-  data.maintenance.push({
-    name:input.value.trim(),
-    date:date.value
+  data.calendar.push({
+    id:Date.now(),
+    name:name,
+    date:date
   });
 
-  input.value="";
-  date.value="";
+  saveData();
+
+  document.getElementById("eventName").value="";
+  document.getElementById("eventDate").value="";
+
+  renderCalendar();
+}
+
+
+function renderCalendar(){
+
+  const list=document.getElementById("calendarList");
+
+  if(data.calendar.length===0){
+
+    list.innerHTML=`<div class="empty">No calendar items yet.</div>`;
+
+    return;
+  }
+
+  const sorted=[...data.calendar].sort(
+    (a,b)=>a.date.localeCompare(b.date)
+  );
+
+  list.innerHTML=sorted.map(event=>`
+
+    <div class="item">
+
+      <div>
+        <b>${escapeHTML(event.name)}</b><br>
+        ${escapeHTML(event.date)}
+      </div>
+
+    </div>
+
+  `).join("");
+}
+
+
+/* =====================================================
+   MAINTENANCE
+   ===================================================== */
+
+function addMaintenance(){
+
+  const item=document.getElementById("maintenanceItem").value.trim();
+  const date=document.getElementById("maintenanceDate").value;
+  const notes=document.getElementById("maintenanceNotes").value.trim();
+
+  if(!item) return;
+
+  data.maintenance.push({
+    id:Date.now(),
+    item:item,
+    date:date,
+    notes:notes
+  });
 
   saveData();
+
+  document.getElementById("maintenanceItem").value="";
+  document.getElementById("maintenanceDate").value="";
+  document.getElementById("maintenanceNotes").value="";
 
   renderMaintenance();
 }
@@ -1043,90 +1063,38 @@ function renderMaintenance(){
 
   const list=document.getElementById("maintenanceList");
 
-  list.innerHTML="";
+  if(data.maintenance.length===0){
 
-  data.maintenance.forEach((item,index)=>{
+    list.innerHTML=`<div class="empty">No maintenance items.</div>`;
 
-    list.innerHTML+=`
+    return;
+  }
 
-      <div class="card">
+  list.innerHTML=data.maintenance.map(item=>`
 
-        <div class="row">
+    <div class="item">
 
-          <div>
-            <strong>🔧 ${item.name}</strong>
-            <br>
-            <small>${item.date || "No date set"}</small>
-          </div>
+      <div>
+        <b>${escapeHTML(item.item)}</b><br>
 
-          <button
-            class="danger"
-            onclick="deleteMaintenance(${index})">
-            ×
-          </button>
+        ${item.date ? escapeHTML(item.date) : ""}
 
-        </div>
-
+        ${item.notes
+          ? `<br><small>${escapeHTML(item.notes)}</small>`
+          : ""}
       </div>
 
-    `;
+    </div>
 
-  });
+  `).join("");
 }
 
 
-function deleteMaintenance(index){
-
-  data.maintenance.splice(index,1);
-
-  saveData();
-
-  renderMaintenance();
-}
-
-
-function renderCalendar(){
-
-  const list=document.getElementById("calendarList");
-
-  list.innerHTML="";
-
-  if(!data.calendar.length)return;
-
-  data.calendar.forEach(event=>{
-
-    list.innerHTML+=`
-      <div class="card">
-        <strong>📅 ${event.name}</strong>
-        <br>
-        ${event.date}
-      </div>
-    `;
-
-  });
-}
-
-
-function renderBudget(){
-
-  const total=data.projects.reduce(
-    (sum,p)=>sum+Number(p.budget||0),0
-  );
-
-  document.getElementById("totalBudget").textContent=
-    "$"+total.toFixed(2);
-
-  document.getElementById("budgetDetails").textContent=
-    data.projects.length+
-    " projects currently tracked.";
-}
-
+/* =====================================================
+   START APP
+   ===================================================== */
 
 renderHome();
-renderProjects();
-renderShopping();
-renderMaintenance();
-renderBudget();
 
 </script>
 
