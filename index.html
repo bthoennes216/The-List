@@ -508,20 +508,32 @@ function renderHome(){
     `${data.home.location||""} • ${data.home.squareFeet||""} sq ft home • Built ${data.home.yearBuilt||""}`;
 
   document.getElementById("homeProjects").innerHTML=
-    data.projects.map(p=>`
+    data.projects.map(p=>{
 
-      <div class="item">
+      const completed=p.tasks.filter(t=>t.done).length;
+      const total=p.tasks.length;
+      const percent=total ? Math.round((completed/total)*100) : 0;
 
-        <div>
-          <b>${escapeHTML(p.name)}</b><br>
-          <span class="badge">${escapeHTML(p.category)}</span>
+      return `
+
+        <div class="item">
+
+          <div>
+            <b>${escapeHTML(p.name)}</b><br>
+            <span class="badge">${escapeHTML(p.category)}</span>
+            <br>
+            <small>
+              Progress: ${completed}/${total} tasks (${percent}%)
+            </small>
+          </div>
+
+          <button onclick="openProject(${p.id})">Open</button>
+
         </div>
 
-        <button onclick="openProject(${p.id})">Open</button>
+      `;
 
-      </div>
-
-    `).join("");
+    }).join("");
 }
 
 
