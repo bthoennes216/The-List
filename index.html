@@ -527,13 +527,13 @@ function renderHome(){
 
   document.getElementById("projectCount").textContent=data.projects.length;
 
-  let tasks=0;
+let tasksRemaining=0;
 
-  data.projects.forEach(p=>{
-    tasks+=p.tasks.length;
-  });
+data.projects.forEach(p=>{
+  tasksRemaining+=p.tasks.filter(t=>!t.done).length;
+});
 
-  document.getElementById("taskCount").textContent=tasks;
+document.getElementById("taskCount").textContent=tasksRemaining;
 
   document.getElementById("homeSummary").textContent=
     `${data.home.location||""} • ${data.home.squareFeet||""} sq ft home • Built ${data.home.yearBuilt||""}`;
