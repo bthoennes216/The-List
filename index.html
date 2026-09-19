@@ -203,14 +203,28 @@ Tasks Remaining
 
 
 <section id="shoppingPage" class="hidden">
+
   <div class="card">
     <h2>🛒 Shopping List</h2>
-    <input id="shoppingInput" placeholder="Add shopping item">
-    <button onclick="addShopping()">＋ Add Item</button>
+
+    <input id="shoppingInput" placeholder="What do you need?">
+
+    <select id="shoppingProject">
+      <option value="">No Project</option>
+    </select>
+
+    <input id="shoppingQuantity" placeholder="Quantity">
+
+    <button onclick="addShopping()">
+      ＋ Add Item
+    </button>
   </div>
+
   <div class="card">
+    <h2>🛍️ Items to Buy</h2>
     <div id="shoppingList"></div>
   </div>
+
 </section>
 
 
