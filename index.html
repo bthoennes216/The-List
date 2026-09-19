@@ -7,12 +7,14 @@
 
 <style>
 *{box-sizing:border-box}
+
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   background:#f4f4f6;
   color:#222;
 }
+
 header{
   background:#222;
   color:white;
@@ -20,6 +22,7 @@ header{
   font-size:28px;
   font-weight:700;
 }
+
 nav{
   display:flex;
   overflow-x:auto;
@@ -28,15 +31,23 @@ nav{
   background:white;
   border-bottom:1px solid #ddd;
 }
+
 nav button{
   white-space:nowrap;
   border:0;
   background:#eee;
+  color:#222;
   border-radius:12px;
   padding:10px 14px;
   font-size:15px;
 }
-main{padding:16px;max-width:800px;margin:auto}
+
+main{
+  padding:16px;
+  max-width:800px;
+  margin:auto;
+}
+
 .card{
   background:white;
   border-radius:16px;
@@ -44,8 +55,10 @@ main{padding:16px;max-width:800px;margin:auto}
   margin-bottom:15px;
   box-shadow:0 2px 8px rgba(0,0,0,.08);
 }
+
 h2{margin-top:0}
 h3{margin-bottom:8px}
+
 button{
   border:0;
   border-radius:10px;
@@ -54,7 +67,12 @@ button{
   background:#222;
   color:white;
 }
-.secondary{background:#e8e8e8;color:#222}
+
+.secondary{
+  background:#e8e8e8;
+  color:#222;
+}
+
 input,textarea,select{
   width:100%;
   padding:12px;
@@ -64,12 +82,18 @@ input,textarea,select{
   font-size:16px;
   background:white;
 }
-textarea{min-height:80px;resize:vertical}
+
+textarea{
+  min-height:80px;
+  resize:vertical;
+}
+
 label{
   display:block;
   font-weight:600;
   margin-top:5px;
 }
+
 .item{
   display:flex;
   justify-content:space-between;
@@ -78,6 +102,7 @@ label{
   padding:13px 0;
   border-bottom:1px solid #eee;
 }
+
 .badge{
   display:inline-block;
   background:#eee;
@@ -85,6 +110,7 @@ label{
   border-radius:8px;
   font-size:13px;
 }
+
 .task{
   display:flex;
   align-items:center;
@@ -92,8 +118,17 @@ label{
   padding:10px 0;
   border-bottom:1px solid #eee;
 }
-.task input{width:auto;margin:0}
-.done{text-decoration:line-through;color:#888}
+
+.task input{
+  width:auto;
+  margin:0;
+}
+
+.done{
+  text-decoration:line-through;
+  color:#888;
+}
+
 .stat{
   display:inline-block;
   width:48%;
@@ -103,9 +138,117 @@ label{
   border-radius:14px;
   text-align:center;
 }
-.stat b{display:block;font-size:28px}
+
+.stat b{
+  display:block;
+  font-size:28px;
+}
+
 .hidden{display:none}
-.danger{background:#b3261e}
+
+.danger{
+  background:#b3261e;
+}
+
+/* CALENDAR */
+
+.calendarHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.calendarHeader button{
+  padding:9px 12px;
+}
+
+.calendarTitle{
+  font-size:20px;
+  font-weight:700;
+  text-align:center;
+  flex:1;
+}
+
+.calendarGrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+}
+
+.calendarDayName{
+  text-align:center;
+  font-size:12px;
+  font-weight:700;
+  color:#777;
+  padding:6px 2px;
+}
+
+.calendarDay{
+  min-height:70px;
+  background:#f7f7f8;
+  border-radius:9px;
+  padding:7px 4px;
+  border:1px solid #eee;
+  cursor:pointer;
+}
+
+.calendarDay.empty{
+  background:transparent;
+  border:0;
+  cursor:default;
+}
+
+.calendarDay.today{
+  border:2px solid #222;
+}
+
+.calendarDay.selected{
+  background:#e5e5e5;
+}
+
+.calendarNumber{
+  font-weight:700;
+  font-size:14px;
+}
+
+.calendarDots{
+  margin-top:6px;
+}
+
+.calendarDot{
+  display:block;
+  font-size:10px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-top:3px;
+}
+
+.upcomingDate{
+  font-size:13px;
+  color:#666;
+}
+
+.dateButton{
+  margin-top:8px;
+  width:100%;
+  background:#eee;
+  color:#222;
+  font-size:14px;
+}
+
+@media(max-width:400px){
+  .calendarDay{
+    min-height:62px;
+    padding:5px 3px;
+  }
+
+  .calendarDot{
+    font-size:9px;
+  }
+}
 </style>
 </head>
 
@@ -144,8 +287,8 @@ label{
     </div>
 
     <div class="stat">
-     <b id="taskCount">0</b>
-Tasks Remaining
+      <b id="taskCount">0</b>
+      Tasks Remaining
     </div>
   </div>
 
@@ -160,7 +303,7 @@ Tasks Remaining
 
   <div class="card">
     <h2>📅 Coming Up</h2>
-    <p>Your upcoming home tasks will appear here.</p>
+    <div id="homeUpcoming"></div>
 
     <button onclick="showPage('calendar')">
       📅 Open Calendar
@@ -189,69 +332,164 @@ Tasks Remaining
 
 
 <section id="projectsPage" class="hidden">
+
   <div class="card">
     <h2>📋 Projects</h2>
-    <button onclick="newProject()">＋ New Project</button>
+
+    <button onclick="newProject()">
+      ＋ New Project
+    </button>
   </div>
+
   <div id="projectsList"></div>
+
 </section>
 
 
 <section id="workspacePage" class="hidden">
+
   <div class="card" id="workspaceContent"></div>
+
 </section>
 
 
 <section id="shoppingPage" class="hidden">
 
   <div class="card">
+
     <h2>🛒 Shopping List</h2>
 
-    <input id="shoppingInput" placeholder="What do you need?">
+    <input
+      id="shoppingInput"
+      placeholder="What do you need?">
 
     <select id="shoppingProject">
       <option value="">No Project</option>
     </select>
 
-    <input id="shoppingQuantity" placeholder="Quantity">
+    <input
+      id="shoppingQuantity"
+      placeholder="Quantity">
 
     <button onclick="addShopping()">
       ＋ Add Item
     </button>
+
   </div>
 
   <div class="card">
+
     <h2>🛍️ Items to Buy</h2>
+
     <div id="shoppingList"></div>
+
   </div>
 
 </section>
 
 
 <section id="calendarPage" class="hidden">
+
   <div class="card">
-    <h2>📅 Home Calendar</h2>
-    <input id="calendarTitle" placeholder="Event or task">
-    <input id="calendarDate" type="date">
-    <button onclick="addCalendar()">＋ Add</button>
+
+    <div class="calendarHeader">
+
+      <button onclick="changeMonth(-1)">
+        ‹
+      </button>
+
+      <div
+        id="calendarMonthTitle"
+        class="calendarTitle">
+      </div>
+
+      <button onclick="changeMonth(1)">
+        ›
+      </button>
+
+    </div>
+
+    <div
+      id="calendarGrid"
+      class="calendarGrid">
+    </div>
+
   </div>
+
+
   <div class="card">
+
+    <h2 id="selectedDateTitle">
+      📅 Select a Date
+    </h2>
+
+    <div id="selectedDateTasks">
+      <p>Tap a date on the calendar.</p>
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h2>＋ Add Calendar Event</h2>
+
+    <input
+      id="calendarTitle"
+      placeholder="Event or task">
+
+    <input
+      id="calendarDate"
+      type="date">
+
+    <button onclick="addCalendar()">
+      ＋ Add
+    </button>
+
+  </div>
+
+
+  <div class="card">
+
+    <h2>📋 Other Calendar Events</h2>
+
     <div id="calendarList"></div>
+
   </div>
+
 </section>
 
 
 <section id="maintenancePage" class="hidden">
+
   <div class="card">
+
     <h2>🔧 Maintenance</h2>
-    <input id="maintenanceName" placeholder="Maintenance item">
-    <input id="maintenanceDue" type="date">
-    <input id="maintenanceNotes" placeholder="Notes">
-    <button onclick="addMaintenance()">＋ Add</button>
+
+    <input
+      id="maintenanceName"
+      placeholder="Maintenance item">
+
+    <input
+      id="maintenanceDue"
+      type="date">
+
+    <input
+      id="maintenanceNotes"
+      placeholder="Notes">
+
+    <button onclick="addMaintenance()">
+      ＋ Add
+    </button>
+
   </div>
+
   <div class="card">
+
     <div id="maintenanceList"></div>
+
   </div>
+
 </section>
 
 
@@ -306,7 +544,9 @@ Tasks Remaining
     <label>General Home Notes</label>
     <textarea id="homeNotes"></textarea>
 
-    <button onclick="saveHomeInfo()">💾 Save Home Information</button>
+    <button onclick="saveHomeInfo()">
+      💾 Save Home Information
+    </button>
 
   </div>
 
@@ -314,13 +554,27 @@ Tasks Remaining
 
 
 <section id="familyPage" class="hidden">
+
   <div class="card">
+
     <h2>👨‍👩‍👧‍👦 Family</h2>
-    <p>Shared home workspace for you and your wife.</p>
-    <input id="familyNote" placeholder="Add a family note">
-    <button onclick="saveFamilyNote()">Save Note</button>
+
+    <p>
+      Shared home workspace for you and your wife.
+    </p>
+
+    <input
+      id="familyNote"
+      placeholder="Add a family note">
+
+    <button onclick="saveFamilyNote()">
+      Save Note
+    </button>
+
     <p id="familySaved"></p>
+
   </div>
+
 </section>
 
 </main>
@@ -332,6 +586,7 @@ const STORAGE_KEY="theListDataV2";
 
 
 const defaultData={
+
   home:{
     location:"Palm Coast, Florida",
     yearBuilt:2001,
@@ -350,7 +605,9 @@ const defaultData={
     notes:""
   },
 
+
   projects:[
+
     {
       id:1,
       name:"🏠 House Painting",
@@ -367,8 +624,13 @@ const defaultData={
         {name:"Paint exterior",done:false},
         {name:"Paint trim",done:false},
         {name:"Final inspection and touch-up",done:false}
-      ]
+      ],
+      materials:[],
+      records:[],
+      notes:"",
+      budget:0
     },
+
 
     {
       id:2,
@@ -383,8 +645,13 @@ const defaultData={
         {name:"Establish Zoysia",done:false},
         {name:"Install plugs",done:false},
         {name:"Water and maintain",done:false}
-      ]
+      ],
+      materials:[],
+      records:[],
+      notes:"",
+      budget:0
     },
+
 
     {
       id:3,
@@ -397,8 +664,13 @@ const defaultData={
         {name:"Plan fruit trees",done:false},
         {name:"Set up irrigation",done:false},
         {name:"Set up compost",done:false}
-      ]
+      ],
+      materials:[],
+      records:[],
+      notes:"",
+      budget:0
     },
+
 
     {
       id:4,
@@ -411,8 +683,13 @@ const defaultData={
         {name:"Plan gates",done:false},
         {name:"Price materials",done:false},
         {name:"Build fence",done:false}
-      ]
+      ],
+      materials:[],
+      records:[],
+      notes:"",
+      budget:0
     },
+
 
     {
       id:5,
@@ -429,8 +706,13 @@ const defaultData={
         {name:"Control fire ants",done:false},
         {name:"Level lawn",done:false},
         {name:"Develop Zoysia plug nursery",done:false}
-      ]
+      ],
+      materials:[],
+      records:[],
+      notes:"",
+      budget:0
     },
+
 
     {
       id:6,
@@ -447,8 +729,13 @@ const defaultData={
         {name:"Install fixtures",done:false},
         {name:"Install glass",done:false},
         {name:"Final inspection",done:false}
-      ]
+      ],
+      materials:[],
+      records:[],
+      notes:"",
+      budget:0
     },
+
 
     {
       id:7,
@@ -464,14 +751,20 @@ const defaultData={
         {name:"Plan French doors",done:false},
         {name:"Price materials",done:false},
         {name:"Build enclosure",done:false}
-      ]
+      ],
+      materials:[],
+      records:[],
+      notes:"",
+      budget:0
     }
+
   ],
 
   shopping:[],
   maintenance:[],
   calendar:[],
   familyNote:""
+
 };
 
 
@@ -479,364 +772,1105 @@ let data=JSON.parse(localStorage.getItem(STORAGE_KEY));
 
 
 if(!data){
+
   data=defaultData;
   saveData();
+
 }else{
 
   if(!data.home)data.home={};
 
   Object.keys(defaultData.home).forEach(key=>{
+
     if(data.home[key]===undefined){
       data.home[key]=defaultData.home[key];
     }
+
   });
 
-  if(!Array.isArray(data.projects))data.projects=[];
-  if(!Array.isArray(data.shopping))data.shopping=[];
-  if(!Array.isArray(data.maintenance))data.maintenance=[];
-  if(!Array.isArray(data.calendar))data.calendar=[];
+
+  if(!Array.isArray(data.projects))
+    data.projects=[];
+
+  if(!Array.isArray(data.shopping))
+    data.shopping=[];
+
+  if(!Array.isArray(data.maintenance))
+    data.maintenance=[];
+
+  if(!Array.isArray(data.calendar))
+    data.calendar=[];
+
+
+  /*
+    Upgrade existing projects without deleting
+    anything already saved.
+  */
+
+  data.projects.forEach(project=>{
+
+    if(!Array.isArray(project.tasks))
+      project.tasks=[];
+
+    if(!Array.isArray(project.materials))
+      project.materials=[];
+
+    if(!Array.isArray(project.records))
+      project.records=[];
+
+    if(project.notes===undefined)
+      project.notes="";
+
+    if(project.budget===undefined)
+      project.budget=0;
+
+
+    project.tasks.forEach(task=>{
+
+      if(task.done===undefined)
+        task.done=false;
+
+      /*
+        Every task now has a calendar date.
+      */
+
+      if(task.dueDate===undefined)
+        task.dueDate="";
+
+    });
+
+  });
+
 
   saveData();
+
 }
 
 
+/* Calendar state */
+
+let calendarViewDate=new Date();
+
+let selectedCalendarDate="";
+
+
 function saveData(){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(data)
+  );
+
 }
 
 
 function escapeHTML(value){
+
   return String(value??"")
     .replace(/&/g,"&amp;")
     .replace(/</g,"&lt;")
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
+
+}
+
+
+function dateToKey(date){
+
+  return date.getFullYear()+"-"+
+    String(date.getMonth()+1).padStart(2,"0")+"-"+
+    String(date.getDate()).padStart(2,"0");
+
+}
+
+
+function formatDate(dateString){
+
+  if(!dateString)return "No date";
+
+  const parts=dateString.split("-");
+
+  if(parts.length!==3)return dateString;
+
+  const date=new Date(
+    Number(parts[0]),
+    Number(parts[1])-1,
+    Number(parts[2])
+  );
+
+  return date.toLocaleDateString(
+    undefined,
+    {
+      month:"short",
+      day:"numeric",
+      year:"numeric"
+    }
+  );
+
 }
 
 
 function showPage(page){
 
-  document.querySelectorAll("main>section").forEach(section=>{
+  document.querySelectorAll(
+    "main>section"
+  ).forEach(section=>{
     section.classList.add("hidden");
   });
 
-  const target=document.getElementById(page+"Page");
 
-  if(target){
+  const target=document.getElementById(
+    page+"Page"
+  );
+
+
+  if(target)
     target.classList.remove("hidden");
-  }
 
-  if(page==="home")renderHome();
-  if(page==="projects")renderProjects();
-  if(page==="shopping")renderShopping();
-  if(page==="calendar")renderCalendar();
-  if(page==="maintenance")renderMaintenance();
-  if(page==="homeInfo")renderHomeInfo();
-  if(page==="family")renderFamily();
+
+  if(page==="home")
+    renderHome();
+
+  if(page==="projects")
+    renderProjects();
+
+  if(page==="shopping")
+    renderShopping();
+
+  if(page==="calendar")
+    renderCalendar();
+
+  if(page==="maintenance")
+    renderMaintenance();
+
+  if(page==="homeInfo")
+    renderHomeInfo();
+
+  if(page==="family")
+    renderFamily();
+
 }
 
 
+/* HOME */
+
 function renderHome(){
 
-  document.getElementById("projectCount").textContent=data.projects.length;
+  document.getElementById(
+    "projectCount"
+  ).textContent=data.projects.length;
 
-let tasksRemaining=0;
 
-data.projects.forEach(p=>{
-  tasksRemaining+=p.tasks.filter(t=>!t.done).length;
-});
+  let tasksRemaining=0;
 
-document.getElementById("taskCount").textContent=tasksRemaining;
 
-  document.getElementById("homeSummary").textContent=
+  data.projects.forEach(p=>{
+
+    tasksRemaining+=p.tasks.filter(
+      t=>!t.done
+    ).length;
+
+  });
+
+
+  document.getElementById(
+    "taskCount"
+  ).textContent=tasksRemaining;
+
+
+  document.getElementById(
+    "homeSummary"
+  ).textContent=
     `${data.home.location||""} • ${data.home.squareFeet||""} sq ft home • Built ${data.home.yearBuilt||""}`;
 
-  document.getElementById("homeProjects").innerHTML=
+
+  document.getElementById(
+    "homeProjects"
+  ).innerHTML=
+
     data.projects.map(p=>{
 
-      const completed=p.tasks.filter(t=>t.done).length;
+      const completed=
+        p.tasks.filter(t=>t.done).length;
+
       const total=p.tasks.length;
-      const percent=total ? Math.round((completed/total)*100) : 0;
+
+      const percent=
+        total?
+        Math.round((completed/total)*100):
+        0;
+
 
       return `
 
         <div class="item">
 
           <div>
+
             <b>${escapeHTML(p.name)}</b><br>
-            <span class="badge">${escapeHTML(p.category)}</span>
+
+            <span class="badge">
+              ${escapeHTML(p.category)}
+            </span>
+
             <br>
+
             <small>
-              Progress: ${completed}/${total} tasks (${percent}%)
+              Progress:
+              ${completed}/${total}
+              tasks (${percent}%)
             </small>
+
           </div>
 
-          <button onclick="openProject(${p.id})">Open</button>
+          <button
+            onclick="openProject(${p.id})">
+            Open
+          </button>
 
         </div>
 
       `;
 
     }).join("");
+
+
+  renderHomeUpcoming();
+
 }
 
 
-function renderProjects(){
+function renderHomeUpcoming(){
 
-  const list=document.getElementById("projectsList");
+  const container=
+    document.getElementById(
+      "homeUpcoming"
+    );
 
-  list.innerHTML=data.projects.map(p=>{
 
-    const completed=p.tasks.filter(t=>t.done).length;
-    const total=p.tasks.length;
+  const upcoming=[];
 
-    return `
 
-      <div class="card">
+  data.projects.forEach(project=>{
 
-        <h3>${escapeHTML(p.name)}</h3>
+    project.tasks.forEach((task,index)=>{
 
-        <span class="badge">${escapeHTML(p.category)}</span>
+      if(
+        !task.done &&
+        task.dueDate
+      ){
 
-        <p>${escapeHTML(p.description)}</p>
+        upcoming.push({
+          project,
+          task,
+          index
+        });
 
-        <p><b>Progress:</b> ${completed}/${total} tasks</p>
+      }
 
-        <button onclick="openProject(${p.id})">
-          Open Project
+    });
+
+  });
+
+
+  upcoming.sort((a,b)=>
+    a.task.dueDate.localeCompare(
+      b.task.dueDate
+    )
+  );
+
+
+  if(!upcoming.length){
+
+    container.innerHTML=
+      "<p>No dated tasks yet.</p>";
+
+    return;
+
+  }
+
+
+  container.innerHTML=
+    upcoming.slice(0,5).map(x=>`
+
+      <div class="item">
+
+        <div>
+
+          <b>
+            ${escapeHTML(x.task.name)}
+          </b>
+
+          <br>
+
+          <span class="upcomingDate">
+            ${escapeHTML(x.task.dueDate)}
+          </span>
+
+          <br>
+
+          <small>
+            ${escapeHTML(x.project.name)}
+          </small>
+
+        </div>
+
+        <button
+          onclick="openProject(${x.project.id})">
+          Open
         </button>
 
       </div>
 
-    `;
+    `).join("");
 
-  }).join("");
 }
 
 
+/* PROJECTS */
+
+function renderProjects(){
+
+  const list=
+    document.getElementById(
+      "projectsList"
+    );
+
+
+  list.innerHTML=
+    data.projects.map(p=>{
+
+      const completed=
+        p.tasks.filter(t=>t.done).length;
+
+      const total=p.tasks.length;
+
+
+      return `
+
+        <div class="card">
+
+          <h3>
+            ${escapeHTML(p.name)}
+          </h3>
+
+          <span class="badge">
+            ${escapeHTML(p.category)}
+          </span>
+
+          <p>
+            ${escapeHTML(p.description)}
+          </p>
+
+          <p>
+            <b>Progress:</b>
+            ${completed}/${total} tasks
+          </p>
+
+          <button
+            onclick="openProject(${p.id})">
+            Open Project
+          </button>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+}
+
+
+/* PROJECT WORKSPACE */
+
 function openProject(id){
 
-  const project=data.projects.find(p=>p.id===id);
+  const project=
+    data.projects.find(
+      p=>p.id===id
+    );
+
 
   if(!project)return;
 
-  document.getElementById("workspaceContent").innerHTML=`
 
-    <h2>${escapeHTML(project.name)}</h2>
+  document.getElementById(
+    "workspaceContent"
+  ).innerHTML=`
 
-    <span class="badge">${escapeHTML(project.category)}</span>
+    <h2>
+      ${escapeHTML(project.name)}
+    </h2>
 
-    <p>${escapeHTML(project.description)}</p>
+    <span class="badge">
+      ${escapeHTML(project.category)}
+    </span>
+
+    <p>
+      ${escapeHTML(project.description)}
+    </p>
+
 
     <div class="card">
 
       <h3>📋 Tasks</h3>
 
-      <div id="tasksArea">
+      ${
+        project.tasks.length?
 
-        ${project.tasks.map((task,i)=>`
+        project.tasks.map((task,i)=>`
 
           <div class="task">
 
             <input
               type="checkbox"
               ${task.done?"checked":""}
-              onchange="toggleTask(${project.id},${i})">
+              onchange="
+                toggleTask(${project.id},${i})
+              ">
 
-            <span class="${task.done?"done":""}">
+            <span
+              class="${task.done?"done":""}">
+
               ${escapeHTML(task.name)}
+
             </span>
 
           </div>
 
-        `).join("")}
 
-      </div>
+          <label>
+            📅 Due Date
+          </label>
 
-      <input id="newTask" placeholder="Add a task">
+          <input
+            type="date"
+            value="${escapeHTML(task.dueDate||"")}"
+            onchange="
+              setTaskDate(
+                ${project.id},
+                ${i},
+                this.value
+              )
+            ">
 
-      <button onclick="addTask(${project.id})">
+        `).join("")
+
+        :
+
+        "<p>No tasks yet.</p>"
+
+      }
+
+
+      <input
+        id="newTask"
+        placeholder="Add a task">
+
+
+      <button
+        onclick="addTask(${project.id})">
         ＋ Add Task
       </button>
 
     </div>
 
-    <button class="secondary" onclick="showPage('projects')">
+
+    <div class="card">
+
+      <h3>🛒 Materials</h3>
+
+      <p>
+        Materials for this project will live here.
+      </p>
+
+      ${
+        project.materials.length?
+
+        project.materials.map(material=>`
+
+          <div class="item">
+
+            <div>
+              <b>
+                ${escapeHTML(material.name)}
+              </b>
+
+              ${
+                material.quantity?
+
+                `<br>
+                 <small>
+                   Quantity:
+                   ${escapeHTML(material.quantity)}
+                 </small>`
+
+                :""
+              }
+
+            </div>
+
+          </div>
+
+        `).join("")
+
+        :
+
+        "<p>No materials added yet.</p>"
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>💰 Project Budget</h3>
+
+      <p>
+        Estimated budget:
+        <b>
+          $${Number(project.budget||0).toFixed(2)}
+        </b>
+      </p>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>🏠 Permanent Home Records</h3>
+
+      <p>
+        Paint, flooring, tile, fixtures,
+        appliances and other confirmed
+        products will be saved here.
+      </p>
+
+      ${
+        project.records.length?
+
+        project.records.map(record=>`
+
+          <div class="item">
+
+            <div>
+              <b>
+                ${escapeHTML(record.name)}
+              </b>
+
+              <br>
+
+              <small>
+                ${escapeHTML(record.type||"Home Record")}
+              </small>
+
+            </div>
+
+          </div>
+
+        `).join("")
+
+        :
+
+        "<p>No permanent records yet.</p>"
+      }
+
+    </div>
+
+
+    <button
+      class="secondary"
+      onclick="showPage('projects')">
       ← Back to Projects
     </button>
+
   `;
 
+
   showPage("workspace");
+
 }
 
 
 function toggleTask(projectId,index){
 
-  const project=data.projects.find(p=>p.id===projectId);
+  const project=
+    data.projects.find(
+      p=>p.id===projectId
+    );
+
 
   if(!project)return;
 
-  project.tasks[index].done=!project.tasks[index].done;
+
+  project.tasks[index].done=
+    !project.tasks[index].done;
+
 
   saveData();
 
   renderHome();
 
   openProject(projectId);
+
+}
+
+
+function setTaskDate(
+  projectId,
+  index,
+  date
+){
+
+  const project=
+    data.projects.find(
+      p=>p.id===projectId
+    );
+
+
+  if(!project)return;
+
+
+  if(!project.tasks[index])
+    return;
+
+
+  project.tasks[index].dueDate=date;
+
+
+  saveData();
+
+  renderHome();
+
+
+  /*
+    Keep the workspace open.
+  */
+
+  openProject(projectId);
+
 }
 
 
 function addTask(projectId){
 
-  const input=document.getElementById("newTask");
+  const input=
+    document.getElementById(
+      "newTask"
+    );
 
-  if(!input.value.trim())return;
 
-  const project=data.projects.find(p=>p.id===projectId);
+  if(!input.value.trim())
+    return;
+
+
+  const project=
+    data.projects.find(
+      p=>p.id===projectId
+    );
+
+
+  if(!project)return;
+
 
   project.tasks.push({
+
     name:input.value.trim(),
-    done:false
+
+    done:false,
+
+    dueDate:""
+
   });
+
 
   saveData();
 
   openProject(projectId);
+
 }
 
 
 function newProject(){
 
-  const name=prompt("Project name:");
+  const name=
+    prompt("Project name:");
+
 
   if(!name)return;
 
-  const category=prompt("Category:")||"Custom";
+
+  const category=
+    prompt("Category:")||"Custom";
+
 
   const id=Date.now();
 
+
   data.projects.push({
+
     id:id,
+
     name:name,
+
     category:category,
+
     description:"",
-    tasks:[]
+
+    tasks:[],
+
+    materials:[],
+
+    records:[],
+
+    notes:"",
+
+    budget:0
+
   });
+
 
   saveData();
 
   renderProjects();
+
 }
 
+
+/* HOME INFORMATION */
 
 function renderHomeInfo(){
 
   const h=data.home;
 
-  document.getElementById("homeLocation").value=h.location||"";
-  document.getElementById("homeYearBuilt").value=h.yearBuilt||"";
-  document.getElementById("homeBuilder").value=h.builder||"";
-  document.getElementById("homeSquareFeet").value=h.squareFeet||"";
-  document.getElementById("homeExteriorColor").value=h.exteriorColor||"";
-  document.getElementById("homeTrimColor").value=h.trimColor||"";
-  document.getElementById("homeRoofColor").value=h.roofColor||"";
-  document.getElementById("homeLawnArea").value=h.lawnArea||"";
-  document.getElementById("homeLawnGrass").value=h.lawnGrass||"";
-  document.getElementById("homeLawnGoal").value=h.lawnGoal||"";
-  document.getElementById("homeGardenSize").value=h.gardenSize||"";
-  document.getElementById("homeGardenNotes").value=h.gardenNotes||"";
-  document.getElementById("homeIrrigationNotes").value=h.irrigationNotes||"";
-  document.getElementById("homeDrainageNotes").value=h.drainageNotes||"";
-  document.getElementById("homeNotes").value=h.notes||"";
+
+  document.getElementById(
+    "homeLocation"
+  ).value=h.location||"";
+
+
+  document.getElementById(
+    "homeYearBuilt"
+  ).value=h.yearBuilt||"";
+
+
+  document.getElementById(
+    "homeBuilder"
+  ).value=h.builder||"";
+
+
+  document.getElementById(
+    "homeSquareFeet"
+  ).value=h.squareFeet||"";
+
+
+  document.getElementById(
+    "homeExteriorColor"
+  ).value=h.exteriorColor||"";
+
+
+  document.getElementById(
+    "homeTrimColor"
+  ).value=h.trimColor||"";
+
+
+  document.getElementById(
+    "homeRoofColor"
+  ).value=h.roofColor||"";
+
+
+  document.getElementById(
+    "homeLawnArea"
+  ).value=h.lawnArea||"";
+
+
+  document.getElementById(
+    "homeLawnGrass"
+  ).value=h.lawnGrass||"";
+
+
+  document.getElementById(
+    "homeLawnGoal"
+  ).value=h.lawnGoal||"";
+
+
+  document.getElementById(
+    "homeGardenSize"
+  ).value=h.gardenSize||"";
+
+
+  document.getElementById(
+    "homeGardenNotes"
+  ).value=h.gardenNotes||"";
+
+
+  document.getElementById(
+    "homeIrrigationNotes"
+  ).value=h.irrigationNotes||"";
+
+
+  document.getElementById(
+    "homeDrainageNotes"
+  ).value=h.drainageNotes||"";
+
+
+  document.getElementById(
+    "homeNotes"
+  ).value=h.notes||"";
+
 }
 
 
 function saveHomeInfo(){
 
-  data.home.location=document.getElementById("homeLocation").value;
-  data.home.yearBuilt=document.getElementById("homeYearBuilt").value;
-  data.home.builder=document.getElementById("homeBuilder").value;
-  data.home.squareFeet=document.getElementById("homeSquareFeet").value;
-  data.home.exteriorColor=document.getElementById("homeExteriorColor").value;
-  data.home.trimColor=document.getElementById("homeTrimColor").value;
-  data.home.roofColor=document.getElementById("homeRoofColor").value;
-  data.home.lawnArea=document.getElementById("homeLawnArea").value;
-  data.home.lawnGrass=document.getElementById("homeLawnGrass").value;
-  data.home.lawnGoal=document.getElementById("homeLawnGoal").value;
-  data.home.gardenSize=document.getElementById("homeGardenSize").value;
-  data.home.gardenNotes=document.getElementById("homeGardenNotes").value;
-  data.home.irrigationNotes=document.getElementById("homeIrrigationNotes").value;
-  data.home.drainageNotes=document.getElementById("homeDrainageNotes").value;
-  data.home.notes=document.getElementById("homeNotes").value;
+  data.home.location=
+    document.getElementById(
+      "homeLocation"
+    ).value;
+
+
+  data.home.yearBuilt=
+    document.getElementById(
+      "homeYearBuilt"
+    ).value;
+
+
+  data.home.builder=
+    document.getElementById(
+      "homeBuilder"
+    ).value;
+
+
+  data.home.squareFeet=
+    document.getElementById(
+      "homeSquareFeet"
+    ).value;
+
+
+  data.home.exteriorColor=
+    document.getElementById(
+      "homeExteriorColor"
+    ).value;
+
+
+  data.home.trimColor=
+    document.getElementById(
+      "homeTrimColor"
+    ).value;
+
+
+  data.home.roofColor=
+    document.getElementById(
+      "homeRoofColor"
+    ).value;
+
+
+  data.home.lawnArea=
+    document.getElementById(
+      "homeLawnArea"
+    ).value;
+
+
+  data.home.lawnGrass=
+    document.getElementById(
+      "homeLawnGrass"
+    ).value;
+
+
+  data.home.lawnGoal=
+    document.getElementById(
+      "homeLawnGoal"
+    ).value;
+
+
+  data.home.gardenSize=
+    document.getElementById(
+      "homeGardenSize"
+    ).value;
+
+
+  data.home.gardenNotes=
+    document.getElementById(
+      "homeGardenNotes"
+    ).value;
+
+
+  data.home.irrigationNotes=
+    document.getElementById(
+      "homeIrrigationNotes"
+    ).value;
+
+
+  data.home.drainageNotes=
+    document.getElementById(
+      "homeDrainageNotes"
+    ).value;
+
+
+  data.home.notes=
+    document.getElementById(
+      "homeNotes"
+    ).value;
+
 
   saveData();
 
-  alert("Home Information saved!");
+  alert(
+    "Home Information saved!"
+  );
 
   showPage("home");
+
 }
 
 
+/* SHOPPING */
+
 function addShopping(){
 
-  const input=document.getElementById("shoppingInput");
+  const input=
+    document.getElementById(
+      "shoppingInput"
+    );
 
-  if(!input.value.trim())return;
+
+  const projectSelect=
+    document.getElementById(
+      "shoppingProject"
+    );
+
+
+  const quantity=
+    document.getElementById(
+      "shoppingQuantity"
+    );
+
+
+  if(!input.value.trim())
+    return;
+
 
   data.shopping.push({
+
     id:Date.now(),
+
     name:input.value.trim(),
+
+    projectId:
+      projectSelect.value?
+      Number(projectSelect.value):
+      null,
+
+    quantity:
+      quantity.value.trim(),
+
     purchased:false
+
   });
 
+
   input.value="";
+  quantity.value="";
+
 
   saveData();
+
   renderShopping();
+
 }
 
 
 function renderShopping(){
 
-  const projectSelect=document.getElementById("shoppingProject");
+  const projectSelect=
+    document.getElementById(
+      "shoppingProject"
+    );
+
 
   projectSelect.innerHTML=
-    `<option value="">No Project</option>`+
+    `<option value="">
+      No Project
+    </option>`+
+
     data.projects.map(p=>
       `<option value="${p.id}">
         ${escapeHTML(p.name)}
       </option>`
     ).join("");
 
-  document.getElementById("shoppingList").innerHTML=
+
+  const list=
+    document.getElementById(
+      "shoppingList"
+    );
+
+
+  list.innerHTML=
 
     data.shopping.length?
 
     data.shopping.map(item=>{
 
-      const project=data.projects.find(p=>p.id===item.projectId);
-      const projectName=project?project.name:"No Project";
+      const project=
+        data.projects.find(
+          p=>p.id===item.projectId
+        );
+
+
+      const projectName=
+        project?
+        project.name:
+        "No Project";
+
 
       return `
 
         <div class="item">
 
-          <label style="display:flex;align-items:center;gap:10px;font-weight:400">
+          <label
+            style="
+              display:flex;
+              align-items:center;
+              gap:10px;
+              font-weight:400;
+            ">
 
             <input
               type="checkbox"
-              style="width:auto;margin:0"
+              style="
+                width:auto;
+                margin:0;
+              "
               ${item.purchased?"checked":""}
-              onchange="toggleShopping(${item.id})">
+              onchange="
+                toggleShopping(${item.id})
+              ">
 
-            <span class="${item.purchased?"done":""}">
+
+            <span
+              class="${item.purchased?"done":""}">
+
               ${escapeHTML(item.name)}
+
               <br>
+
               <small>
+
                 ${escapeHTML(projectName)}
-                ${item.quantity?" • "+escapeHTML(item.quantity):""}
+
+                ${
+                  item.quantity?
+
+                  " • "+
+                  escapeHTML(item.quantity):
+
+                  ""
+                }
+
               </small>
+
             </span>
 
           </label>
@@ -850,107 +1884,624 @@ function renderShopping(){
     :
 
     "<p>No shopping items yet.</p>";
+
 }
 
 
 function toggleShopping(id){
 
-  const item=data.shopping.find(x=>x.id===id);
+  const item=
+    data.shopping.find(
+      x=>x.id===id
+    );
 
-  if(item)item.purchased=!item.purchased;
+
+  if(item)
+    item.purchased=
+      !item.purchased;
+
 
   saveData();
+
   renderShopping();
+
 }
 
 
-function addCalendar(){
+/* CALENDAR */
 
-  const title=document.getElementById("calendarTitle").value.trim();
-  const date=document.getElementById("calendarDate").value;
+function changeMonth(amount){
 
-  if(!title)return;
+  calendarViewDate.setMonth(
+    calendarViewDate.getMonth()+amount
+  );
 
-  data.calendar.push({
-    id:Date.now(),
-    title:title,
-    date:date
-  });
-
-  document.getElementById("calendarTitle").value="";
-  document.getElementById("calendarDate").value="";
-
-  saveData();
   renderCalendar();
+
 }
 
 
 function renderCalendar(){
 
-  const list=document.getElementById("calendarList");
+  const year=
+    calendarViewDate.getFullYear();
 
-  list.innerHTML=data.calendar.length?
+
+  const month=
+    calendarViewDate.getMonth();
+
+
+  const title=
+    calendarViewDate.toLocaleDateString(
+      undefined,
+      {
+        month:"long",
+        year:"numeric"
+      }
+    );
+
+
+  document.getElementById(
+    "calendarMonthTitle"
+  ).textContent=title;
+
+
+  const grid=
+    document.getElementById(
+      "calendarGrid"
+    );
+
+
+  const dayNames=[
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat"
+  ];
+
+
+  let html=
+    dayNames.map(day=>
+      `<div class="calendarDayName">
+        ${day}
+      </div>`
+    ).join("");
+
+
+  const firstDay=
+    new Date(
+      year,
+      month,
+      1
+    ).getDay();
+
+
+  const daysInMonth=
+    new Date(
+      year,
+      month+1,
+      0
+    ).getDate();
+
+
+  for(
+    let i=0;
+    i<firstDay;
+    i++
+  ){
+
+    html+=
+      `<div class="calendarDay empty"></div>`;
+
+  }
+
+
+  const todayKey=
+    dateToKey(new Date());
+
+
+  for(
+    let day=1;
+    day<=daysInMonth;
+    day++
+  ){
+
+    const date=
+      new Date(
+        year,
+        month,
+        day
+      );
+
+
+    const key=
+      dateToKey(date);
+
+
+    const selected=
+      selectedCalendarDate===key;
+
+
+    const isToday=
+      todayKey===key;
+
+
+    const taskItems=
+      getTasksForDate(key);
+
+
+    const eventItems=
+      getEventsForDate(key);
+
+
+    const allItems=
+      [
+        ...taskItems.map(x=>({
+          text:x.task.name,
+          type:"task"
+        })),
+
+        ...eventItems.map(x=>({
+          text:x.title,
+          type:"event"
+        }))
+      ];
+
+
+    html+=`
+
+      <div
+        class="
+          calendarDay
+          ${isToday?"today":""}
+          ${selected?"selected":""}
+        "
+        onclick="
+          selectCalendarDate('${key}')
+        ">
+
+        <div class="calendarNumber">
+          ${day}
+        </div>
+
+        <div class="calendarDots">
+
+          ${
+            allItems
+              .slice(0,3)
+              .map(item=>`
+
+                <span class="calendarDot">
+
+                  ${
+                    item.type==="task"?
+                    "📋":
+                    "📅"
+                  }
+
+                  ${escapeHTML(item.text)}
+
+                </span>
+
+              `)
+              .join("")
+          }
+
+          ${
+            allItems.length>3?
+
+            `<span class="calendarDot">
+              +${allItems.length-3} more
+            </span>`
+
+            :
+
+            ""
+          }
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  grid.innerHTML=html;
+
+
+  if(selectedCalendarDate){
+
+    renderSelectedDate();
+
+  }
+
+}
+
+
+function getTasksForDate(date){
+
+  const results=[];
+
+
+  data.projects.forEach(project=>{
+
+    project.tasks.forEach((task,index)=>{
+
+      if(task.dueDate===date){
+
+        results.push({
+          project,
+          task,
+          index
+        });
+
+      }
+
+    });
+
+  });
+
+
+  return results;
+
+}
+
+
+function getEventsForDate(date){
+
+  return data.calendar.filter(
+    item=>item.date===date
+  );
+
+}
+
+
+function selectCalendarDate(date){
+
+  selectedCalendarDate=date;
+
+  renderCalendar();
+
+  renderSelectedDate();
+
+}
+
+
+function renderSelectedDate(){
+
+  const title=
+    document.getElementById(
+      "selectedDateTitle"
+    );
+
+
+  const container=
+    document.getElementById(
+      "selectedDateTasks"
+    );
+
+
+  if(!selectedCalendarDate){
+
+    title.textContent=
+      "📅 Select a Date";
+
+    container.innerHTML=
+      "<p>Tap a date on the calendar.</p>";
+
+    return;
+
+  }
+
+
+  title.textContent=
+    "📅 "+
+    formatDate(
+      selectedCalendarDate
+    );
+
+
+  const tasks=
+    getTasksForDate(
+      selectedCalendarDate
+    );
+
+
+  const events=
+    getEventsForDate(
+      selectedCalendarDate
+    );
+
+
+  let html="";
+
+
+  tasks.forEach(x=>{
+
+    html+=`
+
+      <div class="item">
+
+        <div>
+
+          <b>
+            📋 ${escapeHTML(x.task.name)}
+          </b>
+
+          <br>
+
+          <small>
+            ${escapeHTML(x.project.name)}
+          </small>
+
+        </div>
+
+        <button
+          onclick="
+            openProject(${x.project.id})
+          ">
+          Open
+        </button>
+
+      </div>
+
+    `;
+
+  });
+
+
+  events.forEach(event=>{
+
+    html+=`
+
+      <div class="item">
+
+        <div>
+          <b>
+            📅 ${escapeHTML(event.title)}
+          </b>
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+
+  if(!html){
+
+    html=
+      "<p>No tasks or events on this date.</p>";
+
+  }
+
+
+  container.innerHTML=html;
+
+}
+
+
+function addCalendar(){
+
+  const title=
+    document.getElementById(
+      "calendarTitle"
+    ).value.trim();
+
+
+  const date=
+    document.getElementById(
+      "calendarDate"
+    ).value;
+
+
+  if(!title || !date)
+    return;
+
+
+  data.calendar.push({
+
+    id:Date.now(),
+
+    title:title,
+
+    date:date
+
+  });
+
+
+  document.getElementById(
+    "calendarTitle"
+  ).value="";
+
+
+  document.getElementById(
+    "calendarDate"
+  ).value="";
+
+
+  saveData();
+
+  selectedCalendarDate=date;
+
+
+  const parts=date.split("-");
+
+
+  if(parts.length===3){
+
+    calendarViewDate=
+      new Date(
+        Number(parts[0]),
+        Number(parts[1])-1,
+        1
+      );
+
+  }
+
+
+  renderCalendar();
+
+  renderSelectedDate();
+
+  renderHome();
+
+}
+
+
+function renderCalendarList(){
+
+  const list=
+    document.getElementById(
+      "calendarList"
+    );
+
+
+  list.innerHTML=
+
+    data.calendar.length?
 
     data.calendar
       .slice()
-      .sort((a,b)=>(a.date||"").localeCompare(b.date||""))
+      .sort((a,b)=>
+        (a.date||"")
+          .localeCompare(
+            b.date||""
+          )
+      )
       .map(x=>`
 
         <div class="item">
+
           <div>
-            <b>${escapeHTML(x.title)}</b><br>
-            <span class="badge">${escapeHTML(x.date||"No date")}</span>
+
+            <b>
+              ${escapeHTML(x.title)}
+            </b>
+
+            <br>
+
+            <span class="badge">
+              ${escapeHTML(
+                formatDate(x.date)
+              )}
+            </span>
+
           </div>
+
         </div>
 
       `).join("")
 
     :
 
-    "<p>No calendar items yet.</p>";
+    "<p>No calendar events yet.</p>";
+
 }
 
 
+/* MAINTENANCE */
+
 function addMaintenance(){
 
-  const name=document.getElementById("maintenanceName").value.trim();
+  const name=
+    document.getElementById(
+      "maintenanceName"
+    ).value.trim();
+
 
   if(!name)return;
 
+
   data.maintenance.push({
+
     id:Date.now(),
+
     name:name,
-    due:document.getElementById("maintenanceDue").value,
-    notes:document.getElementById("maintenanceNotes").value
+
+    due:
+      document.getElementById(
+        "maintenanceDue"
+      ).value,
+
+    notes:
+      document.getElementById(
+        "maintenanceNotes"
+      ).value
+
   });
 
-  document.getElementById("maintenanceName").value="";
-  document.getElementById("maintenanceDue").value="";
-  document.getElementById("maintenanceNotes").value="";
+
+  document.getElementById(
+    "maintenanceName"
+  ).value="";
+
+
+  document.getElementById(
+    "maintenanceDue"
+  ).value="";
+
+
+  document.getElementById(
+    "maintenanceNotes"
+  ).value="";
+
 
   saveData();
+
   renderMaintenance();
+
 }
 
 
 function renderMaintenance(){
 
-  const list=document.getElementById("maintenanceList");
+  const list=
+    document.getElementById(
+      "maintenanceList"
+    );
 
-  list.innerHTML=data.maintenance.length?
+
+  list.innerHTML=
+
+    data.maintenance.length?
 
     data.maintenance.map(x=>`
 
       <div class="item">
 
         <div>
-          <b>${escapeHTML(x.name)}</b><br>
+
+          <b>
+            ${escapeHTML(x.name)}
+          </b>
+
+          <br>
+
           <span class="badge">
-            Due: ${escapeHTML(x.due||"Not set")}
+            Due:
+            ${escapeHTML(
+              formatDate(x.due)
+            )}
           </span>
 
-          ${x.notes?
-            `<p>${escapeHTML(x.notes)}</p>`:""}
+          ${
+            x.notes?
+
+            `<p>
+              ${escapeHTML(x.notes)}
+            </p>`
+
+            :
+
+            ""
+          }
 
         </div>
 
@@ -961,26 +2512,42 @@ function renderMaintenance(){
     :
 
     "<p>No maintenance items yet.</p>";
+
 }
 
 
+/* FAMILY */
+
 function renderFamily(){
 
-  document.getElementById("familySaved").textContent=
+  document.getElementById(
+    "familySaved"
+  ).textContent=
     data.familyNote||"";
+
 }
 
 
 function saveFamilyNote(){
 
-  data.familyNote=document.getElementById("familyNote").value;
+  data.familyNote=
+    document.getElementById(
+      "familyNote"
+    ).value;
+
 
   saveData();
 
-  document.getElementById("familySaved").textContent=
+
+  document.getElementById(
+    "familySaved"
+  ).textContent=
     data.familyNote;
+
 }
 
+
+/* INITIAL LOAD */
 
 renderHome();
 
