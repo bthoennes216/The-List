@@ -799,31 +799,53 @@ function addShopping(){
 
 function renderShopping(){
 
+  const projectSelect=document.getElementById("shoppingProject");
+
+  projectSelect.innerHTML=
+    `<option value="">No Project</option>`+
+    data.projects.map(p=>
+      `<option value="${p.id}">
+        ${escapeHTML(p.name)}
+      </option>`
+    ).join("");
+
   document.getElementById("shoppingList").innerHTML=
 
     data.shopping.length?
 
-    data.shopping.map(item=>`
+    data.shopping.map(item=>{
 
-      <div class="item">
+      const project=data.projects.find(p=>p.id===item.projectId);
+      const projectName=project?project.name:"No Project";
 
-        <label style="display:flex;align-items:center;gap:10px;font-weight:400">
+      return `
 
-          <input
-            type="checkbox"
-            style="width:auto;margin:0"
-            ${item.purchased?"checked":""}
-            onchange="toggleShopping(${item.id})">
+        <div class="item">
 
-          <span class="${item.purchased?"done":""}">
-            ${escapeHTML(item.name)}
-          </span>
+          <label style="display:flex;align-items:center;gap:10px;font-weight:400">
 
-        </label>
+            <input
+              type="checkbox"
+              style="width:auto;margin:0"
+              ${item.purchased?"checked":""}
+              onchange="toggleShopping(${item.id})">
 
-      </div>
+            <span class="${item.purchased?"done":""}">
+              ${escapeHTML(item.name)}
+              <br>
+              <small>
+                ${escapeHTML(projectName)}
+                ${item.quantity?" • "+escapeHTML(item.quantity):""}
+              </small>
+            </span>
 
-    `).join("")
+          </label>
+
+        </div>
+
+      `;
+
+    }).join("")
 
     :
 
