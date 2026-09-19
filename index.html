@@ -1333,66 +1333,47 @@ function renderProjects(){
    ========================= */
 
 function openProject(id){
-
   const project=
     data.projects.find(
       p=>p.id===id
     );
-
-
   if(!project)
     return;
-
-
   document.getElementById(
     "workspaceContent"
   ).innerHTML=`
-
     <h2>
       ${escapeHTML(project.name)}
     </h2>
-
     <span class="badge">
       ${escapeHTML(project.category)}
     </span>
-
     <p>
       ${escapeHTML(project.description)}
     </p>
-
-
+    <!-- =========================
+         TASKS
+         ========================= -->
     <div class="card">
-
       <h3>📋 Tasks</h3>
-
       ${
         project.tasks.length?
-
         project.tasks.map((task,i)=>`
-
           <div class="task">
-
             <input
               type="checkbox"
               ${task.done?"checked":""}
               onchange="
                 toggleTask(${project.id},${i})
               ">
-
             <span
               class="${task.done?"done":""}">
-
               ${escapeHTML(task.name)}
-
             </span>
-
           </div>
-
-
           <label>
             📅 Due Date
           </label>
-
           <input
             type="date"
             value="${escapeHTML(task.dueDate||"")}"
@@ -1403,200 +1384,122 @@ function openProject(id){
                 this.value
               )
             ">
-
         `).join("")
-
         :
-
         "<p>No tasks yet.</p>"
-
       }
-
-
       <input
         id="newTask"
         placeholder="Add a task">
-
-
       <button
         onclick="addTask(${project.id})">
         ＋ Add Task
       </button>
-
     </div>
-
-
-<div class="card">
-
-  <h3>🛒 Materials</h3>
-
-  <p>
-    Add materials and supplies needed for this project.
-  </p>
-
-  <input
-    id="materialName"
-    placeholder="Material or supply">
-
-  <input
-    id="materialQuantity"
-    placeholder="Quantity">
-
-  <button
-    onclick="addMaterial(${project.id})">
-    ＋ Add Material
-  </button>
-
-
-  ${
-    project.materials.length?
-
-    project.materials.map((material,index)=>`
-
-      <div class="item">
-
-        <div>
-
-          <b>
-            ${escapeHTML(material.name)}
-          </b>
-
-          ${
-            material.quantity?
-
-            `<br>
-             <small>
-               Quantity:
-               ${escapeHTML(material.quantity)}
-             </small>`
-
-            :""
-          }
-
-        </div>
-
-        <button
-          onclick="
-            addMaterialToShopping(
-              ${project.id},
-              ${index}
-            )
-          ">
-          🛒 Add
-        </button>
-
-      </div>
-
-    `).join("")
-
-    :
-
-    "<p>No materials added yet.</p>"
-
-  }
-
-</div>
-
+    <!-- =========================
+         MATERIALS
+         ========================= -->
+    <div class="card">
+      <h3>🛒 Materials</h3>
+      <p>
+        Add materials and supplies needed
+        for this project.
+      </p>
+      <input
+        id="materialName"
+        placeholder="Material or supply">
+      <input
+        id="materialQuantity"
+        placeholder="Quantity">
+      <button
+        onclick="addMaterial(${project.id})">
+        ＋ Add Material
+      </button>
+      ${
+        project.materials.length?
+        project.materials.map((material,index)=>`
+          <div class="item">
+            <div>
               <b>
                 ${escapeHTML(material.name)}
               </b>
-
               ${
                 material.quantity?
-
                 `<br>
                  <small>
                    Quantity:
                    ${escapeHTML(material.quantity)}
                  </small>`
-
-                :""
+                :
+                ""
               }
-
             </div>
-
+            <button
+              onclick="
+                addMaterialToShopping(
+                  ${project.id},
+                  ${index}
+                )
+              ">
+              🛒 Add
+            </button>
           </div>
-
         `).join("")
-
         :
-
         "<p>No materials added yet.</p>"
       }
-
     </div>
-
-
+    <!-- =========================
+         PROJECT BUDGET
+         ========================= -->
     <div class="card">
-
       <h3>💰 Project Budget</h3>
-
       <p>
         Estimated budget:
         <b>
           $${Number(project.budget||0).toFixed(2)}
         </b>
       </p>
-
     </div>
-
-
+    <!-- =========================
+         PERMANENT HOME RECORDS
+         ========================= -->
     <div class="card">
-
       <h3>🏠 Permanent Home Records</h3>
-
       <p>
         Paint, flooring, tile, fixtures,
         appliances and other confirmed
         products will be saved here.
       </p>
-
       ${
         project.records.length?
-
         project.records.map(record=>`
-
           <div class="item">
-
             <div>
-
               <b>
                 ${escapeHTML(record.name)}
               </b>
-
               <br>
-
               <small>
-                ${escapeHTML(record.type||"Home Record")}
+                ${escapeHTML(
+                  record.type||"Home Record"
+                )}
               </small>
-
             </div>
-
           </div>
-
         `).join("")
-
         :
-
         "<p>No permanent records yet.</p>"
       }
-
     </div>
-
-
     <button
       class="secondary"
       onclick="showPage('projects')">
       ← Back to Projects
     </button>
-
   `;
-
-
   showPage("workspace");
-
 }
-
 
 function toggleTask(projectId,index){
 
