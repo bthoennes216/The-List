@@ -1655,6 +1655,133 @@ function setTaskDate(
 
 }
 
+function addMaterial(projectId){
+
+  const nameInput=
+    document.getElementById(
+      "materialName"
+    );
+
+  const quantityInput=
+    document.getElementById(
+      "materialQuantity"
+    );
+
+
+  const name=
+    nameInput.value.trim();
+
+
+  const quantity=
+    quantityInput.value.trim();
+
+
+  if(!name)
+    return;
+
+
+  const project=
+    data.projects.find(
+      p=>p.id===projectId
+    );
+
+
+  if(!project)
+    return;
+
+
+  if(!Array.isArray(project.materials))
+    project.materials=[];
+
+
+  project.materials.push({
+
+    id:Date.now(),
+
+    name:name,
+
+    quantity:quantity,
+
+    addedToShopping:false
+
+  });
+
+
+  saveData();
+
+  openProject(projectId);
+
+}
+
+
+function addMaterialToShopping(
+  projectId,
+  materialIndex
+){
+
+  const project=
+    data.projects.find(
+      p=>p.id===projectId
+    );
+
+
+  if(!project)
+    return;
+
+
+  const material=
+    project.materials[materialIndex];
+
+
+  if(!material)
+    return;
+
+
+  /*
+    Prevent the same material from being
+    added to the Shopping List twice.
+  */
+
+  if(material.addedToShopping){
+
+    alert(
+      "This material is already on the Shopping List."
+    );
+
+    return;
+
+  }
+
+
+  data.shopping.push({
+
+    id:Date.now(),
+
+    name:material.name,
+
+    projectId:project.id,
+
+    quantity:material.quantity||"",
+
+    purchased:false
+
+  });
+
+
+  material.addedToShopping=true;
+
+
+  saveData();
+
+
+  alert(
+    "Added to Shopping List!"
+  );
+
+
+  openProject(projectId);
+
+}
 
 function addTask(projectId){
 
