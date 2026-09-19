@@ -2078,7 +2078,488 @@ function changeMonth(amount){
 
 }
 
+function renderCalendarToday(){
 
+  const container=
+    document.getElementById(
+      "calendarTodaySummary"
+    );
+
+  if(!container)
+    return;
+
+
+  const today=
+    new Date();
+
+  const todayKey=
+    dateToKey(today);
+
+
+  const nextSeven=[];
+
+  const overdue=[];
+
+  const todayTasks=[];
+
+  const todayEvents=[];
+
+
+  /*
+    Find project tasks
+  */
+
+  data.projects.forEach(project=>{
+
+    project.tasks.forEach((task,index)=>{
+
+      if(
+        task.dueDate &&
+        !task.done
+      ){
+
+        if(task.dueDate < todayKey){
+
+          overdue.push({
+            project,
+            task,
+            index
+          });
+
+        }
+
+        if(task.dueDate === todayKey){
+
+          todayTasks.push({
+            project,
+            task,
+            index
+          });
+
+        }
+
+        if(
+          task.dueDate > todayKey
+        ){
+
+          const taskDate=
+            new Date(
+              Number(task.dueDate.split("-")[0]),
+              Number(task.dueDate.split("-")[1])-1,
+              Number(task.dueDate.split("-")[2])
+            );
+
+          const diff=
+            Math.round(
+              (
+                taskDate-today
+              )/
+              86400000
+            );
+
+
+          if(
+            diff>=1 &&
+            diff<=7
+          ){
+
+            nextSeven.push({
+              project,
+              task,
+              index
+            });
+
+          }
+
+        }
+
+      }
+
+    });
+
+  });
+
+
+  /*
+    Find today's calendar events
+  */
+
+  data.calendar.forEach(event=>{
+
+    if(event.date===todayKey){
+
+      todayEvents.push(event);
+
+    }
+
+  });
+
+
+  /*
+    Find upcoming calendar events
+  */
+
+  data.calendar.forEach(event=>{
+
+    if(
+      event.date &&
+      event.date>todayKey
+    ){
+
+      const parts=
+        event.date.split("-");
+
+
+      const eventDate=
+        new Date(
+          Number(parts[0]),
+          Number(parts[1])-1,
+          Number(parts[2])
+        );
+
+
+      const diff=
+        Math.round(
+          (
+            eventDate-today
+          )/
+          86400000
+        );
+
+
+      if(
+        diff>=1 &&
+        diff<=7
+      ){
+
+        nextSeven.push({
+          event
+        });
+
+      }
+
+    }
+
+  });
+
+
+  /*
+    Sort upcoming items by date
+  */
+
+  nextSeven.sort((a,b)=>{
+
+    const dateA=
+      a.task?
+      a.task.dueDate:
+      a.event.date;
+
+
+    const dateB=
+      b.task?
+      b.task.dueDate:
+      b.event.date;
+
+
+    return dateA.localeCompare(dateB);
+
+  });
+
+
+  let html="";
+
+
+  /*
+    OVERDUE
+  */
+
+  if(overdue.length){
+
+    html+=`
+
+      <div class="todaySection">
+
+        <h3>⚠️ Overdue</h3>
+
+    `;
+
+
+    overdue.forEach(x=>{
+
+      html+=`
+
+        <div class="item">
+
+          <div>
+
+            <b>
+              ${escapeHTML(x.task.name)}
+            </b>
+
+            <br>
+
+            <span class="badge overdueBadge">
+              Due ${escapeHTML(
+                formatDate(x.task.dueDate)
+              )}
+            </span>
+
+            <br>
+
+            <small>
+              ${escapeHTML(x.project.name)}
+            </small>
+
+          </div>
+
+          <button
+            onclick="
+              openProject(${x.project.id})
+            ">
+            Open
+          </button>
+
+        </div>
+
+      `;
+
+    });
+
+
+    html+=`
+
+      </div>
+
+    `;
+
+  }
+
+
+  /*
+    TODAY'S TASKS
+  */
+
+  if(todayTasks.length){
+
+    html+=`
+
+      <div class="todaySection">
+
+        <h3>📋 Tasks Today</h3>
+
+    `;
+
+
+    todayTasks.forEach(x=>{
+
+      html+=`
+
+        <div class="item">
+
+          <div>
+
+            <b>
+              ${escapeHTML(x.task.name)}
+            </b>
+
+            <br>
+
+            <small>
+              ${escapeHTML(x.project.name)}
+            </small>
+
+          </div>
+
+          <button
+            onclick="
+              openProject(${x.project.id})
+            ">
+            Open
+          </button>
+
+        </div>
+
+      `;
+
+    });
+
+
+    html+=`
+
+      </div>
+
+    `;
+
+  }
+
+
+  /*
+    TODAY'S EVENTS
+  */
+
+  if(todayEvents.length){
+
+    html+=`
+
+      <div class="todaySection">
+
+        <h3>📅 Events Today</h3>
+
+    `;
+
+
+    todayEvents.forEach(event=>{
+
+      html+=`
+
+        <div class="item">
+
+          <div>
+
+            <b>
+              ${escapeHTML(event.title)}
+            </b>
+
+            <br>
+
+            <span class="badge todayBadge">
+              Today
+            </span>
+
+          </div>
+
+        </div>
+
+      `;
+
+    });
+
+
+    html+=`
+
+      </div>
+
+    `;
+
+  }
+
+
+  /*
+    NEXT 7 DAYS
+  */
+
+  if(nextSeven.length){
+
+    html+=`
+
+      <div class="todaySection">
+
+        <h3>🔜 Next 7 Days</h3>
+
+    `;
+
+
+    nextSeven.forEach(x=>{
+
+      if(x.task){
+
+        html+=`
+
+          <div class="item">
+
+            <div>
+
+              <b>
+                📋 ${escapeHTML(x.task.name)}
+              </b>
+
+              <br>
+
+              <span class="badge upcomingBadge">
+                ${escapeHTML(
+                  formatDate(x.task.dueDate)
+                )}
+              </span>
+
+              <br>
+
+              <small>
+                ${escapeHTML(x.project.name)}
+              </small>
+
+            </div>
+
+            <button
+              onclick="
+                openProject(${x.project.id})
+              ">
+              Open
+            </button>
+
+          </div>
+
+        `;
+
+      }else{
+
+        html+=`
+
+          <div class="item">
+
+            <div>
+
+              <b>
+                📅 ${escapeHTML(x.event.title)}
+              </b>
+
+              <br>
+
+              <span class="badge upcomingBadge">
+                ${escapeHTML(
+                  formatDate(x.event.date)
+                )}
+              </span>
+
+            </div>
+
+          </div>
+
+        `;
+
+      }
+
+    });
+
+
+    html+=`
+
+      </div>
+
+    `;
+
+  }
+
+
+  /*
+    NOTHING SCHEDULED
+  */
+
+  if(!html){
+
+    html=`
+
+      <p class="todayEmpty">
+        Nothing scheduled. You're all caught up! 🎉
+      </p>
+
+    `;
+
+  }
+
+
+  container.innerHTML=html;
+
+}
 function renderCalendar(){
 
   const year=
