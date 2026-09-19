@@ -144,8 +144,13 @@ label{
     </div>
 
     <div class="stat">
-      <b id="taskCount">0</b>
-      Tasks
+     let tasks=0;
+
+data.projects.forEach(p=>{
+  tasks+=p.tasks.length;
+});
+
+document.getElementById("taskCount").textContent=tasks;
     </div>
   </div>
 
