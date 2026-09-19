@@ -150,7 +150,10 @@ label{
   background:#b3261e;
 }
 
-/* CALENDAR */
+
+/* =========================
+   CALENDAR
+   ========================= */
 
 .calendarHeader{
   display:flex;
@@ -185,13 +188,24 @@ label{
   padding:6px 2px;
 }
 
+
+/*
+  IMPORTANT:
+  Calendar days now have a fixed height.
+  This prevents a busy/selected day from
+  stretching the calendar row.
+*/
+
 .calendarDay{
+  height:70px;
   min-height:70px;
   background:#f7f7f8;
   border-radius:9px;
   padding:7px 4px;
   border:1px solid #eee;
   cursor:pointer;
+  overflow:hidden;
+  position:relative;
 }
 
 .calendarDay.empty{
@@ -204,26 +218,53 @@ label{
   border:2px solid #222;
 }
 
+
+/*
+  Selected day gets a highlight,
+  but the height remains exactly the same.
+*/
+
 .calendarDay.selected{
-  background:#e5e5e5;
+  background:#dedede;
+  border:2px solid #222;
 }
 
 .calendarNumber{
   font-weight:700;
   font-size:14px;
+  line-height:16px;
 }
 
 .calendarDots{
-  margin-top:6px;
+  margin-top:5px;
+  overflow:hidden;
 }
 
 .calendarDot{
   display:block;
   font-size:10px;
+  line-height:13px;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  margin-top:3px;
+  margin-top:2px;
+}
+
+.calendarMore{
+  display:block;
+  font-size:9px;
+  line-height:12px;
+  font-weight:700;
+  color:#666;
+  white-space:nowrap;
+}
+
+.selectedDateCard{
+  border:2px solid #ddd;
+}
+
+.selectedDateEmpty{
+  color:#777;
 }
 
 .upcomingDate{
@@ -240,14 +281,23 @@ label{
 }
 
 @media(max-width:400px){
+
   .calendarDay{
+    height:62px;
     min-height:62px;
     padding:5px 3px;
   }
 
   .calendarDot{
     font-size:9px;
+    line-height:11px;
   }
+
+  .calendarMore{
+    font-size:8px;
+    line-height:10px;
+  }
+
 }
 </style>
 </head>
@@ -273,12 +323,15 @@ label{
   <div class="card">
     <h1>🏡 The List</h1>
     <p id="homeSummary"></p>
+
     <button onclick="showPage('homeInfo')">
       ✏️ Edit Home Information
     </button>
   </div>
 
+
   <div class="card">
+
     <h2>📊 At a Glance</h2>
 
     <div class="stat">
@@ -290,42 +343,59 @@ label{
       <b id="taskCount">0</b>
       Tasks Remaining
     </div>
+
   </div>
 
+
   <div class="card">
+
     <h2>🎯 Your Projects</h2>
+
     <div id="homeProjects"></div>
 
     <button onclick="showPage('projects')">
       📋 View All Projects
     </button>
+
   </div>
 
+
   <div class="card">
+
     <h2>📅 Coming Up</h2>
+
     <div id="homeUpcoming"></div>
 
     <button onclick="showPage('calendar')">
       📅 Open Calendar
     </button>
+
   </div>
 
+
   <div class="card">
+
     <h2>🛒 Shopping</h2>
+
     <p>Materials and supplies you still need.</p>
 
     <button onclick="showPage('shopping')">
       🛒 Open Shopping List
     </button>
+
   </div>
 
+
   <div class="card">
+
     <h2>🔧 Maintenance</h2>
+
     <p>Keep track of important home maintenance.</p>
 
     <button onclick="showPage('maintenance')">
       🔧 Open Maintenance
     </button>
+
   </div>
 
 </section>
@@ -334,11 +404,13 @@ label{
 <section id="projectsPage" class="hidden">
 
   <div class="card">
+
     <h2>📋 Projects</h2>
 
     <button onclick="newProject()">
       ＋ New Project
     </button>
+
   </div>
 
   <div id="projectsList"></div>
@@ -377,6 +449,7 @@ label{
 
   </div>
 
+
   <div class="card">
 
     <h2>🛍️ Items to Buy</h2>
@@ -409,6 +482,7 @@ label{
 
     </div>
 
+
     <div
       id="calendarGrid"
       class="calendarGrid">
@@ -417,14 +491,17 @@ label{
   </div>
 
 
-  <div class="card">
+  <div
+    class="card selectedDateCard">
 
     <h2 id="selectedDateTitle">
       📅 Select a Date
     </h2>
 
     <div id="selectedDateTasks">
-      <p>Tap a date on the calendar.</p>
+      <p class="selectedDateEmpty">
+        Tap a date on the calendar.
+      </p>
     </div>
 
   </div>
@@ -483,6 +560,7 @@ label{
     </button>
 
   </div>
+
 
   <div class="card">
 
@@ -768,22 +846,30 @@ const defaultData={
 };
 
 
-let data=JSON.parse(localStorage.getItem(STORAGE_KEY));
+let data=JSON.parse(
+  localStorage.getItem(STORAGE_KEY)
+);
 
 
 if(!data){
 
   data=defaultData;
+
   saveData();
 
 }else{
 
-  if(!data.home)data.home={};
+  if(!data.home)
+    data.home={};
+
 
   Object.keys(defaultData.home).forEach(key=>{
 
     if(data.home[key]===undefined){
-      data.home[key]=defaultData.home[key];
+
+      data.home[key]=
+        defaultData.home[key];
+
     }
 
   });
@@ -830,9 +916,6 @@ if(!data){
       if(task.done===undefined)
         task.done=false;
 
-      /*
-        Every task now has a calendar date.
-      */
 
       if(task.dueDate===undefined)
         task.dueDate="";
@@ -847,7 +930,9 @@ if(!data){
 }
 
 
-/* Calendar state */
+/* =========================
+   CALENDAR STATE
+   ========================= */
 
 let calendarViewDate=new Date();
 
@@ -887,17 +972,23 @@ function dateToKey(date){
 
 function formatDate(dateString){
 
-  if(!dateString)return "No date";
+  if(!dateString)
+    return "No date";
+
 
   const parts=dateString.split("-");
 
-  if(parts.length!==3)return dateString;
+
+  if(parts.length!==3)
+    return dateString;
+
 
   const date=new Date(
     Number(parts[0]),
     Number(parts[1])-1,
     Number(parts[2])
   );
+
 
   return date.toLocaleDateString(
     undefined,
@@ -916,7 +1007,9 @@ function showPage(page){
   document.querySelectorAll(
     "main>section"
   ).forEach(section=>{
+
     section.classList.add("hidden");
+
   });
 
 
@@ -932,20 +1025,31 @@ function showPage(page){
   if(page==="home")
     renderHome();
 
+
   if(page==="projects")
     renderProjects();
+
 
   if(page==="shopping")
     renderShopping();
 
-  if(page==="calendar")
+
+  if(page==="calendar"){
+
     renderCalendar();
+
+    renderCalendarList();
+
+  }
+
 
   if(page==="maintenance")
     renderMaintenance();
 
+
   if(page==="homeInfo")
     renderHomeInfo();
+
 
   if(page==="family")
     renderFamily();
@@ -953,7 +1057,9 @@ function showPage(page){
 }
 
 
-/* HOME */
+/* =========================
+   HOME
+   ========================= */
 
 function renderHome(){
 
@@ -994,7 +1100,9 @@ function renderHome(){
       const completed=
         p.tasks.filter(t=>t.done).length;
 
+
       const total=p.tasks.length;
+
 
       const percent=
         total?
@@ -1008,7 +1116,11 @@ function renderHome(){
 
           <div>
 
-            <b>${escapeHTML(p.name)}</b><br>
+            <b>
+              ${escapeHTML(p.name)}
+            </b>
+
+            <br>
 
             <span class="badge">
               ${escapeHTML(p.category)}
@@ -1128,7 +1240,9 @@ function renderHomeUpcoming(){
 }
 
 
-/* PROJECTS */
+/* =========================
+   PROJECTS
+   ========================= */
 
 function renderProjects(){
 
@@ -1143,6 +1257,7 @@ function renderProjects(){
 
       const completed=
         p.tasks.filter(t=>t.done).length;
+
 
       const total=p.tasks.length;
 
@@ -1182,7 +1297,9 @@ function renderProjects(){
 }
 
 
-/* PROJECT WORKSPACE */
+/* =========================
+   PROJECT WORKSPACE
+   ========================= */
 
 function openProject(id){
 
@@ -1192,7 +1309,8 @@ function openProject(id){
     );
 
 
-  if(!project)return;
+  if(!project)
+    return;
 
 
   document.getElementById(
@@ -1293,6 +1411,7 @@ function openProject(id){
           <div class="item">
 
             <div>
+
               <b>
                 ${escapeHTML(material.name)}
               </b>
@@ -1355,6 +1474,7 @@ function openProject(id){
           <div class="item">
 
             <div>
+
               <b>
                 ${escapeHTML(record.name)}
               </b>
@@ -1401,7 +1521,8 @@ function toggleTask(projectId,index){
     );
 
 
-  if(!project)return;
+  if(!project)
+    return;
 
 
   project.tasks[index].done=
@@ -1429,7 +1550,8 @@ function setTaskDate(
     );
 
 
-  if(!project)return;
+  if(!project)
+    return;
 
 
   if(!project.tasks[index])
@@ -1443,10 +1565,6 @@ function setTaskDate(
 
   renderHome();
 
-
-  /*
-    Keep the workspace open.
-  */
 
   openProject(projectId);
 
@@ -1471,7 +1589,8 @@ function addTask(projectId){
     );
 
 
-  if(!project)return;
+  if(!project)
+    return;
 
 
   project.tasks.push({
@@ -1498,7 +1617,8 @@ function newProject(){
     prompt("Project name:");
 
 
-  if(!name)return;
+  if(!name)
+    return;
 
 
   const category=
@@ -1538,7 +1658,9 @@ function newProject(){
 }
 
 
-/* HOME INFORMATION */
+/* =========================
+   HOME INFORMATION
+   ========================= */
 
 function renderHomeInfo(){
 
@@ -1716,16 +1838,20 @@ function saveHomeInfo(){
 
   saveData();
 
+
   alert(
     "Home Information saved!"
   );
+
 
   showPage("home");
 
 }
 
 
-/* SHOPPING */
+/* =========================
+   SHOPPING
+   ========================= */
 
 function addShopping(){
 
@@ -1908,13 +2034,16 @@ function toggleShopping(id){
 }
 
 
-/* CALENDAR */
+/* =========================
+   CALENDAR
+   ========================= */
 
 function changeMonth(amount){
 
   calendarViewDate.setMonth(
     calendarViewDate.getMonth()+amount
   );
+
 
   renderCalendar();
 
@@ -2037,18 +2166,34 @@ function renderCalendar(){
       getEventsForDate(key);
 
 
-    const allItems=
-      [
-        ...taskItems.map(x=>({
-          text:x.task.name,
-          type:"task"
-        })),
+    const allItems=[
 
-        ...eventItems.map(x=>({
-          text:x.title,
-          type:"event"
-        }))
-      ];
+      ...taskItems.map(x=>({
+        text:x.task.name,
+        type:"task"
+      })),
+
+      ...eventItems.map(x=>({
+        text:x.title,
+        type:"event"
+      }))
+
+    ];
+
+
+    /*
+      Only display two items inside the
+      calendar cell. The rest appear as
+      "+N more". The cell can never grow.
+    */
+
+    const visibleItems=
+      allItems.slice(0,2);
+
+
+    const remaining=
+      allItems.length-
+      visibleItems.length;
 
 
     html+=`
@@ -2070,31 +2215,29 @@ function renderCalendar(){
         <div class="calendarDots">
 
           ${
-            allItems
-              .slice(0,3)
-              .map(item=>`
+            visibleItems.map(item=>`
 
-                <span class="calendarDot">
+              <span class="calendarDot">
 
-                  ${
-                    item.type==="task"?
-                    "📋":
-                    "📅"
-                  }
+                ${
+                  item.type==="task"?
+                  "📋":
+                  "📅"
+                }
 
-                  ${escapeHTML(item.text)}
+                ${escapeHTML(item.text)}
 
-                </span>
+              </span>
 
-              `)
-              .join("")
+            `).join("")
           }
 
-          ${
-            allItems.length>3?
 
-            `<span class="calendarDot">
-              +${allItems.length-3} more
+          ${
+            remaining>0?
+
+            `<span class="calendarMore">
+              +${remaining} more
             </span>`
 
             :
@@ -2114,11 +2257,12 @@ function renderCalendar(){
   grid.innerHTML=html;
 
 
-  if(selectedCalendarDate){
+  /*
+    The selected date details are always
+    displayed in the card underneath.
+  */
 
-    renderSelectedDate();
-
-  }
+  renderSelectedDate();
 
 }
 
@@ -2167,8 +2311,6 @@ function selectCalendarDate(date){
 
   renderCalendar();
 
-  renderSelectedDate();
-
 }
 
 
@@ -2191,8 +2333,12 @@ function renderSelectedDate(){
     title.textContent=
       "📅 Select a Date";
 
+
     container.innerHTML=
-      "<p>Tap a date on the calendar.</p>";
+      `<p class="selectedDateEmpty">
+        Tap a date on the calendar.
+      </p>`;
+
 
     return;
 
@@ -2262,9 +2408,11 @@ function renderSelectedDate(){
       <div class="item">
 
         <div>
+
           <b>
             📅 ${escapeHTML(event.title)}
           </b>
+
         </div>
 
       </div>
@@ -2328,6 +2476,7 @@ function addCalendar(){
 
   saveData();
 
+
   selectedCalendarDate=date;
 
 
@@ -2348,7 +2497,7 @@ function addCalendar(){
 
   renderCalendar();
 
-  renderSelectedDate();
+  renderCalendarList();
 
   renderHome();
 
@@ -2406,7 +2555,9 @@ function renderCalendarList(){
 }
 
 
-/* MAINTENANCE */
+/* =========================
+   MAINTENANCE
+   ========================= */
 
 function addMaintenance(){
 
@@ -2416,7 +2567,8 @@ function addMaintenance(){
     ).value.trim();
 
 
-  if(!name)return;
+  if(!name)
+    return;
 
 
   data.maintenance.push({
@@ -2516,7 +2668,9 @@ function renderMaintenance(){
 }
 
 
-/* FAMILY */
+/* =========================
+   FAMILY
+   ========================= */
 
 function renderFamily(){
 
@@ -2547,7 +2701,9 @@ function saveFamilyNote(){
 }
 
 
-/* INITIAL LOAD */
+/* =========================
+   INITIAL LOAD
+   ========================= */
 
 renderHome();
 
