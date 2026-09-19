@@ -128,7 +128,15 @@ label{
 <section id="homePage">
 
   <div class="card">
-    <h2>Home Dashboard</h2>
+    <h1>🏡 The List</h1>
+    <p id="homeSummary"></p>
+    <button onclick="showPage('homeInfo')">
+      ✏️ Edit Home Information
+    </button>
+  </div>
+
+  <div class="card">
+    <h2>📊 At a Glance</h2>
 
     <div class="stat">
       <b id="projectCount">0</b>
@@ -142,16 +150,39 @@ label{
   </div>
 
   <div class="card">
-    <h2>🏠 Home</h2>
-    <p id="homeSummary"></p>
-    <button onclick="showPage('homeInfo')">
-      ✏️ Edit Home Information
+    <h2>🎯 Your Projects</h2>
+    <div id="homeProjects"></div>
+
+    <button onclick="showPage('projects')">
+      📋 View All Projects
     </button>
   </div>
 
   <div class="card">
-    <h2>Projects</h2>
-    <div id="homeProjects"></div>
+    <h2>📅 Coming Up</h2>
+    <p>Your upcoming home tasks will appear here.</p>
+
+    <button onclick="showPage('calendar')">
+      📅 Open Calendar
+    </button>
+  </div>
+
+  <div class="card">
+    <h2>🛒 Shopping</h2>
+    <p>Materials and supplies you still need.</p>
+
+    <button onclick="showPage('shopping')">
+      🛒 Open Shopping List
+    </button>
+  </div>
+
+  <div class="card">
+    <h2>🔧 Maintenance</h2>
+    <p>Keep track of important home maintenance.</p>
+
+    <button onclick="showPage('maintenance')">
+      🔧 Open Maintenance
+    </button>
   </div>
 
 </section>
