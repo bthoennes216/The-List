@@ -1426,22 +1426,76 @@ function openProject(id){
     </div>
 
 
-    <div class="card">
+<div class="card">
 
-      <h3>🛒 Materials</h3>
+  <h3>🛒 Materials</h3>
 
-      <p>
-        Materials for this project will live here.
-      </p>
+  <p>
+    Add materials and supplies needed for this project.
+  </p>
 
-      ${
-        project.materials.length?
+  <input
+    id="materialName"
+    placeholder="Material or supply">
 
-        project.materials.map(material=>`
+  <input
+    id="materialQuantity"
+    placeholder="Quantity">
 
-          <div class="item">
+  <button
+    onclick="addMaterial(${project.id})">
+    ＋ Add Material
+  </button>
 
-            <div>
+
+  ${
+    project.materials.length?
+
+    project.materials.map((material,index)=>`
+
+      <div class="item">
+
+        <div>
+
+          <b>
+            ${escapeHTML(material.name)}
+          </b>
+
+          ${
+            material.quantity?
+
+            `<br>
+             <small>
+               Quantity:
+               ${escapeHTML(material.quantity)}
+             </small>`
+
+            :""
+          }
+
+        </div>
+
+        <button
+          onclick="
+            addMaterialToShopping(
+              ${project.id},
+              ${index}
+            )
+          ">
+          🛒 Add
+        </button>
+
+      </div>
+
+    `).join("")
+
+    :
+
+    "<p>No materials added yet.</p>"
+
+  }
+
+</div>
 
               <b>
                 ${escapeHTML(material.name)}
