@@ -2007,16 +2007,43 @@ function showPlanPreview(){
   preview.innerHTML=`
 
     <h2>
-      ✨ Your Project Plan
+      ✨ Build Your Project Plan
     </h2>
 
     <span class="badge">
       ${escapeHTML(aiPlanDraft.category)}
     </span>
 
-    <p>
-      ${escapeHTML(aiPlanDraft.description)}
-    </p>
+
+    <div class="card">
+
+      <h3>🏠 Project Details</h3>
+
+      <label>Project Name</label>
+
+      <input
+        id="aiProjectName"
+        value="${escapeHTML(aiPlanDraft.name)}">
+
+
+      <label>Description</label>
+
+      <textarea
+        id="aiProjectDescription"
+        rows="3">${escapeHTML(aiPlanDraft.description)}</textarea>
+
+
+      <label>Estimated Budget</label>
+
+      <input
+        id="aiProjectBudget"
+        type="number"
+        min="0"
+        step="1"
+        placeholder="Enter estimated budget"
+        value="${aiPlanDraft.budget||""}">
+
+    </div>
 
 
     <div class="card">
@@ -2024,29 +2051,42 @@ function showPlanPreview(){
       <h3>📋 Tasks</h3>
 
       <p>
-        ${aiPlanDraft.tasks.length}
-        suggested tasks
+        Edit the plan before adding it to your project.
       </p>
 
-      ${
+      <div id="aiTasksList">
 
-        aiPlanDraft.tasks.map((task,index)=>`
+        ${
+          aiPlanDraft.tasks.map((task,index)=>`
 
-          <div class="task">
+            <div
+              class="item"
+              style="display:flex;gap:8px;align-items:center;">
 
-            <input
-              type="checkbox"
-              checked>
+              <input
+                id="aiTask${index}"
+                value="${escapeHTML(task)}"
+                style="flex:1;">
 
-            <span>
-              ${escapeHTML(task)}
-            </span>
+              <button
+                class="secondary"
+                onclick="removeAIPlanTask(${index})">
+                🗑️
+              </button>
 
-          </div>
+            </div>
 
-        `).join("")
+          `).join("")
+        }
 
-      }
+      </div>
+
+
+      <button
+        onclick="addAIPlanTask()"
+        style="margin-top:10px;">
+        ＋ Add Task
+      </button>
 
     </div>
 
@@ -2055,37 +2095,57 @@ function showPlanPreview(){
 
       <h3>🛒 Materials</h3>
 
-      ${
+      <div id="aiMaterialsList">
 
-        aiPlanDraft.materials.length?
+        ${
+          aiPlanDraft.materials.length?
 
-        aiPlanDraft.materials.map(material=>`
+          aiPlanDraft.materials.map((material,index)=>`
 
-          <div class="item">
+            <div
+              class="item"
+              style="display:flex;gap:8px;align-items:center;">
 
-            <div>
+              <div style="flex:1;">
 
-              <b>
-                ${escapeHTML(material.name)}
-              </b>
+                <input
+                  id="aiMaterialName${index}"
+                  value="${escapeHTML(material.name)}"
+                  placeholder="Material name">
 
-              <br>
 
-              <small>
-                ${escapeHTML(material.quantity)}
-              </small>
+                <input
+                  id="aiMaterialQuantity${index}"
+                  value="${escapeHTML(material.quantity)}"
+                  placeholder="Quantity">
+
+              </div>
+
+
+              <button
+                class="secondary"
+                onclick="removeAIPlanMaterial(${index})">
+                🗑️
+              </button>
 
             </div>
 
-          </div>
+          `).join("")
 
-        `).join("")
+          :
 
-        :
+          "<p>No materials added yet.</p>"
 
-        "<p>Materials will be added as the project is developed.</p>"
+        }
 
-      }
+      </div>
+
+
+      <button
+        onclick="addAIPlanMaterial()"
+        style="margin-top:10px;">
+        ＋ Add Material
+      </button>
 
     </div>
 
@@ -2095,6 +2155,7 @@ function showPlanPreview(){
       <h3>❓ Things We Need to Know</h3>
 
       ${
+        aiPlanDraft.questions.length?
 
         aiPlanDraft.questions.map(question=>`
 
@@ -2106,6 +2167,10 @@ function showPlanPreview(){
 
         `).join("")
 
+        :
+
+        "<p>No additional questions.</p>"
+
       }
 
     </div>
@@ -2116,14 +2181,17 @@ function showPlanPreview(){
       <h3>🤖 AI Plan Review</h3>
 
       <p>
-        This is a starting plan. You can review
-        it before anything is added to your project.
+        Review and edit everything above.
+        Nothing will be added to your Projects until
+        you approve the plan.
       </p>
+
 
       <button
         onclick="addAIPlanToProjects()">
         ✅ Add Plan to Project
       </button>
+
 
       <button
         class="secondary"
@@ -2140,12 +2208,166 @@ function showPlanPreview(){
   showPage("workspace");
 
 }
+function saveAIPlanEdits(){
 
+  if(!aiPlanDraft)
+    return;
+
+
+  const name=
+    document.getElementById("aiProjectName");
+
+  const description=
+    document.getElementById("aiProjectDescription");
+
+  const budget=
+    document.getElementById("aiProjectBudget");
+
+
+  if(name)
+    aiPlanDraft.name=name.value.trim();
+
+
+  if(description)
+    aiPlanDraft.description=
+      description.value.trim();
+
+
+  if(budget)
+    aiPlanDraft.budget=
+      Number(budget.value)||0;
+
+
+  aiPlanDraft.tasks=
+    aiPlanDraft.tasks.map((task,index)=>{
+
+      const input=
+        document.getElementById(
+          "aiTask"+index
+        );
+
+      return input?
+        input.value.trim():
+        task;
+
+    }).filter(task=>task);
+
+
+  aiPlanDraft.materials=
+    aiPlanDraft.materials.map((material,index)=>{
+
+      const nameInput=
+        document.getElementById(
+          "aiMaterialName"+index
+        );
+
+      const quantityInput=
+        document.getElementById(
+          "aiMaterialQuantity"+index
+        );
+
+      return {
+
+        name:
+          nameInput?
+          nameInput.value.trim():
+          material.name,
+
+        quantity:
+          quantityInput?
+          quantityInput.value.trim():
+          material.quantity
+
+      };
+
+    }).filter(material=>material.name);
+
+}
+
+
+function addAIPlanTask(){
+
+  saveAIPlanEdits();
+
+
+  aiPlanDraft.tasks.push(
+    "New task"
+  );
+
+
+  showPlanPreview();
+
+}
+
+
+function removeAIPlanTask(index){
+
+  saveAIPlanEdits();
+
+
+  aiPlanDraft.tasks.splice(
+    index,
+    1
+  );
+
+
+  showPlanPreview();
+
+}
+
+
+function addAIPlanMaterial(){
+
+  saveAIPlanEdits();
+
+
+  aiPlanDraft.materials.push({
+
+    name:"New material",
+
+    quantity:"Enter quantity"
+
+  });
+
+
+  showPlanPreview();
+
+}
+
+
+function removeAIPlanMaterial(index){
+
+  saveAIPlanEdits();
+
+
+  aiPlanDraft.materials.splice(
+    index,
+    1
+  );
+
+
+  showPlanPreview();
+
+}
 
 function addAIPlanToProjects(){
 
   if(!aiPlanDraft)
     return;
+
+
+  saveAIPlanEdits();
+
+
+  if(!aiPlanDraft.name){
+
+    alert(
+      "Please enter a project name."
+    );
+
+    return;
+
+  }
 
 
   const id=
@@ -2190,7 +2412,8 @@ function addAIPlanToProjects(){
 
     notes:"",
 
-    budget:0
+    budget:
+      aiPlanDraft.budget||0
 
   });
 
@@ -2202,7 +2425,7 @@ function addAIPlanToProjects(){
 
 
   alert(
-    "Your project plan has been added to The List!"
+    "Your approved project plan has been added to The List!"
   );
 
 
