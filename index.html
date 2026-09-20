@@ -188,14 +188,6 @@ label{
   padding:6px 2px;
 }
 
-
-/*
-  IMPORTANT:
-  Calendar days now have a fixed height.
-  This prevents a busy/selected day from
-  stretching the calendar row.
-*/
-
 .calendarDay{
   height:70px;
   min-height:70px;
@@ -217,12 +209,6 @@ label{
 .calendarDay.today{
   border:2px solid #222;
 }
-
-
-/*
-  Selected day gets a highlight,
-  but the height remains exactly the same.
-*/
 
 .calendarDay.selected{
   background:#dedede;
@@ -266,6 +252,7 @@ label{
 .selectedDateEmpty{
   color:#777;
 }
+
 .todaySection{
   margin-bottom:18px;
 }
@@ -290,6 +277,7 @@ label{
 .upcomingBadge{
   background:#e8e8e8;
 }
+
 .upcomingDate{
   font-size:13px;
   color:#666;
@@ -301,6 +289,21 @@ label{
   background:#eee;
   color:#222;
   font-size:14px;
+}
+
+.answerBox{
+  margin-bottom:18px;
+}
+
+.answerBox label{
+  margin-bottom:5px;
+}
+
+.planQuestion{
+  background:#f7f7f8;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:10px;
 }
 
 @media(max-width:400px){
@@ -345,6 +348,7 @@ label{
 
   <div class="card">
     <h1>🏡 The List</h1>
+
     <p id="homeSummary"></p>
 
     <button onclick="showPage('homeInfo')">
@@ -491,6 +495,7 @@ label{
 
 
 <section id="calendarPage" class="hidden">
+
   <div class="card">
 
     <h2>📅 Today & Upcoming</h2>
@@ -498,6 +503,8 @@ label{
     <div id="calendarTodaySummary"></div>
 
   </div>
+
+
   <div class="card">
 
     <div class="calendarHeader">
@@ -534,9 +541,11 @@ label{
     </h2>
 
     <div id="selectedDateTasks">
+
       <p class="selectedDateEmpty">
         Tap a date on the calendar.
       </p>
+
     </div>
 
   </div>
@@ -923,11 +932,6 @@ if(!data){
     data.calendar=[];
 
 
-  /*
-    Upgrade existing projects without deleting
-    anything already saved.
-  */
-
   data.projects.forEach(project=>{
 
     if(!Array.isArray(project.tasks))
@@ -945,12 +949,14 @@ if(!data){
     if(project.budget===undefined)
       project.budget=0;
 
+    if(!Array.isArray(project.answers))
+      project.answers=[];
+
 
     project.tasks.forEach(task=>{
 
       if(task.done===undefined)
         task.done=false;
-
 
       if(task.dueDate===undefined)
         task.dueDate="";
@@ -972,6 +978,13 @@ if(!data){
 let calendarViewDate=new Date();
 
 let selectedCalendarDate="";
+
+
+/* =========================
+   AI PLAN STATE
+   ========================= */
+
+let aiPlanDraft=null;
 
 
 function saveData(){
@@ -1069,7 +1082,7 @@ function showPage(page){
     renderShopping();
 
 
- if(page==="calendar"){
+  if(page==="calendar"){
 
     renderCalendarToday();
 
@@ -1077,7 +1090,7 @@ function showPage(page){
 
     renderCalendarList();
 
-}
+  }
 
 
   if(page==="maintenance")
@@ -1254,7 +1267,9 @@ function renderHomeUpcoming(){
           <br>
 
           <span class="upcomingDate">
-            ${escapeHTML(x.task.dueDate)}
+            ${escapeHTML(
+              formatDate(x.task.dueDate)
+            )}
           </span>
 
           <br>
@@ -1339,47 +1354,72 @@ function renderProjects(){
    ========================= */
 
 function openProject(id){
+
   const project=
     data.projects.find(
       p=>p.id===id
     );
+
+
   if(!project)
     return;
+
+
+  if(!Array.isArray(project.answers))
+    project.answers=[];
+
+
   document.getElementById(
     "workspaceContent"
   ).innerHTML=`
+
     <h2>
       ${escapeHTML(project.name)}
     </h2>
+
     <span class="badge">
       ${escapeHTML(project.category)}
     </span>
+
     <p>
       ${escapeHTML(project.description)}
     </p>
-    <!-- =========================
-         TASKS
-         ========================= -->
+
+
+    <!-- TASKS -->
+
     <div class="card">
+
       <h3>📋 Tasks</h3>
+
       ${
         project.tasks.length?
+
         project.tasks.map((task,i)=>`
+
           <div class="task">
+
             <input
               type="checkbox"
               ${task.done?"checked":""}
               onchange="
                 toggleTask(${project.id},${i})
               ">
+
             <span
               class="${task.done?"done":""}">
+
               ${escapeHTML(task.name)}
+
             </span>
+
           </div>
+
+
           <label>
             📅 Due Date
           </label>
+
           <input
             type="date"
             value="${escapeHTML(task.dueDate||"")}"
@@ -1390,56 +1430,82 @@ function openProject(id){
                 this.value
               )
             ">
+
         `).join("")
+
         :
+
         "<p>No tasks yet.</p>"
       }
+
+
       <input
         id="newTask"
         placeholder="Add a task">
+
       <button
         onclick="addTask(${project.id})">
         ＋ Add Task
       </button>
+
     </div>
-    <!-- =========================
-         MATERIALS
-         ========================= -->
+
+
+    <!-- MATERIALS -->
+
     <div class="card">
+
       <h3>🛒 Materials</h3>
+
       <p>
         Add materials and supplies needed
         for this project.
       </p>
+
       <input
         id="materialName"
         placeholder="Material or supply">
+
       <input
         id="materialQuantity"
         placeholder="Quantity">
+
       <button
         onclick="addMaterial(${project.id})">
         ＋ Add Material
       </button>
+
+
       ${
         project.materials.length?
+
         project.materials.map((material,index)=>`
+
           <div class="item">
+
             <div>
+
               <b>
                 ${escapeHTML(material.name)}
               </b>
+
               ${
                 material.quantity?
+
                 `<br>
                  <small>
                    Quantity:
                    ${escapeHTML(material.quantity)}
                  </small>`
+
                 :
+
                 ""
               }
+
             </div>
+
+
             <button
               onclick="
                 addMaterialToShopping(
@@ -1447,65 +1513,140 @@ function openProject(id){
                   ${index}
                 )
               ">
+
               🛒 Add
+
             </button>
+
           </div>
+
         `).join("")
+
         :
+
         "<p>No materials added yet.</p>"
       }
+
     </div>
-    <!-- =========================
-         PROJECT BUDGET
-         ========================= -->
+
+
+    <!-- BUDGET -->
+
     <div class="card">
+
       <h3>💰 Project Budget</h3>
+
       <p>
         Estimated budget:
         <b>
           $${Number(project.budget||0).toFixed(2)}
         </b>
       </p>
+
     </div>
-    <!-- =========================
-         PERMANENT HOME RECORDS
-         ========================= -->
+
+
+    <!-- QUESTIONS AND ANSWERS -->
+
     <div class="card">
+
+      <h3>❓ Project Details & Answers</h3>
+
+      ${
+        project.answers.length?
+
+        project.answers.map(item=>`
+
+          <div class="planQuestion">
+
+            <b>
+              ${escapeHTML(item.question)}
+            </b>
+
+            <br>
+
+            <span>
+              ${
+                item.answer?
+                escapeHTML(item.answer):
+                "<em>No answer provided</em>"
+              }
+            </span>
+
+          </div>
+
+        `).join("")
+
+        :
+
+        "<p>No planning questions saved for this project.</p>"
+      }
+
+    </div>
+
+
+    <!-- HOME RECORDS -->
+
+    <div class="card">
+
       <h3>🏠 Permanent Home Records</h3>
+
       <p>
         Paint, flooring, tile, fixtures,
         appliances and other confirmed
         products will be saved here.
       </p>
+
       ${
         project.records.length?
+
         project.records.map(record=>`
+
           <div class="item">
+
             <div>
+
               <b>
                 ${escapeHTML(record.name)}
               </b>
+
               <br>
+
               <small>
                 ${escapeHTML(
                   record.type||"Home Record"
                 )}
               </small>
+
             </div>
+
           </div>
+
         `).join("")
+
         :
+
         "<p>No permanent records yet.</p>"
       }
+
     </div>
+
+
     <button
       class="secondary"
       onclick="showPage('projects')">
+
       ← Back to Projects
+
     </button>
+
   `;
+
+
   showPage("workspace");
+
 }
+
 
 function toggleTask(projectId,index){
 
@@ -1559,10 +1700,10 @@ function setTaskDate(
 
   renderHome();
 
-
   openProject(projectId);
 
 }
+
 
 function addMaterial(projectId){
 
@@ -1570,6 +1711,7 @@ function addMaterial(projectId){
     document.getElementById(
       "materialName"
     );
+
 
   const quantityInput=
     document.getElementById(
@@ -1646,11 +1788,6 @@ function addMaterialToShopping(
     return;
 
 
-  /*
-    Prevent the same material from being
-    added to the Shopping List twice.
-  */
-
   if(material.addedToShopping){
 
     alert(
@@ -1691,6 +1828,7 @@ function addMaterialToShopping(
   openProject(projectId);
 
 }
+
 
 function addTask(projectId){
 
@@ -1767,7 +1905,9 @@ function newProject(){
 
     notes:"",
 
-    budget:0
+    budget:0,
+
+    answers:[]
 
   });
 
@@ -1777,12 +1917,11 @@ function newProject(){
   renderProjects();
 
 }
+
+
 /* =========================
    BUILD MY PLAN
    ========================= */
-
-let aiPlanDraft=null;
-
 
 function buildMyPlan(){
 
@@ -1806,191 +1945,418 @@ function buildMyPlan(){
     )||"";
 
 
-  /*
-    Stage 1:
-    Simulated AI plan generator.
-
-    Later this function will send the
-    project information to a real AI service.
-  */
-
   const lowerName=
     projectName.toLowerCase();
 
 
-  if(
-    lowerName.includes("fence")
-  ){
+  let questions=[];
 
-    aiPlanDraft={
 
-      name:"🪚 "+projectName,
+  if(lowerName.includes("fence")){
 
-      category:"Exterior",
+    questions=[
 
-      description:
-        description||
-        "Design and build the property fence.",
+      {
+        question:
+          "How many linear feet of fence are needed?",
+        answer:""
+      },
 
-      budget:0,
-      
-      tasks:[
+      {
+        question:
+          "What fence style do you want?",
+        answer:""
+      },
 
-        "Measure property and fence runs",
+      {
+        question:
+          "What height should the fence be?",
+        answer:""
+      },
 
-        "Verify property boundaries",
+      {
+        question:
+          "Where should the gates go?",
+        answer:""
+      },
 
-        "Check local requirements and permits",
+      {
+        question:
+          "What gate sizes are needed?",
+        answer:""
+      },
 
-        "Check HOA requirements",
+      {
+        question:
+          "What is your target budget?",
+        answer:""
+      },
 
-        "Choose fence style",
+      {
+        question:
+          "Are there any HOA or property-line requirements?",
+        answer:""
+      }
 
-        "Choose fence height",
-
-        "Plan gate locations",
-
-        "Calculate total linear footage",
-
-        "Determine post spacing",
-
-        "Calculate number of posts",
-
-        "Calculate rails or panels",
-
-        "Calculate concrete requirements",
-
-        "Price materials",
-
-        "Purchase materials",
-
-        "Mark fence and post locations",
-
-        "Dig post holes",
-
-        "Set fence posts",
-
-        "Install rails or panels",
-
-        "Build and install gates",
-
-        "Final inspection and cleanup"
-
-      ],
-
-      materials:[
-
-        {
-          name:"Fence posts",
-          quantity:"Calculate after measuring"
-        },
-
-        {
-          name:"Fence panels or pickets",
-          quantity:"Calculate from fence length"
-        },
-
-        {
-          name:"Rails",
-          quantity:"Calculate from fence design"
-        },
-
-        {
-          name:"Gate hardware",
-          quantity:"As required"
-        },
-
-        {
-          name:"Concrete",
-          quantity:"Calculate from number of posts"
-        },
-
-        {
-          name:"Post caps",
-          quantity:"One per post"
-        },
-
-        {
-          name:"Exterior screws / fasteners",
-          quantity:"As required"
-        },
-
-        {
-          name:"Gravel",
-          quantity:"As required"
-        }
-
-      ],
-
-      questions:[
-
-        "How many linear feet of fence are needed?",
-
-        "What fence style do you want?",
-
-        "What height should the fence be?",
-
-        "Where should the gates go?",
-
-        "What gate sizes are needed?"
-
-      ]
-
-    };
+    ];
 
   }else{
 
-    aiPlanDraft={
+    questions=[
 
-      name:"🛠️ "+projectName,
+      {
+        question:
+          "What are the project dimensions?",
+        answer:""
+      },
 
-      category:"Custom",
+      {
+        question:
+          "What materials do you want to use?",
+        answer:""
+      },
 
-      description:
-        description||
-        "New home project.",
+      {
+        question:
+          "What is your target budget?",
+        answer:""
+      },
 
-      budget:0,
-      
-      tasks:[
+      {
+        question:
+          "Are there any special requirements?",
+        answer:""
+      }
 
-        "Define project goals",
+    ];
 
-        "Measure project area",
+  }
 
-        "Research project requirements",
 
-        "Plan materials",
+  aiPlanDraft={
 
-        "Create shopping list",
+    name:
+      lowerName.includes("fence")?
+      "🪚 "+projectName:
+      "🛠️ "+projectName,
 
-        "Set project budget",
+    category:
+      lowerName.includes("fence")?
+      "Exterior":
+      "Custom",
 
-        "Prepare work area",
+    description:
+      description||
+      (
+        lowerName.includes("fence")?
+        "Design and build the property fence.":
+        "New home project."
+      ),
 
-        "Complete project",
+    budget:0,
 
-        "Inspect completed work",
+    answers:questions,
 
-        "Clean up"
+    tasks:[],
 
-      ],
+    materials:[],
 
-      materials:[],
+    questions:questions
 
-      questions:[
+  };
 
-        "What are the project dimensions?",
 
-        "What materials do you want to use?",
+  showPlanQuestions();
 
-        "What is your target budget?",
+}
 
-        "Are there any special requirements?"
 
-      ]
+function showPlanQuestions(){
 
-    };
+  const preview=
+    document.getElementById(
+      "workspaceContent"
+    );
+
+
+  preview.innerHTML=`
+
+    <h2>
+      ✨ Let's Build Your Plan
+    </h2>
+
+
+    <p>
+      A few answers will help The List
+      create a more useful project plan.
+    </p>
+
+
+    <div class="card">
+
+      <h3>🏠 Project</h3>
+
+      <p>
+        <b>
+          ${escapeHTML(aiPlanDraft.name)}
+        </b>
+      </p>
+
+      <p>
+        ${escapeHTML(aiPlanDraft.description)}
+      </p>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>❓ Tell Me About Your Project</h3>
+
+      ${
+        aiPlanDraft.answers.map(
+          (item,index)=>`
+
+            <div class="answerBox">
+
+              <label>
+                ${escapeHTML(item.question)}
+              </label>
+
+              <input
+                id="aiAnswer${index}"
+                placeholder="Enter your answer">
+
+            </div>
+
+          `
+        ).join("")
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <button
+        onclick="generateAIPlanFromAnswers()">
+
+        ✨ Build My Plan
+
+      </button>
+
+
+      <button
+        class="secondary"
+        onclick="showPage('projects')"
+        style="margin-top:10px;">
+
+        ← Cancel
+
+      </button>
+
+    </div>
+
+  `;
+
+
+  showPage("workspace");
+
+}
+
+
+function generateAIPlanFromAnswers(){
+
+  if(!aiPlanDraft)
+    return;
+
+
+  aiPlanDraft.answers=
+    aiPlanDraft.answers.map(
+      (item,index)=>{
+
+        const input=
+          document.getElementById(
+            "aiAnswer"+index
+          );
+
+
+        return {
+
+          question:item.question,
+
+          answer:
+            input?
+            input.value.trim():
+            ""
+
+        };
+
+      }
+    );
+
+
+  aiPlanDraft.questions=
+    aiPlanDraft.answers;
+
+
+  const lowerName=
+    aiPlanDraft.name.toLowerCase();
+
+
+  /*
+    Stage 1 planning logic.
+
+    This is the temporary built-in planner.
+    Later this section can be connected
+    to a real AI service.
+  */
+
+
+  if(lowerName.includes("fence")){
+
+    aiPlanDraft.tasks=[
+
+      "Measure property and fence runs",
+
+      "Verify property boundaries",
+
+      "Check local requirements and permits",
+
+      "Check HOA requirements",
+
+      "Confirm fence style and height",
+
+      "Confirm gate locations and sizes",
+
+      "Calculate total linear footage",
+
+      "Determine post spacing",
+
+      "Calculate number of posts",
+
+      "Calculate rails or panels",
+
+      "Calculate concrete requirements",
+
+      "Price materials",
+
+      "Purchase materials",
+
+      "Mark fence and post locations",
+
+      "Dig post holes",
+
+      "Set fence posts",
+
+      "Install rails or panels",
+
+      "Build and install gates",
+
+      "Final inspection and cleanup"
+
+    ];
+
+
+    aiPlanDraft.materials=[
+
+      {
+        name:"Fence posts",
+        quantity:"Calculate after measuring"
+      },
+
+      {
+        name:"Fence panels or pickets",
+        quantity:"Calculate from fence length"
+      },
+
+      {
+        name:"Rails",
+        quantity:"Calculate from fence design"
+      },
+
+      {
+        name:"Gate hardware",
+        quantity:"As required"
+      },
+
+      {
+        name:"Concrete",
+        quantity:"Calculate from number of posts"
+      },
+
+      {
+        name:"Post caps",
+        quantity:"One per post"
+      },
+
+      {
+        name:"Exterior screws / fasteners",
+        quantity:"As required"
+      },
+
+      {
+        name:"Gravel",
+        quantity:"As required"
+      }
+
+    ];
+
+  }else{
+
+    aiPlanDraft.tasks=[
+
+      "Define project goals",
+
+      "Measure project area",
+
+      "Research project requirements",
+
+      "Plan materials",
+
+      "Create shopping list",
+
+      "Set project budget",
+
+      "Prepare work area",
+
+      "Complete project",
+
+      "Inspect completed work",
+
+      "Clean up"
+
+    ];
+
+
+    aiPlanDraft.materials=[];
+
+  }
+
+
+  /*
+    If the user entered a budget,
+    try to save it as the project budget.
+  */
+
+  const budgetAnswer=
+    aiPlanDraft.answers.find(
+      item=>
+        item.question
+          .toLowerCase()
+          .includes("budget")
+    );
+
+
+  if(budgetAnswer){
+
+    const numbers=
+      budgetAnswer.answer
+        .replace(/[^0-9.]/g,"");
+
+
+    aiPlanDraft.budget=
+      Number(numbers)||0;
 
   }
 
@@ -2013,6 +2379,7 @@ function showPlanPreview(){
     <h2>
       ✨ Build Your Project Plan
     </h2>
+
 
     <span class="badge">
       ${escapeHTML(aiPlanDraft.category)}
@@ -2058,29 +2425,38 @@ function showPlanPreview(){
         Edit the plan before adding it to your project.
       </p>
 
+
       <div id="aiTasksList">
 
         ${
-          aiPlanDraft.tasks.map((task,index)=>`
+          aiPlanDraft.tasks.map(
+            (task,index)=>`
 
-            <div
-              class="item"
-              style="display:flex;gap:8px;align-items:center;">
+              <div
+                class="item"
+                style="
+                  display:flex;
+                  gap:8px;
+                  align-items:center;
+                ">
 
-              <input
-                id="aiTask${index}"
-                value="${escapeHTML(task)}"
-                style="flex:1;">
+                <input
+                  id="aiTask${index}"
+                  value="${escapeHTML(task)}"
+                  style="flex:1;">
 
-              <button
-                class="secondary"
-                onclick="removeAIPlanTask(${index})">
-                🗑️
-              </button>
+                <button
+                  class="secondary"
+                  onclick="removeAIPlanTask(${index})">
 
-            </div>
+                  🗑️
 
-          `).join("")
+                </button>
+
+              </div>
+
+            `
+          ).join("")
         }
 
       </div>
@@ -2089,7 +2465,9 @@ function showPlanPreview(){
       <button
         onclick="addAIPlanTask()"
         style="margin-top:10px;">
+
         ＋ Add Task
+
       </button>
 
     </div>
@@ -2099,42 +2477,50 @@ function showPlanPreview(){
 
       <h3>🛒 Materials</h3>
 
+
       <div id="aiMaterialsList">
 
         ${
           aiPlanDraft.materials.length?
 
-          aiPlanDraft.materials.map((material,index)=>`
+          aiPlanDraft.materials.map(
+            (material,index)=>`
 
-            <div
-              class="item"
-              style="display:flex;gap:8px;align-items:center;">
+              <div
+                class="item"
+                style="
+                  display:flex;
+                  gap:8px;
+                  align-items:center;
+                ">
 
-              <div style="flex:1;">
+                <div style="flex:1;">
 
-                <input
-                  id="aiMaterialName${index}"
-                  value="${escapeHTML(material.name)}"
-                  placeholder="Material name">
+                  <input
+                    id="aiMaterialName${index}"
+                    value="${escapeHTML(material.name)}"
+                    placeholder="Material name">
+
+                  <input
+                    id="aiMaterialQuantity${index}"
+                    value="${escapeHTML(material.quantity)}"
+                    placeholder="Quantity">
+
+                </div>
 
 
-                <input
-                  id="aiMaterialQuantity${index}"
-                  value="${escapeHTML(material.quantity)}"
-                  placeholder="Quantity">
+                <button
+                  class="secondary"
+                  onclick="removeAIPlanMaterial(${index})">
+
+                  🗑️
+
+                </button>
 
               </div>
 
-
-              <button
-                class="secondary"
-                onclick="removeAIPlanMaterial(${index})">
-                🗑️
-              </button>
-
-            </div>
-
-          `).join("")
+            `
+          ).join("")
 
           :
 
@@ -2148,7 +2534,9 @@ function showPlanPreview(){
       <button
         onclick="addAIPlanMaterial()"
         style="margin-top:10px;">
+
         ＋ Add Material
+
       </button>
 
     </div>
@@ -2156,16 +2544,30 @@ function showPlanPreview(){
 
     <div class="card">
 
-      <h3>❓ Things We Need to Know</h3>
+      <h3>❓ Your Answers</h3>
 
       ${
-        aiPlanDraft.questions.length?
+        aiPlanDraft.answers.length?
 
-        aiPlanDraft.questions.map(question=>`
+        aiPlanDraft.answers.map(item=>`
 
-          <div class="item">
+          <div class="planQuestion">
 
-            ${escapeHTML(question)}
+            <b>
+              ${escapeHTML(item.question)}
+            </b>
+
+            <br>
+
+            <span>
+
+              ${
+                item.answer?
+                escapeHTML(item.answer):
+                "<em>No answer provided</em>"
+              }
+
+            </span>
 
           </div>
 
@@ -2173,7 +2575,7 @@ function showPlanPreview(){
 
         :
 
-        "<p>No additional questions.</p>"
+        "<p>No answers provided.</p>"
 
       }
 
@@ -2182,7 +2584,7 @@ function showPlanPreview(){
 
     <div class="card">
 
-      <h3>🤖 AI Plan Review</h3>
+      <h3>🤖 Plan Review</h3>
 
       <p>
         Review and edit everything above.
@@ -2193,7 +2595,9 @@ function showPlanPreview(){
 
       <button
         onclick="addAIPlanToProjects()">
+
         ✅ Add Plan to Project
+
       </button>
 
 
@@ -2201,7 +2605,9 @@ function showPlanPreview(){
         class="secondary"
         onclick="showPage('projects')"
         style="margin-top:10px;">
+
         ← Cancel
+
       </button>
 
     </div>
@@ -2212,6 +2618,8 @@ function showPlanPreview(){
   showPage("workspace");
 
 }
+
+
 function saveAIPlanEdits(){
 
   if(!aiPlanDraft)
@@ -2219,17 +2627,26 @@ function saveAIPlanEdits(){
 
 
   const name=
-    document.getElementById("aiProjectName");
+    document.getElementById(
+      "aiProjectName"
+    );
+
 
   const description=
-    document.getElementById("aiProjectDescription");
+    document.getElementById(
+      "aiProjectDescription"
+    );
+
 
   const budget=
-    document.getElementById("aiProjectBudget");
+    document.getElementById(
+      "aiProjectBudget"
+    );
 
 
   if(name)
-    aiPlanDraft.name=name.value.trim();
+    aiPlanDraft.name=
+      name.value.trim();
 
 
   if(description)
@@ -2243,48 +2660,55 @@ function saveAIPlanEdits(){
 
 
   aiPlanDraft.tasks=
-    aiPlanDraft.tasks.map((task,index)=>{
+    aiPlanDraft.tasks
+      .map((task,index)=>{
 
-      const input=
-        document.getElementById(
-          "aiTask"+index
-        );
+        const input=
+          document.getElementById(
+            "aiTask"+index
+          );
 
-      return input?
-        input.value.trim():
-        task;
 
-    }).filter(task=>task);
+        return input?
+          input.value.trim():
+          task;
+
+      })
+      .filter(task=>task);
 
 
   aiPlanDraft.materials=
-    aiPlanDraft.materials.map((material,index)=>{
+    aiPlanDraft.materials
+      .map((material,index)=>{
 
-      const nameInput=
-        document.getElementById(
-          "aiMaterialName"+index
-        );
+        const nameInput=
+          document.getElementById(
+            "aiMaterialName"+index
+          );
 
-      const quantityInput=
-        document.getElementById(
-          "aiMaterialQuantity"+index
-        );
 
-      return {
+        const quantityInput=
+          document.getElementById(
+            "aiMaterialQuantity"+index
+          );
 
-        name:
-          nameInput?
-          nameInput.value.trim():
-          material.name,
 
-        quantity:
-          quantityInput?
-          quantityInput.value.trim():
-          material.quantity
+        return {
 
-      };
+          name:
+            nameInput?
+            nameInput.value.trim():
+            material.name,
 
-    }).filter(material=>material.name);
+          quantity:
+            quantityInput?
+            quantityInput.value.trim():
+            material.quantity
+
+        };
+
+      })
+      .filter(material=>material.name);
 
 }
 
@@ -2354,6 +2778,7 @@ function removeAIPlanMaterial(index){
 
 }
 
+
 function addAIPlanToProjects(){
 
   if(!aiPlanDraft)
@@ -2388,6 +2813,23 @@ function addAIPlanToProjects(){
 
     description:aiPlanDraft.description,
 
+    /*
+      IMPORTANT:
+      Save the planning questions
+      and the user's answers with
+      the project permanently.
+    */
+
+    answers:
+      aiPlanDraft.answers.map(item=>({
+
+        question:item.question,
+
+        answer:item.answer
+
+      })),
+
+
     tasks:
       aiPlanDraft.tasks.map(task=>({
 
@@ -2398,6 +2840,7 @@ function addAIPlanToProjects(){
         dueDate:""
 
       })),
+
 
     materials:
       aiPlanDraft.materials.map(material=>({
@@ -2411,6 +2854,7 @@ function addAIPlanToProjects(){
         addedToShopping:false
 
       })),
+
 
     records:[],
 
@@ -2436,6 +2880,7 @@ function addAIPlanToProjects(){
   showPage("projects");
 
 }
+
 
 /* =========================
    HOME INFORMATION
@@ -2676,6 +3121,7 @@ function addShopping(){
 
 
   input.value="";
+
   quantity.value="";
 
 
@@ -2828,6 +3274,7 @@ function changeMonth(amount){
 
 }
 
+
 function renderCalendarToday(){
 
   const container=
@@ -2835,12 +3282,14 @@ function renderCalendarToday(){
       "calendarTodaySummary"
     );
 
+
   if(!container)
     return;
 
 
   const today=
     new Date();
+
 
   const todayKey=
     dateToKey(today);
@@ -2854,10 +3303,6 @@ function renderCalendarToday(){
 
   const todayEvents=[];
 
-
-  /*
-    Find project tasks
-  */
 
   data.projects.forEach(project=>{
 
@@ -2878,6 +3323,7 @@ function renderCalendarToday(){
 
         }
 
+
         if(task.dueDate === todayKey){
 
           todayTasks.push({
@@ -2887,6 +3333,7 @@ function renderCalendarToday(){
           });
 
         }
+
 
         if(
           task.dueDate > todayKey
@@ -2898,6 +3345,7 @@ function renderCalendarToday(){
               Number(task.dueDate.split("-")[1])-1,
               Number(task.dueDate.split("-")[2])
             );
+
 
           const diff=
             Math.round(
@@ -2930,10 +3378,6 @@ function renderCalendarToday(){
   });
 
 
-  /*
-    Find today's calendar events
-  */
-
   data.calendar.forEach(event=>{
 
     if(event.date===todayKey){
@@ -2944,10 +3388,6 @@ function renderCalendarToday(){
 
   });
 
-
-  /*
-    Find upcoming calendar events
-  */
 
   data.calendar.forEach(event=>{
 
@@ -2993,10 +3433,6 @@ function renderCalendarToday(){
   });
 
 
-  /*
-    Sort upcoming items by date
-  */
-
   nextSeven.sort((a,b)=>{
 
     const dateA=
@@ -3018,10 +3454,6 @@ function renderCalendarToday(){
 
   let html="";
 
-
-  /*
-    OVERDUE
-  */
 
   if(overdue.length){
 
@@ -3049,9 +3481,12 @@ function renderCalendarToday(){
             <br>
 
             <span class="badge overdueBadge">
-              Due ${escapeHTML(
+
+              Due
+              ${escapeHTML(
                 formatDate(x.task.dueDate)
               )}
+
             </span>
 
             <br>
@@ -3062,11 +3497,14 @@ function renderCalendarToday(){
 
           </div>
 
+
           <button
             onclick="
               openProject(${x.project.id})
             ">
+
             Open
+
           </button>
 
         </div>
@@ -3077,17 +3515,11 @@ function renderCalendarToday(){
 
 
     html+=`
-
       </div>
-
     `;
 
   }
 
-
-  /*
-    TODAY'S TASKS
-  */
 
   if(todayTasks.length){
 
@@ -3120,11 +3552,14 @@ function renderCalendarToday(){
 
           </div>
 
+
           <button
             onclick="
               openProject(${x.project.id})
             ">
+
             Open
+
           </button>
 
         </div>
@@ -3135,17 +3570,11 @@ function renderCalendarToday(){
 
 
     html+=`
-
       </div>
-
     `;
 
   }
 
-
-  /*
-    TODAY'S EVENTS
-  */
 
   if(todayEvents.length){
 
@@ -3186,17 +3615,11 @@ function renderCalendarToday(){
 
 
     html+=`
-
       </div>
-
     `;
 
   }
 
-
-  /*
-    NEXT 7 DAYS
-  */
 
   if(nextSeven.length){
 
@@ -3226,9 +3649,11 @@ function renderCalendarToday(){
               <br>
 
               <span class="badge upcomingBadge">
+
                 ${escapeHTML(
                   formatDate(x.task.dueDate)
                 )}
+
               </span>
 
               <br>
@@ -3239,11 +3664,14 @@ function renderCalendarToday(){
 
             </div>
 
+
             <button
               onclick="
                 openProject(${x.project.id})
               ">
+
               Open
+
             </button>
 
           </div>
@@ -3265,9 +3693,11 @@ function renderCalendarToday(){
               <br>
 
               <span class="badge upcomingBadge">
+
                 ${escapeHTML(
                   formatDate(x.event.date)
                 )}
+
               </span>
 
             </div>
@@ -3282,17 +3712,11 @@ function renderCalendarToday(){
 
 
     html+=`
-
       </div>
-
     `;
 
   }
 
-
-  /*
-    NOTHING SCHEDULED
-  */
 
   if(!html){
 
@@ -3310,6 +3734,8 @@ function renderCalendarToday(){
   container.innerHTML=html;
 
 }
+
+
 function renderCalendar(){
 
   const year=
@@ -3342,6 +3768,7 @@ function renderCalendar(){
 
 
   const dayNames=[
+
     "Sun",
     "Mon",
     "Tue",
@@ -3349,6 +3776,7 @@ function renderCalendar(){
     "Thu",
     "Fri",
     "Sat"
+
   ];
 
 
@@ -3429,23 +3857,23 @@ function renderCalendar(){
     const allItems=[
 
       ...taskItems.map(x=>({
+
         text:x.task.name,
+
         type:"task"
+
       })),
 
       ...eventItems.map(x=>({
+
         text:x.title,
+
         type:"event"
+
       }))
 
     ];
 
-
-    /*
-      Only display two items inside the
-      calendar cell. The rest appear as
-      "+N more". The cell can never grow.
-    */
 
     const visibleItems=
       allItems.slice(0,2);
@@ -3471,6 +3899,7 @@ function renderCalendar(){
         <div class="calendarNumber">
           ${day}
         </div>
+
 
         <div class="calendarDots">
 
@@ -3517,11 +3946,6 @@ function renderCalendar(){
   grid.innerHTML=html;
 
 
-  /*
-    The selected date details are always
-    displayed in the card underneath.
-  */
-
   renderSelectedDate();
 
 }
@@ -3539,9 +3963,11 @@ function getTasksForDate(date){
       if(task.dueDate===date){
 
         results.push({
+
           project,
           task,
           index
+
         });
 
       }
@@ -3647,11 +4073,14 @@ function renderSelectedDate(){
 
         </div>
 
+
         <button
           onclick="
             openProject(${x.project.id})
           ">
+
           Open
+
         </button>
 
       </div>
@@ -3755,13 +4184,13 @@ function addCalendar(){
   }
 
 
-renderCalendarToday();
+  renderCalendarToday();
 
-renderCalendar();
+  renderCalendar();
 
-renderCalendarList();
+  renderCalendarList();
 
-renderHome();
+  renderHome();
 
 }
 
@@ -3799,9 +4228,11 @@ function renderCalendarList(){
             <br>
 
             <span class="badge">
+
               ${escapeHTML(
                 formatDate(x.date)
               )}
+
             </span>
 
           </div>
@@ -3899,11 +4330,14 @@ function renderMaintenance(){
           <br>
 
           <span class="badge">
+
             Due:
             ${escapeHTML(
               formatDate(x.due)
             )}
+
           </span>
+
 
           ${
             x.notes?
@@ -3939,6 +4373,12 @@ function renderFamily(){
   document.getElementById(
     "familySaved"
   ).textContent=
+    data.familyNote||"";
+
+
+  document.getElementById(
+    "familyNote"
+  ).value=
     data.familyNote||"";
 
 }
