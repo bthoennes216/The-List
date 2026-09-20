@@ -434,6 +434,12 @@ label{
       ＋ New Project
     </button>
 
+    <button
+      onclick="buildMyPlan()"
+      style="margin-top:10px;">
+      ✨ Build My Plan
+    </button>
+
   </div>
 
   <div id="projectsList"></div>
@@ -1771,7 +1777,438 @@ function newProject(){
   renderProjects();
 
 }
+/* =========================
+   BUILD MY PLAN
+   ========================= */
 
+let aiPlanDraft=null;
+
+
+function buildMyPlan(){
+
+  const name=
+    prompt(
+      "What are you building?\n\nExample: Fence"
+    );
+
+
+  if(!name)
+    return;
+
+
+  const projectName=
+    name.trim();
+
+
+  const description=
+    prompt(
+      "Tell me a little about the project (optional):"
+    )||"";
+
+
+  /*
+    Stage 1:
+    Simulated AI plan generator.
+
+    Later this function will send the
+    project information to a real AI service.
+  */
+
+  const lowerName=
+    projectName.toLowerCase();
+
+
+  if(
+    lowerName.includes("fence")
+  ){
+
+    aiPlanDraft={
+
+      name:"🪚 "+projectName,
+
+      category:"Exterior",
+
+      description:
+        description||
+        "Design and build the property fence.",
+
+      tasks:[
+
+        "Measure property and fence runs",
+
+        "Verify property boundaries",
+
+        "Check local requirements and permits",
+
+        "Check HOA requirements",
+
+        "Choose fence style",
+
+        "Choose fence height",
+
+        "Plan gate locations",
+
+        "Calculate total linear footage",
+
+        "Determine post spacing",
+
+        "Calculate number of posts",
+
+        "Calculate rails or panels",
+
+        "Calculate concrete requirements",
+
+        "Price materials",
+
+        "Purchase materials",
+
+        "Mark fence and post locations",
+
+        "Dig post holes",
+
+        "Set fence posts",
+
+        "Install rails or panels",
+
+        "Build and install gates",
+
+        "Final inspection and cleanup"
+
+      ],
+
+      materials:[
+
+        {
+          name:"Fence posts",
+          quantity:"Calculate after measuring"
+        },
+
+        {
+          name:"Fence panels or pickets",
+          quantity:"Calculate from fence length"
+        },
+
+        {
+          name:"Rails",
+          quantity:"Calculate from fence design"
+        },
+
+        {
+          name:"Gate hardware",
+          quantity:"As required"
+        },
+
+        {
+          name:"Concrete",
+          quantity:"Calculate from number of posts"
+        },
+
+        {
+          name:"Post caps",
+          quantity:"One per post"
+        },
+
+        {
+          name:"Exterior screws / fasteners",
+          quantity:"As required"
+        },
+
+        {
+          name:"Gravel",
+          quantity:"As required"
+        }
+
+      ],
+
+      questions:[
+
+        "How many linear feet of fence are needed?",
+
+        "What fence style do you want?",
+
+        "What height should the fence be?",
+
+        "Where should the gates go?",
+
+        "What gate sizes are needed?"
+
+      ]
+
+    };
+
+  }else{
+
+    aiPlanDraft={
+
+      name:"🛠️ "+projectName,
+
+      category:"Custom",
+
+      description:
+        description||
+        "New home project.",
+
+      tasks:[
+
+        "Define project goals",
+
+        "Measure project area",
+
+        "Research project requirements",
+
+        "Plan materials",
+
+        "Create shopping list",
+
+        "Set project budget",
+
+        "Prepare work area",
+
+        "Complete project",
+
+        "Inspect completed work",
+
+        "Clean up"
+
+      ],
+
+      materials:[],
+
+      questions:[
+
+        "What are the project dimensions?",
+
+        "What materials do you want to use?",
+
+        "What is your target budget?",
+
+        "Are there any special requirements?"
+
+      ]
+
+    };
+
+  }
+
+
+  showPlanPreview();
+
+}
+
+
+function showPlanPreview(){
+
+  const preview=
+    document.getElementById(
+      "workspaceContent"
+    );
+
+
+  preview.innerHTML=`
+
+    <h2>
+      ✨ Your Project Plan
+    </h2>
+
+    <span class="badge">
+      ${escapeHTML(aiPlanDraft.category)}
+    </span>
+
+    <p>
+      ${escapeHTML(aiPlanDraft.description)}
+    </p>
+
+
+    <div class="card">
+
+      <h3>📋 Tasks</h3>
+
+      <p>
+        ${aiPlanDraft.tasks.length}
+        suggested tasks
+      </p>
+
+      ${
+
+        aiPlanDraft.tasks.map((task,index)=>`
+
+          <div class="task">
+
+            <input
+              type="checkbox"
+              checked>
+
+            <span>
+              ${escapeHTML(task)}
+            </span>
+
+          </div>
+
+        `).join("")
+
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>🛒 Materials</h3>
+
+      ${
+
+        aiPlanDraft.materials.length?
+
+        aiPlanDraft.materials.map(material=>`
+
+          <div class="item">
+
+            <div>
+
+              <b>
+                ${escapeHTML(material.name)}
+              </b>
+
+              <br>
+
+              <small>
+                ${escapeHTML(material.quantity)}
+              </small>
+
+            </div>
+
+          </div>
+
+        `).join("")
+
+        :
+
+        "<p>Materials will be added as the project is developed.</p>"
+
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>❓ Things We Need to Know</h3>
+
+      ${
+
+        aiPlanDraft.questions.map(question=>`
+
+          <div class="item">
+
+            ${escapeHTML(question)}
+
+          </div>
+
+        `).join("")
+
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>🤖 AI Plan Review</h3>
+
+      <p>
+        This is a starting plan. You can review
+        it before anything is added to your project.
+      </p>
+
+      <button
+        onclick="addAIPlanToProjects()">
+        ✅ Add Plan to Project
+      </button>
+
+      <button
+        class="secondary"
+        onclick="showPage('projects')"
+        style="margin-top:10px;">
+        ← Cancel
+      </button>
+
+    </div>
+
+  `;
+
+
+  showPage("workspace");
+
+}
+
+
+function addAIPlanToProjects(){
+
+  if(!aiPlanDraft)
+    return;
+
+
+  const id=
+    Date.now();
+
+
+  data.projects.push({
+
+    id:id,
+
+    name:aiPlanDraft.name,
+
+    category:aiPlanDraft.category,
+
+    description:aiPlanDraft.description,
+
+    tasks:
+      aiPlanDraft.tasks.map(task=>({
+
+        name:task,
+
+        done:false,
+
+        dueDate:""
+
+      })),
+
+    materials:
+      aiPlanDraft.materials.map(material=>({
+
+        id:Date.now()+Math.random(),
+
+        name:material.name,
+
+        quantity:material.quantity,
+
+        addedToShopping:false
+
+      })),
+
+    records:[],
+
+    notes:"",
+
+    budget:0
+
+  });
+
+
+  saveData();
+
+
+  aiPlanDraft=null;
+
+
+  alert(
+    "Your project plan has been added to The List!"
+  );
+
+
+  showPage("projects");
+
+}
 
 /* =========================
    HOME INFORMATION
