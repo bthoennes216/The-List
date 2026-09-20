@@ -165,17 +165,78 @@ label{
   color:#777;
 }
 
+
+/* =========================================================
+   PROJECT CARDS
+   ========================================================= */
+
+.projectSwipe{
+  position:relative;
+  margin-bottom:14px;
+  border-radius:14px;
+  overflow:hidden;
+  background:#c62828;
+  touch-action:pan-y;
+}
+
+.projectDelete{
+  position:absolute;
+  right:0;
+  top:0;
+  bottom:0;
+  width:88px;
+  border-radius:0;
+  background:#c62828;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:3px;
+  font-size:14px;
+  z-index:1;
+}
+
+.projectDelete span{
+  font-size:22px;
+}
+
 .projectCard{
+  position:relative;
+  z-index:2;
+  margin:0;
   cursor:pointer;
+  background:#dfe8c8;
+  border:1px solid #cbd7ad;
+  box-shadow:0 2px 6px rgba(0,0,0,.08);
+  transition:transform .2s ease;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+.projectCard:active{
+  background:#d7e1bd;
 }
 
 .projectCard h3{
   margin:0 0 5px;
+  font-size:18px;
 }
 
 .projectMeta{
   font-size:13px;
-  color:#777;
+  color:#667052;
+}
+
+.projectCard p{
+  margin:10px 0;
+}
+
+.projectSwipeHint{
+  font-size:11px;
+  color:#667052;
+  margin-top:8px;
+  opacity:.8;
 }
 
 .progress{
@@ -454,8 +515,6 @@ hr{
 
 <main>
 
-<!-- HOME -->
-
 <section id="homePage">
 
   <div class="homeHero">
@@ -519,8 +578,6 @@ hr{
 </section>
 
 
-<!-- PROJECTS -->
-
 <section id="projectsPage" class="hidden">
 
   <div class="card">
@@ -531,14 +588,16 @@ hr{
     <button onclick="buildMyPlan()" style="margin-top:10px;">
       ✨ Build My Plan
     </button>
+
+    <p class="smallText" style="margin-bottom:0;">
+      Tap a project to open it. Swipe left to delete.
+    </p>
   </div>
 
   <div id="projectsList"></div>
 
 </section>
 
-
-<!-- SHOPPING -->
 
 <section id="shoppingPage" class="hidden">
 
@@ -556,8 +615,6 @@ hr{
 
 </section>
 
-
-<!-- CALENDAR -->
 
 <section id="calendarPage" class="hidden">
 
@@ -625,8 +682,6 @@ hr{
 </section>
 
 
-<!-- MAINTENANCE -->
-
 <section id="maintenancePage" class="hidden">
 
   <div class="card">
@@ -652,8 +707,6 @@ hr{
 
 </section>
 
-
-<!-- HOME INFORMATION -->
 
 <section id="homeInfoPage" class="hidden">
 
@@ -717,8 +770,6 @@ hr{
 </section>
 
 
-<!-- FAMILY -->
-
 <section id="familyPage" class="hidden">
 
   <div class="card">
@@ -744,8 +795,6 @@ hr{
 </section>
 
 
-<!-- PROJECT DETAIL -->
-
 <section id="projectDetailPage" class="hidden">
 
   <div id="projectDetail"></div>
@@ -756,10 +805,6 @@ hr{
 
 
 <script>
-
-/* =========================================================
-   STORAGE
-   ========================================================= */
 
 const STORAGE_KEY = "theListDataV2";
 
@@ -850,38 +895,156 @@ function loadData(){
       ...(parsed.family || {})
     };
 
-    parsed.projects.forEach(p => {
 
-      if(!Array.isArray(p.tasks)) p.tasks = [];
-      if(!Array.isArray(p.materials)) p.materials = [];
-      if(!Array.isArray(p.records)) p.records = [];
-      if(!Array.isArray(p.answers)) p.answers = [];
+    /*
+      PROJECT DATA REPAIR
 
-      if(typeof p.notes !== "string") p.notes = "";
+      Older projects may have been saved before the
+      current project ID system was added.
 
-      if(typeof p.budget !== "number") p.budget = 0;
+      We automatically give every project a permanent
+      ID if one is missing.
+    */
+
+    let dataChanged = false;
+
+
+    parsed.projects.forEach((p,index) => {
+
+      if(!p.id){
+
+        p.id =
+          "project-" +
+          Date.now().toString() +
+          "-" +
+          index +
+          "-" +
+          Math.random()
+            .toString(36)
+            .substring(2,8);
+
+        dataChanged = true;
+
+      }
+
+
+      if(!p.name){
+        p.name = "Untitled Project";
+        dataChanged = true;
+      }
+
+
+      if(!Array.isArray(p.tasks)){
+        p.tasks = [];
+        dataChanged = true;
+      }
+
+
+      if(!Array.isArray(p.materials)){
+        p.materials = [];
+        dataChanged = true;
+      }
+
+
+      if(!Array.isArray(p.records)){
+        p.records = [];
+        dataChanged = true;
+      }
+
+
+      if(!Array.isArray(p.answers)){
+        p.answers = [];
+        dataChanged = true;
+      }
+
+
+      if(typeof p.notes !== "string"){
+        p.notes = "";
+        dataChanged = true;
+      }
+
+
+      if(typeof p.budget !== "number"){
+        p.budget = Number(p.budget) || 0;
+        dataChanged = true;
+      }
+
 
       if(!p.takeoff){
         p.takeoff = null;
       }
 
+
       if(!p.calculation){
         p.calculation = p.takeoff || null;
       }
 
+
       p.tasks.forEach(t => {
+
+        if(!t.id){
+
+          t.id =
+            "task-" +
+            Date.now().toString() +
+            "-" +
+            Math.random()
+              .toString(36)
+              .substring(2,8);
+
+          dataChanged = true;
+
+        }
+
 
         if(typeof t.done !== "boolean"){
           t.done = false;
+          dataChanged = true;
         }
+
 
         if(typeof t.dueDate === "undefined"){
           t.dueDate = "";
+          dataChanged = true;
+        }
+
+      });
+
+
+      p.materials.forEach(m => {
+
+        if(!m.id){
+
+          m.id =
+            "material-" +
+            Date.now().toString() +
+            "-" +
+            Math.random()
+              .toString(36)
+              .substring(2,8);
+
+          dataChanged = true;
+
         }
 
       });
 
     });
+
+
+    /*
+      Save repaired project IDs immediately.
+    */
+
+    if(dataChanged){
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(parsed)
+      );
+
+    }
+
 
     return parsed;
 
@@ -1147,48 +1310,86 @@ function renderProjects(){
 
   box.innerHTML = data.projects.map(project => {
 
-    const total = project.tasks.length;
+    const total =
+      Array.isArray(project.tasks)
+      ? project.tasks.length
+      : 0;
+
 
     const completed =
-      project.tasks.filter(t => t.done).length;
+      Array.isArray(project.tasks)
+      ? project.tasks.filter(t => t.done).length
+      : 0;
+
 
     const percent =
-      total ? Math.round(completed / total * 100) : 0;
+      total
+      ? Math.round(completed / total * 100)
+      : 0;
+
+
+    const projectId =
+      escapeAttribute(project.id);
 
 
     return `
 
       <div
-        class="card projectCard"
-        onclick="openProject('${project.id}')">
+        class="projectSwipe"
+        data-project-id="${projectId}">
 
-        <h3>
-          ${escapeHTML(project.name)}
-        </h3>
+        <button
+          class="projectDelete"
+          onclick="event.stopPropagation(); deleteProject('${projectId}')">
 
-        <div class="projectMeta">
+          <span>🗑️</span>
+          Delete
 
-          ${escapeHTML(project.category || "Home")}
-          ${project.budget ? ` · Budget $${Number(project.budget).toFixed(0)}` : ""}
+        </button>
 
-        </div>
 
-        <p>
-          ${escapeHTML(project.description || "No description yet.")}
-        </p>
+        <div
+          class="card projectCard"
+          data-project-id="${projectId}">
 
-        ${
-          project.takeoff
-          ? `<span class="badge">📐 Material Takeoff</span>`
-          : ""
-        }
+          <h3>
+            ${escapeHTML(project.name)}
+          </h3>
 
-        <div class="smallText">
-          ${completed} of ${total} tasks complete
-        </div>
+          <div class="projectMeta">
 
-        <div class="progress">
-          <div style="width:${percent}%"></div>
+            ${escapeHTML(project.category || "Home")}
+
+            ${
+              project.budget
+              ? ` · Budget $${Number(project.budget).toFixed(0)}`
+              : ""
+            }
+
+          </div>
+
+          <p>
+            ${escapeHTML(project.description || "No description yet.")}
+          </p>
+
+          ${
+            project.takeoff
+            ? `<span class="badge">📐 Material Takeoff</span>`
+            : ""
+          }
+
+          <div class="smallText">
+            ${completed} of ${total} tasks complete
+          </div>
+
+          <div class="progress">
+            <div style="width:${percent}%"></div>
+          </div>
+
+          <div class="projectSwipeHint">
+            ← Swipe left to delete
+          </div>
+
         </div>
 
       </div>
@@ -1196,6 +1397,216 @@ function renderProjects(){
     `;
 
   }).join("");
+
+
+  /*
+    TAP ANYWHERE TO OPEN
+
+    We use event listeners instead of relying only on
+    inline onclick. This makes older repaired projects
+    open exactly like newly created projects.
+  */
+
+  document
+    .querySelectorAll(".projectCard")
+    .forEach(card => {
+
+      card.addEventListener(
+        "click",
+        function(event){
+
+          if(
+            event.target.closest(".projectDelete")
+          ){
+            return;
+          }
+
+          const id =
+            card.dataset.projectId;
+
+          openProject(id);
+
+        }
+      );
+
+    });
+
+
+  setupProjectSwipe();
+
+}
+
+
+/* =========================================================
+   PROJECT SWIPE
+   ========================================================= */
+
+function setupProjectSwipe(){
+
+  document
+    .querySelectorAll(".projectSwipe")
+    .forEach(wrapper => {
+
+      const card =
+        wrapper.querySelector(".projectCard");
+
+
+      let startX = 0;
+
+      let currentX = 0;
+
+      let dragging = false;
+
+      let moved = false;
+
+
+      card.addEventListener(
+        "touchstart",
+        function(event){
+
+          if(!event.touches.length){
+            return;
+          }
+
+          startX =
+            event.touches[0].clientX;
+
+          currentX = startX;
+
+          dragging = true;
+
+          moved = false;
+
+        },
+        {passive:true}
+      );
+
+
+      card.addEventListener(
+        "touchmove",
+        function(event){
+
+          if(!dragging || !event.touches.length){
+            return;
+          }
+
+
+          currentX =
+            event.touches[0].clientX;
+
+
+          const delta =
+            currentX - startX;
+
+
+          if(Math.abs(delta) > 8){
+            moved = true;
+          }
+
+
+          /*
+            Only allow swiping left.
+          */
+
+          if(delta < 0){
+
+            const translate =
+              Math.max(
+                -88,
+                delta
+              );
+
+            card.style.transform =
+              `translateX(${translate}px)`;
+
+          }else{
+
+            card.style.transform =
+              "translateX(0)";
+
+          }
+
+        },
+        {passive:true}
+      );
+
+
+      card.addEventListener(
+        "touchend",
+        function(){
+
+          if(!dragging){
+            return;
+          }
+
+
+          dragging = false;
+
+
+          const delta =
+            currentX - startX;
+
+
+          /*
+            Reveal delete button after a
+            meaningful left swipe.
+          */
+
+          if(delta <= -45){
+
+            card.style.transform =
+              "translateX(-88px)";
+
+            wrapper.dataset.open = "true";
+
+          }else{
+
+            card.style.transform =
+              "translateX(0)";
+
+            wrapper.dataset.open = "false";
+
+          }
+
+        }
+      );
+
+
+      card.addEventListener(
+        "click",
+        function(){
+
+          /*
+            If the user just swiped, don't open
+            the project when the touch becomes a click.
+          */
+
+          if(moved){
+
+            moved = false;
+
+            return;
+
+          }
+
+          /*
+            If delete panel is open, tapping the
+            project closes it instead of opening it.
+          */
+
+          if(wrapper.dataset.open === "true"){
+
+            card.style.transform =
+              "translateX(0)";
+
+            wrapper.dataset.open = "false";
+
+          }
+
+        }
+      );
+
+    });
 
 }
 
@@ -1219,7 +1630,12 @@ function newProject(){
 
 
   const id =
-    Date.now().toString();
+    "project-" +
+    Date.now().toString() +
+    "-" +
+    Math.random()
+      .toString(36)
+      .substring(2,8);
 
 
   data.projects.push({
@@ -1267,11 +1683,19 @@ function newProject(){
 function openProject(id){
 
   const project =
-    data.projects.find(p => p.id === id);
+    data.projects.find(
+      p => String(p.id) === String(id)
+    );
 
 
   if(!project){
+
+    alert(
+      "This project could not be opened. The project record may be damaged."
+    );
+
     return;
+
   }
 
 
@@ -1341,7 +1765,7 @@ function openProject(id){
         id="newTaskDate"
         type="date">
 
-      <button onclick="addTask('${project.id}')">
+      <button onclick="addTask('${escapeAttribute(project.id)}')">
         ＋ Add Task
       </button>
 
@@ -1357,7 +1781,7 @@ function openProject(id){
         ? `
           <button
             class="success"
-            onclick="addAllProjectMaterialsToShopping('${project.id}')">
+            onclick="addAllProjectMaterialsToShopping('${escapeAttribute(project.id)}')">
             🛒 Add All Materials to Shopping List
           </button>
         `
@@ -1376,7 +1800,7 @@ function openProject(id){
         id="newMaterialQty"
         placeholder="Quantity">
 
-      <button onclick="addMaterial('${project.id}')">
+      <button onclick="addMaterial('${escapeAttribute(project.id)}')">
         ＋ Add Material
       </button>
 
@@ -1440,7 +1864,7 @@ function openProject(id){
         id="projectNotes"
         placeholder="Project records and notes">${escapeHTML(project.notes || "")}</textarea>
 
-      <button onclick="saveProjectNotes('${project.id}')">
+      <button onclick="saveProjectNotes('${escapeAttribute(project.id)}')">
         Save Records
       </button>
 
@@ -1451,7 +1875,7 @@ function openProject(id){
 
       <button
         class="danger"
-        onclick="deleteProject('${project.id}')">
+        onclick="deleteProject('${escapeAttribute(project.id)}')">
         Delete Project
       </button>
 
@@ -1713,7 +2137,7 @@ function renderProjectTasks(project){
         <input
           type="checkbox"
           ${task.done ? "checked" : ""}
-          onchange="toggleTask('${project.id}',${index})">
+          onchange="toggleTask('${escapeAttribute(project.id)}',${index})">
 
         <div class="taskText">
 
@@ -1733,7 +2157,7 @@ function renderProjectTasks(project){
 
         <button
           class="small secondary"
-          onclick="deleteTask('${project.id}',${index})">
+          onclick="deleteTask('${escapeAttribute(project.id)}',${index})">
           ×
         </button>
 
@@ -1747,7 +2171,9 @@ function renderProjectTasks(project){
 function toggleTask(projectId,index){
 
   const project =
-    data.projects.find(p => p.id === projectId);
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
   if(!project) return;
 
@@ -1764,7 +2190,9 @@ function toggleTask(projectId,index){
 function addTask(projectId){
 
   const project =
-    data.projects.find(p => p.id === projectId);
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
   if(!project) return;
 
@@ -1783,7 +2211,9 @@ function addTask(projectId){
 
   project.tasks.push({
 
-    id:Date.now().toString(),
+    id:
+      "task-" +
+      Date.now().toString(),
 
     text:text,
 
@@ -1804,7 +2234,9 @@ function addTask(projectId){
 function deleteTask(projectId,index){
 
   const project =
-    data.projects.find(p => p.id === projectId);
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
   if(!project) return;
 
@@ -1857,13 +2289,13 @@ function renderProjectMaterials(project){
 
         <button
           class="small secondary"
-          onclick="addMaterialToShopping('${project.id}',${index})">
+          onclick="addMaterialToShopping('${escapeAttribute(project.id)}',${index})">
           🛒 Add
         </button>
 
         <button
           class="small secondary"
-          onclick="deleteMaterial('${project.id}',${index})">
+          onclick="deleteMaterial('${escapeAttribute(project.id)}',${index})">
           ×
         </button>
 
@@ -1877,7 +2309,9 @@ function renderProjectMaterials(project){
 function addMaterial(projectId){
 
   const project =
-    data.projects.find(p => p.id === projectId);
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
   if(!project) return;
 
@@ -1898,7 +2332,9 @@ function addMaterial(projectId){
 
   project.materials.push({
 
-    id:Date.now().toString(),
+    id:
+      "material-" +
+      Date.now().toString(),
 
     name:name,
 
@@ -1917,7 +2353,9 @@ function addMaterial(projectId){
 function deleteMaterial(projectId,index){
 
   const project =
-    data.projects.find(p => p.id === projectId);
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
   if(!project) return;
 
@@ -1934,7 +2372,9 @@ function deleteMaterial(projectId,index){
 function addMaterialToShopping(projectId,index){
 
   const project =
-    data.projects.find(p => p.id === projectId);
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
   if(!project) return;
 
@@ -1945,7 +2385,8 @@ function addMaterialToShopping(projectId,index){
 
   data.shopping.push({
 
-    id:Date.now().toString(),
+    id:
+      Date.now().toString(),
 
     name:material.name,
 
@@ -1969,7 +2410,9 @@ function addMaterialToShopping(projectId,index){
 function addAllProjectMaterialsToShopping(projectId){
 
   const project =
-    data.projects.find(p => p.id === projectId);
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
   if(!project || !project.materials.length){
     return;
@@ -2017,7 +2460,9 @@ function addAllProjectMaterialsToShopping(projectId){
 function saveProjectNotes(projectId){
 
   const project =
-    data.projects.find(p => p.id === projectId);
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
   if(!project) return;
 
@@ -2035,16 +2480,32 @@ function saveProjectNotes(projectId){
 
 function deleteProject(projectId){
 
-  if(!confirm("Delete this project?")){
+  const project =
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
+
+
+  if(!project){
+    return;
+  }
+
+
+  if(!confirm(
+    `Delete "${project.name}"?\n\nThis will permanently remove the project, its tasks, materials and project records.`
+  )){
     return;
   }
 
 
   data.projects =
-    data.projects.filter(p => p.id !== projectId);
+    data.projects.filter(
+      p => String(p.id) !== String(projectId)
+    );
 
 
   saveData();
+
 
   showPage("projectsPage");
 
@@ -2552,7 +3013,7 @@ function renderCalendarList(){
 
         <button
           class="small secondary"
-          onclick="deleteCalendar('${item.id}')">
+          onclick="deleteCalendar('${escapeAttribute(item.id)}')">
           ×
         </button>
 
@@ -2566,7 +3027,9 @@ function renderCalendarList(){
 function deleteCalendar(id){
 
   data.calendar =
-    data.calendar.filter(item => item.id !== id);
+    data.calendar.filter(
+      item => String(item.id) !== String(id)
+    );
 
   saveData();
 
@@ -3011,7 +3474,7 @@ function getFenceQuestions(){
         "What post-hole diameter should be used for the planning calculation?",
       placeholder:
         "Example: 10",
-        defaultValue:"10"
+      defaultValue:"10"
     },
 
     {
@@ -3020,7 +3483,7 @@ function getFenceQuestions(){
         "What post-hole depth should be used for the planning calculation?",
       placeholder:
         "Example: 30",
-        defaultValue:"30"
+      defaultValue:"30"
     },
 
     {
@@ -3485,13 +3948,6 @@ function calculateFenceMaterials(answers){
     );
 
 
-  /*
-    Line posts are the ordinary posts between
-    the special posts. Gate posts are counted
-    separately so they are not accidentally hidden
-    inside the normal line-post calculation.
-  */
-
   const basePostPositions =
     sections > 0
     ? sections + 1
@@ -3735,15 +4191,6 @@ function calculateFenceMaterials(answers){
   }
 
 
-  /*
-    Concrete calculation:
-    cylindrical hole volume × total posts.
-    Then divide by an assumed 0.60 cubic-foot yield
-    for an 80-lb bag.
-
-    This is a planning allowance only.
-  */
-
   const holeRadiusFeet =
     holeDiameter / 12 / 2;
 
@@ -3771,12 +4218,6 @@ function calculateFenceMaterials(answers){
     : 0;
 
 
-  /*
-    Gravel allowance:
-    1 bag per post is intentionally conservative
-    as a simple planning allowance.
-  */
-
   const gravelBags =
     totalPosts > 0
     ? totalPosts
@@ -3786,14 +4227,6 @@ function calculateFenceMaterials(answers){
   const postCaps =
     totalPosts;
 
-
-  /*
-    Fastener planning:
-    Panels:
-      approximately 1 box per 4 panels.
-    Pickets:
-      approximately 1 box per 150 pickets.
-  */
 
   let fastenerBoxes;
 
@@ -3866,19 +4299,6 @@ function calculateFenceMaterials(answers){
 
     warnings.push(
       "Fence height exceeds 8 feet. Verify engineering, permitting and local requirements."
-    );
-
-  }
-
-
-  if(
-    height > 0 &&
-    height <= 4 &&
-    parsePositiveNumber(answers.rails) === 0
-  ){
-
-    warnings.push(
-      "Two rails were selected as the automatic planning default for a fence 4 feet or shorter."
     );
 
   }
@@ -4120,9 +4540,10 @@ function generateAIPlanFromAnswers(){
     ];
 
 
-    materials = buildFenceMaterialList(
-      calculation
-    );
+    materials =
+      buildFenceMaterialList(
+        calculation
+      );
 
   }else{
 
@@ -5038,6 +5459,7 @@ function addAIPlanTask(){
   editingPlan.tasks.push({
 
     id:
+      "task-" +
       Date.now().toString(),
 
     text:
@@ -5083,6 +5505,7 @@ function addAIPlanMaterial(){
   editingPlan.materials.push({
 
     id:
+      "material-" +
       Date.now().toString(),
 
     name:
@@ -5126,7 +5549,12 @@ function addAIPlanToProjects(){
   const project = {
 
     id:
-      Date.now().toString(),
+      "project-" +
+      Date.now().toString() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .substring(2,8),
 
     name:
       editingPlan.name,
