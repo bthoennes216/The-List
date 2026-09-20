@@ -306,25 +306,6 @@ label{
   margin-bottom:10px;
 }
 
-@media(max-width:400px){
-
-  .calendarDay{
-    height:62px;
-    min-height:62px;
-    padding:5px 3px;
-  }
-
-  .calendarDot{
-    font-size:9px;
-    line-height:11px;
-  }
-
-  .calendarMore{
-    font-size:8px;
-    line-height:10px;
-  }
-
-}
 </style>
 </head>
 
@@ -356,7 +337,6 @@ label{
     </button>
   </div>
 
-
   <div class="card">
 
     <h2>📊 At a Glance</h2>
@@ -373,7 +353,6 @@ label{
 
   </div>
 
-
   <div class="card">
 
     <h2>🎯 Your Projects</h2>
@@ -385,7 +364,6 @@ label{
     </button>
 
   </div>
-
 
   <div class="card">
 
@@ -399,7 +377,6 @@ label{
 
   </div>
 
-
   <div class="card">
 
     <h2>🛒 Shopping</h2>
@@ -411,7 +388,6 @@ label{
     </button>
 
   </div>
-
 
   <div class="card">
 
@@ -482,7 +458,6 @@ label{
 
   </div>
 
-
   <div class="card">
 
     <h2>🛍️ Items to Buy</h2>
@@ -504,7 +479,6 @@ label{
 
   </div>
 
-
   <div class="card">
 
     <div class="calendarHeader">
@@ -524,14 +498,12 @@ label{
 
     </div>
 
-
     <div
       id="calendarGrid"
       class="calendarGrid">
     </div>
 
   </div>
-
 
   <div
     class="card selectedDateCard">
@@ -550,7 +522,6 @@ label{
 
   </div>
 
-
   <div class="card">
 
     <h2>＋ Add Calendar Event</h2>
@@ -568,7 +539,6 @@ label{
     </button>
 
   </div>
-
 
   <div class="card">
 
@@ -604,7 +574,6 @@ label{
     </button>
 
   </div>
-
 
   <div class="card">
 
@@ -727,7 +696,6 @@ const defaultData={
     notes:""
   },
 
-
   projects:[
 
     {
@@ -750,9 +718,9 @@ const defaultData={
       materials:[],
       records:[],
       notes:"",
-      budget:0
+      budget:0,
+      answers:[]
     },
-
 
     {
       id:2,
@@ -771,9 +739,9 @@ const defaultData={
       materials:[],
       records:[],
       notes:"",
-      budget:0
+      budget:0,
+      answers:[]
     },
-
 
     {
       id:3,
@@ -790,9 +758,9 @@ const defaultData={
       materials:[],
       records:[],
       notes:"",
-      budget:0
+      budget:0,
+      answers:[]
     },
-
 
     {
       id:4,
@@ -809,9 +777,9 @@ const defaultData={
       materials:[],
       records:[],
       notes:"",
-      budget:0
+      budget:0,
+      answers:[]
     },
-
 
     {
       id:5,
@@ -832,9 +800,9 @@ const defaultData={
       materials:[],
       records:[],
       notes:"",
-      budget:0
+      budget:0,
+      answers:[]
     },
-
 
     {
       id:6,
@@ -855,9 +823,9 @@ const defaultData={
       materials:[],
       records:[],
       notes:"",
-      budget:0
+      budget:0,
+      answers:[]
     },
-
 
     {
       id:7,
@@ -877,7 +845,8 @@ const defaultData={
       materials:[],
       records:[],
       notes:"",
-      budget:0
+      budget:0,
+      answers:[]
     }
 
   ],
@@ -1939,6 +1908,10 @@ function buildMyPlan(){
     name.trim();
 
 
+  if(!projectName)
+    return;
+
+
   const description=
     prompt(
       "Tell me a little about the project (optional):"
@@ -2061,7 +2034,9 @@ function buildMyPlan(){
 
     materials:[],
 
-    questions:questions
+    questions:questions.map(
+      item=>item.question
+    )
 
   };
 
@@ -2148,7 +2123,7 @@ function showPlanQuestions(){
 
       <button
         class="secondary"
-        onclick="showPage('projects')"
+        onclick="cancelAIPlan()"
         style="margin-top:10px;">
 
         ← Cancel
@@ -2197,7 +2172,16 @@ function generateAIPlanFromAnswers(){
 
 
   aiPlanDraft.questions=
-    aiPlanDraft.answers;
+    aiPlanDraft.answers.map(item=>{
+
+      if(item.answer)
+        return item.question+
+          " — "+
+          item.answer;
+
+      return item.question;
+
+    });
 
 
   const lowerName=
@@ -2205,9 +2189,8 @@ function generateAIPlanFromAnswers(){
 
 
   /*
-    Stage 1 planning logic.
+    Stage 1 built-in planner.
 
-    This is the temporary built-in planner.
     Later this section can be connected
     to a real AI service.
   */
@@ -2333,11 +2316,6 @@ function generateAIPlanFromAnswers(){
 
   }
 
-
-  /*
-    If the user entered a budget,
-    try to save it as the project budget.
-  */
 
   const budgetAnswer=
     aiPlanDraft.answers.find(
@@ -2603,7 +2581,7 @@ function showPlanPreview(){
 
       <button
         class="secondary"
-        onclick="showPage('projects')"
+        onclick="cancelAIPlan()"
         style="margin-top:10px;">
 
         ← Cancel
@@ -2779,6 +2757,15 @@ function removeAIPlanMaterial(index){
 }
 
 
+function cancelAIPlan(){
+
+  aiPlanDraft=null;
+
+  showPage("projects");
+
+}
+
+
 function addAIPlanToProjects(){
 
   if(!aiPlanDraft)
@@ -2813,21 +2800,8 @@ function addAIPlanToProjects(){
 
     description:aiPlanDraft.description,
 
-    /*
-      IMPORTANT:
-      Save the planning questions
-      and the user's answers with
-      the project permanently.
-    */
-
     answers:
-      aiPlanDraft.answers.map(item=>({
-
-        question:item.question,
-
-        answer:item.answer
-
-      })),
+      aiPlanDraft.answers||[],
 
 
     tasks:
