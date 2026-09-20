@@ -3,24 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f5f5f5">
+
 <title>The List</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
 body{
   margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
   background:#f4f4f6;
   color:#222;
 }
 
 header{
-  background:#222;
-  color:white;
-  padding:20px 18px;
-  font-size:28px;
-  font-weight:700;
+  background:#fff;
+  padding:18px 16px 14px;
+  position:sticky;
+  top:0;
+  z-index:20;
+  border-bottom:1px solid #ddd;
+}
+
+header h1{
+  margin:0;
+  font-size:27px;
+}
+
+header p{
+  margin:3px 0 0;
+  color:#777;
+  font-size:14px;
 }
 
 nav{
@@ -28,100 +46,166 @@ nav{
   overflow-x:auto;
   gap:8px;
   padding:10px;
-  background:white;
+  background:#fff;
   border-bottom:1px solid #ddd;
+  position:sticky;
+  top:70px;
+  z-index:19;
 }
 
 nav button{
   white-space:nowrap;
-  border:0;
-  background:#eee;
-  color:#222;
-  border-radius:12px;
-  padding:10px 14px;
-  font-size:15px;
+  padding:9px 13px;
+  border:1px solid #ddd;
+  border-radius:20px;
+  background:#f7f7f8;
+  font-weight:600;
+}
+
+nav button.active{
+  background:#222;
+  color:#fff;
 }
 
 main{
-  padding:16px;
-  max-width:800px;
+  max-width:900px;
   margin:auto;
+  padding:14px;
 }
 
 .card{
-  background:white;
-  border-radius:16px;
-  padding:18px;
-  margin-bottom:15px;
-  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 1px 4px rgba(0,0,0,.07);
 }
 
-h2{margin-top:0}
-h3{margin-bottom:8px}
+.card h2{
+  margin:0 0 10px;
+}
+
+.card h3{
+  margin:16px 0 8px;
+}
+
+.hidden{
+  display:none !important;
+}
 
 button{
   border:0;
   border-radius:10px;
-  padding:11px 15px;
-  font-size:16px;
+  padding:11px 14px;
   background:#222;
-  color:white;
+  color:#fff;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
 }
 
-.secondary{
-  background:#e8e8e8;
+button.secondary{
+  background:#e9e9ec;
   color:#222;
 }
 
-input,textarea,select{
+button.danger{
+  background:#c62828;
+}
+
+button.small{
+  padding:7px 10px;
+  font-size:13px;
+}
+
+input,
+textarea,
+select{
   width:100%;
-  padding:12px;
-  margin:6px 0 14px;
+  padding:11px;
   border:1px solid #ccc;
-  border-radius:10px;
+  border-radius:9px;
   font-size:16px;
-  background:white;
+  margin-top:5px;
+  margin-bottom:10px;
+  background:#fff;
 }
 
 textarea{
-  min-height:80px;
+  min-height:90px;
   resize:vertical;
 }
 
 label{
   display:block;
   font-weight:600;
-  margin-top:5px;
+  margin-top:10px;
 }
 
-.item{
+.row{
   display:flex;
-  justify-content:space-between;
+  gap:8px;
   align-items:center;
-  gap:10px;
-  padding:13px 0;
-  border-bottom:1px solid #eee;
 }
 
-.badge{
-  display:inline-block;
-  background:#eee;
-  padding:5px 9px;
-  border-radius:8px;
+.row > *{
+  flex:1;
+}
+
+.muted{
+  color:#777;
+}
+
+.smallText{
   font-size:13px;
+  color:#777;
+}
+
+.projectCard{
+  cursor:pointer;
+}
+
+.projectCard h3{
+  margin:0 0 5px;
+}
+
+.projectMeta{
+  font-size:13px;
+  color:#777;
+}
+
+.progress{
+  height:8px;
+  background:#e8e8ea;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.progress div{
+  height:100%;
+  background:#222;
 }
 
 .task{
   display:flex;
-  align-items:center;
-  gap:10px;
+  gap:9px;
+  align-items:flex-start;
   padding:10px 0;
   border-bottom:1px solid #eee;
 }
 
-.task input{
+.task:last-child{
+  border-bottom:0;
+}
+
+.task input[type="checkbox"]{
   width:auto;
-  margin:0;
+  margin:3px 0 0;
+}
+
+.taskText{
+  flex:1;
 }
 
 .done{
@@ -129,49 +213,81 @@ label{
   color:#888;
 }
 
-.stat{
+.material{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:9px 0;
+  border-bottom:1px solid #eee;
+}
+
+.material:last-child{
+  border-bottom:0;
+}
+
+.materialName{
+  flex:1;
+}
+
+.badge{
   display:inline-block;
-  width:48%;
-  margin:1%;
-  padding:20px;
   background:#eee;
-  border-radius:14px;
-  text-align:center;
+  border-radius:20px;
+  padding:5px 9px;
+  font-size:12px;
+  margin:2px;
 }
 
-.stat b{
-  display:block;
-  font-size:28px;
+.answerBox{
+  background:#f7f7f8;
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:10px;
 }
 
-.hidden{display:none}
-
-.danger{
-  background:#b3261e;
+.calcBox{
+  background:#f5f7f5;
+  border:1px solid #d9dfd9;
+  border-radius:12px;
+  padding:14px;
+  margin-top:10px;
 }
 
+.calcLine{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:7px 0;
+  border-bottom:1px solid #ddd;
+}
 
-/* =========================
-   CALENDAR
-   ========================= */
+.calcLine:last-child{
+  border-bottom:0;
+}
+
+.calcValue{
+  font-weight:700;
+  text-align:right;
+}
+
+.warning{
+  background:#fff7df;
+  border:1px solid #ead58b;
+  padding:11px;
+  border-radius:10px;
+  font-size:13px;
+  margin-top:10px;
+}
 
 .calendarHeader{
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  gap:10px;
-  margin-bottom:15px;
+  align-items:center;
+  margin-bottom:12px;
 }
 
 .calendarHeader button{
-  padding:9px 12px;
-}
-
-.calendarTitle{
-  font-size:20px;
-  font-weight:700;
-  text-align:center;
-  flex:1;
+  padding:8px 12px;
 }
 
 .calendarGrid{
@@ -180,12 +296,12 @@ label{
   gap:4px;
 }
 
-.calendarDayName{
+.calendarWeekday{
   text-align:center;
-  font-size:12px;
+  font-size:11px;
   font-weight:700;
   color:#777;
-  padding:6px 2px;
+  padding:4px 0;
 }
 
 .calendarDay{
@@ -200,226 +316,186 @@ label{
   position:relative;
 }
 
-.calendarDay.empty{
-  background:transparent;
-  border:0;
-  cursor:default;
-}
-
 .calendarDay.today{
   border:2px solid #222;
 }
 
 .calendarDay.selected{
-  background:#dedede;
-  border:2px solid #222;
+  background:#e9e9ec;
 }
 
-.calendarNumber{
+.dayNumber{
+  font-size:12px;
   font-weight:700;
-  font-size:14px;
-  line-height:16px;
 }
 
-.calendarDots{
-  margin-top:5px;
-  overflow:hidden;
-}
-
-.calendarDot{
-  display:block;
-  font-size:10px;
-  line-height:13px;
+.calendarItem{
+  font-size:9px;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+  margin-top:3px;
+  background:#ddd;
+  border-radius:4px;
+  padding:2px;
+}
+
+.moreItems{
+  font-size:9px;
+  color:#555;
   margin-top:2px;
 }
 
-.calendarMore{
-  display:block;
-  font-size:9px;
-  line-height:12px;
-  font-weight:700;
-  color:#666;
-  white-space:nowrap;
+@media(max-width:400px){
+  .calendarDay{
+    height:62px;
+    min-height:62px;
+    padding:5px 3px;
+  }
 }
 
-.selectedDateCard{
-  border:2px solid #ddd;
+.statGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
 }
 
-.selectedDateEmpty{
-  color:#777;
-}
-
-.todaySection{
-  margin-bottom:18px;
-}
-
-.todaySection h3{
-  margin-bottom:6px;
-}
-
-.todayEmpty{
-  color:#777;
-}
-
-.overdueBadge{
-  background:#f3d6d6;
-  color:#8a1c1c;
-}
-
-.todayBadge{
-  background:#ddd;
-}
-
-.upcomingBadge{
-  background:#e8e8e8;
-}
-
-.upcomingDate{
-  font-size:13px;
-  color:#666;
-}
-
-.dateButton{
-  margin-top:8px;
-  width:100%;
-  background:#eee;
-  color:#222;
-  font-size:14px;
-}
-
-.answerBox{
-  margin-bottom:18px;
-}
-
-.answerBox label{
-  margin-bottom:5px;
-}
-
-.planQuestion{
+.stat{
   background:#f7f7f8;
-  border-radius:10px;
+  border-radius:11px;
   padding:12px;
-  margin-bottom:10px;
 }
 
+.stat strong{
+  display:block;
+  font-size:21px;
+}
+
+.homeHero{
+  padding:20px;
+  background:#fff;
+  border-radius:14px;
+  margin-bottom:14px;
+}
+
+.homeHero h2{
+  margin:0;
+}
+
+.empty{
+  text-align:center;
+  padding:25px;
+  color:#777;
+}
+
+hr{
+  border:0;
+  border-top:1px solid #eee;
+  margin:18px 0;
+}
 </style>
 </head>
 
 <body>
 
-<header>🏠 The List</header>
+<header>
+  <h1>🏠 The List</h1>
+  <p>Your family's home project planner</p>
+</header>
 
 <nav>
-  <button onclick="showPage('home')">🏠 Home</button>
-  <button onclick="showPage('projects')">📋 Projects</button>
-  <button onclick="showPage('shopping')">🛒 Shopping</button>
-  <button onclick="showPage('calendar')">📅 Calendar</button>
-  <button onclick="showPage('maintenance')">🔧 Maintenance</button>
-  <button onclick="showPage('homeInfo')">🏡 Home Info</button>
-  <button onclick="showPage('family')">👨‍👩‍👧‍👦 Family</button>
+  <button onclick="showPage('homePage')" id="navHome">Home</button>
+  <button onclick="showPage('projectsPage')" id="navProjects">Projects</button>
+  <button onclick="showPage('shoppingPage')" id="navShopping">Shopping</button>
+  <button onclick="showPage('calendarPage')" id="navCalendar">Calendar</button>
+  <button onclick="showPage('maintenancePage')" id="navMaintenance">Maintenance</button>
+  <button onclick="showPage('homeInfoPage')" id="navHomeInfo">Home Info</button>
+  <button onclick="showPage('familyPage')" id="navFamily">Family</button>
 </nav>
 
 <main>
 
+<!-- =========================
+     HOME
+     ========================= -->
+
 <section id="homePage">
 
-  <div class="card">
-    <h1>🏡 The List</h1>
-
-    <p id="homeSummary"></p>
-
-    <button onclick="showPage('homeInfo')">
-      ✏️ Edit Home Information
-    </button>
+  <div class="homeHero">
+    <h2>🏠 Welcome to The List</h2>
+    <p>
+      Keep your home projects, plans, materials, maintenance,
+      shopping and family notes in one place.
+    </p>
   </div>
 
   <div class="card">
+    <h2>📊 Home Overview</h2>
 
-    <h2>📊 At a Glance</h2>
+    <div class="statGrid">
+      <div class="stat">
+        <strong id="homeProjectCount">0</strong>
+        Projects
+      </div>
 
-    <div class="stat">
-      <b id="projectCount">0</b>
-      Projects
+      <div class="stat">
+        <strong id="homeOpenTasks">0</strong>
+        Open Tasks
+      </div>
+
+      <div class="stat">
+        <strong id="homeShoppingCount">0</strong>
+        Shopping Items
+      </div>
+
+      <div class="stat">
+        <strong id="homeMaintenanceCount">0</strong>
+        Maintenance
+      </div>
     </div>
-
-    <div class="stat">
-      <b id="taskCount">0</b>
-      Tasks Remaining
-    </div>
-
   </div>
 
   <div class="card">
-
-    <h2>🎯 Your Projects</h2>
-
-    <div id="homeProjects"></div>
-
-    <button onclick="showPage('projects')">
-      📋 View All Projects
-    </button>
-
-  </div>
-
-  <div class="card">
-
-    <h2>📅 Coming Up</h2>
-
+    <h2>📅 Upcoming</h2>
     <div id="homeUpcoming"></div>
-
-    <button onclick="showPage('calendar')">
-      📅 Open Calendar
-    </button>
-
   </div>
 
   <div class="card">
+    <h2>🚀 Quick Actions</h2>
 
-    <h2>🛒 Shopping</h2>
+    <div class="row">
+      <button onclick="newProject()">＋ Project</button>
+      <button onclick="buildMyPlan()">✨ Build My Plan</button>
+    </div>
 
-    <p>Materials and supplies you still need.</p>
+    <div class="row" style="margin-top:8px;">
+      <button class="secondary" onclick="showPage('shoppingPage')">
+        🛒 Shopping
+      </button>
 
-    <button onclick="showPage('shopping')">
-      🛒 Open Shopping List
-    </button>
-
-  </div>
-
-  <div class="card">
-
-    <h2>🔧 Maintenance</h2>
-
-    <p>Keep track of important home maintenance.</p>
-
-    <button onclick="showPage('maintenance')">
-      🔧 Open Maintenance
-    </button>
-
+      <button class="secondary" onclick="showPage('calendarPage')">
+        📅 Calendar
+      </button>
+    </div>
   </div>
 
 </section>
 
 
+<!-- =========================
+     PROJECTS
+     ========================= -->
+
 <section id="projectsPage" class="hidden">
 
   <div class="card">
-
     <h2>📋 Projects</h2>
 
-    <button onclick="newProject()">
-      ＋ New Project
-    </button>
+    <button onclick="newProject()">＋ New Project</button>
 
-    <button
-      onclick="buildMyPlan()"
-      style="margin-top:10px;">
+    <button onclick="buildMyPlan()" style="margin-top:10px;">
       ✨ Build My Plan
     </button>
-
   </div>
 
   <div id="projectsList"></div>
@@ -427,129 +503,100 @@ label{
 </section>
 
 
-<section id="workspacePage" class="hidden">
-
-  <div class="card" id="workspaceContent"></div>
-
-</section>
-
+<!-- =========================
+     SHOPPING
+     ========================= -->
 
 <section id="shoppingPage" class="hidden">
 
   <div class="card">
-
     <h2>🛒 Shopping List</h2>
 
-    <input
-      id="shoppingInput"
-      placeholder="What do you need?">
+    <input id="shoppingInput" placeholder="Add an item">
 
-    <select id="shoppingProject">
-      <option value="">No Project</option>
-    </select>
-
-    <input
-      id="shoppingQuantity"
-      placeholder="Quantity">
-
-    <button onclick="addShopping()">
+    <button onclick="addShoppingItem()">
       ＋ Add Item
     </button>
-
   </div>
 
-  <div class="card">
-
-    <h2>🛍️ Items to Buy</h2>
-
-    <div id="shoppingList"></div>
-
-  </div>
+  <div id="shoppingList"></div>
 
 </section>
 
+
+<!-- =========================
+     CALENDAR
+     ========================= -->
 
 <section id="calendarPage" class="hidden">
 
   <div class="card">
 
-    <h2>📅 Today & Upcoming</h2>
-
-    <div id="calendarTodaySummary"></div>
-
-  </div>
-
-  <div class="card">
-
     <div class="calendarHeader">
 
-      <button onclick="changeMonth(-1)">
+      <button class="secondary" onclick="changeMonth(-1)">
         ‹
       </button>
 
-      <div
-        id="calendarMonthTitle"
-        class="calendarTitle">
-      </div>
+      <strong id="calendarMonth"></strong>
 
-      <button onclick="changeMonth(1)">
+      <button class="secondary" onclick="changeMonth(1)">
         ›
       </button>
 
     </div>
 
-    <div
-      id="calendarGrid"
-      class="calendarGrid">
-    </div>
+    <div class="calendarGrid">
 
-  </div>
-
-  <div
-    class="card selectedDateCard">
-
-    <h2 id="selectedDateTitle">
-      📅 Select a Date
-    </h2>
-
-    <div id="selectedDateTasks">
-
-      <p class="selectedDateEmpty">
-        Tap a date on the calendar.
-      </p>
+      <div class="calendarWeekday">Sun</div>
+      <div class="calendarWeekday">Mon</div>
+      <div class="calendarWeekday">Tue</div>
+      <div class="calendarWeekday">Wed</div>
+      <div class="calendarWeekday">Thu</div>
+      <div class="calendarWeekday">Fri</div>
+      <div class="calendarWeekday">Sat</div>
 
     </div>
 
+    <div id="calendarGrid" class="calendarGrid"></div>
+
   </div>
+
+  <div id="selectedDateCard"></div>
 
   <div class="card">
+    <h2>＋ Add Calendar Item</h2>
 
-    <h2>＋ Add Calendar Event</h2>
+    <label>Date</label>
+    <input type="date" id="calendarDate">
 
-    <input
-      id="calendarTitle"
-      placeholder="Event or task">
+    <label>Title</label>
+    <input id="calendarTitle" placeholder="Example: Buy fence posts">
 
-    <input
-      id="calendarDate"
-      type="date">
+    <label>Type</label>
+    <select id="calendarType">
+      <option>Task</option>
+      <option>Reminder</option>
+      <option>Project</option>
+      <option>Maintenance</option>
+    </select>
 
     <button onclick="addCalendar()">
-      ＋ Add
+      Add to Calendar
     </button>
-
   </div>
 
   <div class="card">
-
-    <h2>📋 Other Calendar Events</h2>
-
+    <h2>📋 Calendar List</h2>
     <div id="calendarList"></div>
-
   </div>
 
 </section>
 
+
+<!-- =========================
+     MAINTENANCE
+     ========================= -->
 
 <section id="maintenancePage" class="hidden">
 
@@ -557,32 +604,29 @@ label{
 
     <h2>🔧 Maintenance</h2>
 
-    <input
-      id="maintenanceName"
-      placeholder="Maintenance item">
+    <input id="maintenanceName"
+      placeholder="Example: Change HVAC filter">
 
-    <input
-      id="maintenanceDue"
+    <input id="maintenanceDue"
       type="date">
 
-    <input
-      id="maintenanceNotes"
-      placeholder="Notes">
+    <textarea id="maintenanceNotes"
+      placeholder="Notes"></textarea>
 
     <button onclick="addMaintenance()">
-      ＋ Add
+      ＋ Add Maintenance
     </button>
 
   </div>
 
-  <div class="card">
-
-    <div id="maintenanceList"></div>
-
-  </div>
+  <div id="maintenanceList"></div>
 
 </section>
 
+
+<!-- =========================
+     HOME INFORMATION
+     ========================= -->
 
 <section id="homeInfoPage" class="hidden">
 
@@ -599,7 +643,7 @@ label{
     <label>Builder</label>
     <input id="homeBuilder">
 
-    <label>Home Size (sq ft)</label>
+    <label>Square Feet</label>
     <input id="homeSquareFeet" type="number">
 
     <label>Exterior Color</label>
@@ -611,10 +655,10 @@ label{
     <label>Roof Color</label>
     <input id="homeRoofColor">
 
-    <label>Lawn Area (sq ft)</label>
-    <input id="homeLawnArea" type="number">
+    <label>Lawn Area</label>
+    <input id="homeLawnArea">
 
-    <label>Current Grass</label>
+    <label>Lawn Grass</label>
     <textarea id="homeLawnGrass"></textarea>
 
     <label>Lawn Goal</label>
@@ -632,17 +676,23 @@ label{
     <label>Drainage Notes</label>
     <textarea id="homeDrainageNotes"></textarea>
 
-    <label>General Home Notes</label>
+    <label>General Notes</label>
     <textarea id="homeNotes"></textarea>
 
     <button onclick="saveHomeInfo()">
-      💾 Save Home Information
+      Save Home Information
     </button>
+
+    <p id="homeInfoSaved"></p>
 
   </div>
 
 </section>
 
+
+<!-- =========================
+     FAMILY
+     ========================= -->
 
 <section id="familyPage" class="hidden">
 
@@ -668,15 +718,30 @@ label{
 
 </section>
 
+
+<!-- =========================
+     OPEN PROJECT
+     ========================= -->
+
+<section id="projectDetailPage" class="hidden">
+
+  <div id="projectDetail"></div>
+
+</section>
+
 </main>
 
 
 <script>
 
-const STORAGE_KEY="theListDataV2";
+/* =========================================================
+   STORAGE
+   ========================================================= */
+
+const STORAGE_KEY = "theListDataV2";
 
 
-const defaultData={
+const defaultData = {
 
   home:{
     location:"Palm Coast, Florida",
@@ -696,264 +761,109 @@ const defaultData={
     notes:""
   },
 
-  projects:[
-
-    {
-      id:1,
-      name:"🏠 House Painting",
-      category:"Exterior",
-      description:"Paint the house with the selected exterior color scheme.",
-      tasks:[
-        {name:"Choose final colors",done:false},
-        {name:"Calculate paint quantity",done:false},
-        {name:"Purchase paint",done:false},
-        {name:"Purchase preparation supplies",done:false},
-        {name:"Prepare exterior",done:false},
-        {name:"Repair and scrape as needed",done:false},
-        {name:"Prime as needed",done:false},
-        {name:"Paint exterior",done:false},
-        {name:"Paint trim",done:false},
-        {name:"Final inspection and touch-up",done:false}
-      ],
-      materials:[],
-      records:[],
-      notes:"",
-      budget:0,
-      answers:[]
-    },
-
-    {
-      id:2,
-      name:"🌱 Front Yard",
-      category:"Exterior",
-      description:"Grade, improve drainage and establish Zoysia.",
-      tasks:[
-        {name:"Measure yard",done:false},
-        {name:"Plan grading",done:false},
-        {name:"Address drainage",done:false},
-        {name:"Prepare soil",done:false},
-        {name:"Establish Zoysia",done:false},
-        {name:"Install plugs",done:false},
-        {name:"Water and maintain",done:false}
-      ],
-      materials:[],
-      records:[],
-      notes:"",
-      budget:0,
-      answers:[]
-    },
-
-    {
-      id:3,
-      name:"🥕 Garden",
-      category:"Garden",
-      description:"Build and maintain the home food garden.",
-      tasks:[
-        {name:"Prepare garden soil",done:false},
-        {name:"Plant carrots",done:false},
-        {name:"Plan fruit trees",done:false},
-        {name:"Set up irrigation",done:false},
-        {name:"Set up compost",done:false}
-      ],
-      materials:[],
-      records:[],
-      notes:"",
-      budget:0,
-      answers:[]
-    },
-
-    {
-      id:4,
-      name:"🪚 Fence",
-      category:"Exterior",
-      description:"Design and build the property fence.",
-      tasks:[
-        {name:"Measure property",done:false},
-        {name:"Choose fence style",done:false},
-        {name:"Plan gates",done:false},
-        {name:"Price materials",done:false},
-        {name:"Build fence",done:false}
-      ],
-      materials:[],
-      records:[],
-      notes:"",
-      budget:0,
-      answers:[]
-    },
-
-    {
-      id:5,
-      name:"🌿 Lawn — Zoysia",
-      category:"Lawn",
-      description:"Develop a dense Zoysia lawn and reduce Bahia.",
-      tasks:[
-        {name:"Identify grass varieties",done:false},
-        {name:"Set mowing height",done:false},
-        {name:"Improve irrigation",done:false},
-        {name:"Fertilize appropriately",done:false},
-        {name:"Control Bahia",done:false},
-        {name:"Control weeds",done:false},
-        {name:"Control fire ants",done:false},
-        {name:"Level lawn",done:false},
-        {name:"Develop Zoysia plug nursery",done:false}
-      ],
-      materials:[],
-      records:[],
-      notes:"",
-      budget:0,
-      answers:[]
-    },
-
-    {
-      id:6,
-      name:"🚿 Master Bathroom",
-      category:"Interior",
-      description:"Convert existing shower/tub area into one large shower.",
-      tasks:[
-        {name:"Plan demolition",done:false},
-        {name:"Remove dividing wall",done:false},
-        {name:"Plan plumbing",done:false},
-        {name:"Install waterproofing",done:false},
-        {name:"Install shower pan/drain",done:false},
-        {name:"Install tile",done:false},
-        {name:"Install fixtures",done:false},
-        {name:"Install glass",done:false},
-        {name:"Final inspection",done:false}
-      ],
-      materials:[],
-      records:[],
-      notes:"",
-      budget:0,
-      answers:[]
-    },
-
-    {
-      id:7,
-      name:"🏡 Patio / Screen Enclosure",
-      category:"Exterior",
-      description:"Extend patio and create a screened enclosure.",
-      tasks:[
-        {name:"Measure patio",done:false},
-        {name:"Plan full-length extension",done:false},
-        {name:"Plan clear-top enclosure",done:false},
-        {name:"Plan attachment under soffit",done:false},
-        {name:"Plan screening",done:false},
-        {name:"Plan French doors",done:false},
-        {name:"Price materials",done:false},
-        {name:"Build enclosure",done:false}
-      ],
-      materials:[],
-      records:[],
-      notes:"",
-      budget:0,
-      answers:[]
-    }
-
-  ],
+  projects:[],
 
   shopping:[],
+
   maintenance:[],
+
   calendar:[],
-  familyNote:""
+
+  family:{
+    note:""
+  }
 
 };
 
 
-let data=JSON.parse(
-  localStorage.getItem(STORAGE_KEY)
-);
+let data = loadData();
 
 
-if(!data){
+let currentCalendarDate = new Date();
 
-  data=defaultData;
+let selectedCalendarDate = null;
 
-  saveData();
-
-}else{
-
-  if(!data.home)
-    data.home={};
+let editingPlan = null;
 
 
-  Object.keys(defaultData.home).forEach(key=>{
+/* =========================================================
+   LOAD / SAVE
+   ========================================================= */
 
-    if(data.home[key]===undefined){
+function loadData(){
 
-      data.home[key]=
-        defaultData.home[key];
+  try{
 
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if(!saved){
+      return structuredClone(defaultData);
     }
 
-  });
+    const parsed = JSON.parse(saved);
 
+    parsed.home = {
+      ...defaultData.home,
+      ...(parsed.home || {})
+    };
 
-  if(!Array.isArray(data.projects))
-    data.projects=[];
+    parsed.projects = Array.isArray(parsed.projects)
+      ? parsed.projects
+      : [];
 
-  if(!Array.isArray(data.shopping))
-    data.shopping=[];
+    parsed.shopping = Array.isArray(parsed.shopping)
+      ? parsed.shopping
+      : [];
 
-  if(!Array.isArray(data.maintenance))
-    data.maintenance=[];
+    parsed.maintenance = Array.isArray(parsed.maintenance)
+      ? parsed.maintenance
+      : [];
 
-  if(!Array.isArray(data.calendar))
-    data.calendar=[];
+    parsed.calendar = Array.isArray(parsed.calendar)
+      ? parsed.calendar
+      : [];
 
+    parsed.family = {
+      ...defaultData.family,
+      ...(parsed.family || {})
+    };
 
-  data.projects.forEach(project=>{
+    parsed.projects.forEach(p => {
 
-    if(!Array.isArray(project.tasks))
-      project.tasks=[];
+      if(!Array.isArray(p.tasks)) p.tasks = [];
+      if(!Array.isArray(p.materials)) p.materials = [];
+      if(!Array.isArray(p.records)) p.records = [];
+      if(!Array.isArray(p.answers)) p.answers = [];
 
-    if(!Array.isArray(project.materials))
-      project.materials=[];
+      if(typeof p.notes !== "string") p.notes = "";
 
-    if(!Array.isArray(project.records))
-      project.records=[];
+      if(typeof p.budget !== "number") p.budget = 0;
 
-    if(project.notes===undefined)
-      project.notes="";
+      p.tasks.forEach(t => {
 
-    if(project.budget===undefined)
-      project.budget=0;
+        if(typeof t.done !== "boolean"){
+          t.done = false;
+        }
 
-    if(!Array.isArray(project.answers))
-      project.answers=[];
+        if(typeof t.dueDate === "undefined"){
+          t.dueDate = "";
+        }
 
-
-    project.tasks.forEach(task=>{
-
-      if(task.done===undefined)
-        task.done=false;
-
-      if(task.dueDate===undefined)
-        task.dueDate="";
+      });
 
     });
 
-  });
+    return parsed;
 
+  }catch(error){
 
-  saveData();
+    console.error(error);
+
+    return structuredClone(defaultData);
+
+  }
 
 }
-
-
-/* =========================
-   CALENDAR STATE
-   ========================= */
-
-let calendarViewDate=new Date();
-
-let selectedCalendarDate="";
-
-
-/* =========================
-   AI PLAN STATE
-   ========================= */
-
-let aiPlanDraft=null;
 
 
 function saveData(){
@@ -966,205 +876,130 @@ function saveData(){
 }
 
 
-function escapeHTML(value){
+/* =========================================================
+   PAGE NAVIGATION
+   ========================================================= */
 
-  return String(value??"")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
-
-}
-
-
-function dateToKey(date){
-
-  return date.getFullYear()+"-"+
-    String(date.getMonth()+1).padStart(2,"0")+"-"+
-    String(date.getDate()).padStart(2,"0");
-
-}
+const pageIds = [
+  "homePage",
+  "projectsPage",
+  "shoppingPage",
+  "calendarPage",
+  "maintenancePage",
+  "homeInfoPage",
+  "familyPage",
+  "projectDetailPage"
+];
 
 
-function formatDate(dateString){
+function showPage(pageId){
 
-  if(!dateString)
-    return "No date";
+  pageIds.forEach(id => {
 
+    const el = document.getElementById(id);
 
-  const parts=dateString.split("-");
-
-
-  if(parts.length!==3)
-    return dateString;
-
-
-  const date=new Date(
-    Number(parts[0]),
-    Number(parts[1])-1,
-    Number(parts[2])
-  );
-
-
-  return date.toLocaleDateString(
-    undefined,
-    {
-      month:"short",
-      day:"numeric",
-      year:"numeric"
+    if(el){
+      el.classList.toggle(
+        "hidden",
+        id !== pageId
+      );
     }
-  );
-
-}
-
-
-function showPage(page){
-
-  document.querySelectorAll(
-    "main>section"
-  ).forEach(section=>{
-
-    section.classList.add("hidden");
 
   });
 
 
-  const target=document.getElementById(
-    page+"Page"
-  );
+  document.querySelectorAll("nav button")
+    .forEach(btn => btn.classList.remove("active"));
 
 
-  if(target)
-    target.classList.remove("hidden");
+  const map = {
+    homePage:"navHome",
+    projectsPage:"navProjects",
+    shoppingPage:"navShopping",
+    calendarPage:"navCalendar",
+    maintenancePage:"navMaintenance",
+    homeInfoPage:"navHomeInfo",
+    familyPage:"navFamily"
+  };
 
 
-  if(page==="home")
-    renderHome();
+  if(map[pageId]){
 
-
-  if(page==="projects")
-    renderProjects();
-
-
-  if(page==="shopping")
-    renderShopping();
-
-
-  if(page==="calendar"){
-
-    renderCalendarToday();
-
-    renderCalendar();
-
-    renderCalendarList();
+    document
+      .getElementById(map[pageId])
+      .classList.add("active");
 
   }
 
 
-  if(page==="maintenance")
+  if(pageId === "homePage"){
+    renderHome();
+  }
+
+  if(pageId === "projectsPage"){
+    renderProjects();
+  }
+
+  if(pageId === "shoppingPage"){
+    renderShopping();
+  }
+
+  if(pageId === "calendarPage"){
+    renderCalendar();
+    renderCalendarList();
+  }
+
+  if(pageId === "maintenancePage"){
     renderMaintenance();
+  }
 
-
-  if(page==="homeInfo")
+  if(pageId === "homeInfoPage"){
     renderHomeInfo();
+  }
 
-
-  if(page==="family")
+  if(pageId === "familyPage"){
     renderFamily();
+  }
 
 }
 
 
-/* =========================
+/* =========================================================
    HOME
-   ========================= */
+   ========================================================= */
 
 function renderHome(){
 
-  document.getElementById(
-    "projectCount"
-  ).textContent=data.projects.length;
+  document.getElementById("homeProjectCount")
+    .textContent = data.projects.length;
 
 
-  let tasksRemaining=0;
+  let openTasks = 0;
 
+  data.projects.forEach(project => {
 
-  data.projects.forEach(p=>{
+    project.tasks.forEach(task => {
 
-    tasksRemaining+=p.tasks.filter(
-      t=>!t.done
-    ).length;
+      if(!task.done){
+        openTasks++;
+      }
+
+    });
 
   });
 
 
-  document.getElementById(
-    "taskCount"
-  ).textContent=tasksRemaining;
+  document.getElementById("homeOpenTasks")
+    .textContent = openTasks;
 
 
-  document.getElementById(
-    "homeSummary"
-  ).textContent=
-    `${data.home.location||""} • ${data.home.squareFeet||""} sq ft home • Built ${data.home.yearBuilt||""}`;
+  document.getElementById("homeShoppingCount")
+    .textContent = data.shopping
+      .filter(x => !x.done).length;
 
 
-  document.getElementById(
-    "homeProjects"
-  ).innerHTML=
-
-    data.projects.map(p=>{
-
-      const completed=
-        p.tasks.filter(t=>t.done).length;
-
-
-      const total=p.tasks.length;
-
-
-      const percent=
-        total?
-        Math.round((completed/total)*100):
-        0;
-
-
-      return `
-
-        <div class="item">
-
-          <div>
-
-            <b>
-              ${escapeHTML(p.name)}
-            </b>
-
-            <br>
-
-            <span class="badge">
-              ${escapeHTML(p.category)}
-            </span>
-
-            <br>
-
-            <small>
-              Progress:
-              ${completed}/${total}
-              tasks (${percent}%)
-            </small>
-
-          </div>
-
-          <button
-            onclick="openProject(${p.id})">
-            Open
-          </button>
-
-        </div>
-
-      `;
-
-    }).join("");
+  document.getElementById("homeMaintenanceCount")
+    .textContent = data.maintenance.length;
 
 
   renderHomeUpcoming();
@@ -1174,28 +1009,23 @@ function renderHome(){
 
 function renderHomeUpcoming(){
 
-  const container=
-    document.getElementById(
-      "homeUpcoming"
-    );
+  const box =
+    document.getElementById("homeUpcoming");
 
 
-  const upcoming=[];
+  const upcoming = [];
 
 
-  data.projects.forEach(project=>{
+  data.projects.forEach(project => {
 
-    project.tasks.forEach((task,index)=>{
+    project.tasks.forEach(task => {
 
-      if(
-        !task.done &&
-        task.dueDate
-      ){
+      if(task.dueDate && !task.done){
 
         upcoming.push({
-          project,
-          task,
-          index
+          date:task.dueDate,
+          title:task.text,
+          project:project.name
         });
 
       }
@@ -1205,655 +1035,155 @@ function renderHomeUpcoming(){
   });
 
 
-  upcoming.sort((a,b)=>
-    a.task.dueDate.localeCompare(
-      b.task.dueDate
-    )
+  data.calendar.forEach(item => {
+
+    if(item.date){
+
+      upcoming.push({
+        date:item.date,
+        title:item.title,
+        project:item.type || "Calendar"
+      });
+
+    }
+
+  });
+
+
+  upcoming.sort((a,b) =>
+    a.date.localeCompare(b.date)
   );
 
 
   if(!upcoming.length){
 
-    container.innerHTML=
-      "<p>No dated tasks yet.</p>";
+    box.innerHTML =
+      `<div class="empty">Nothing scheduled yet.</div>`;
 
     return;
 
   }
 
 
-  container.innerHTML=
-    upcoming.slice(0,5).map(x=>`
+  box.innerHTML = upcoming
+    .slice(0,6)
+    .map(item => `
 
-      <div class="item">
+      <div class="task">
 
-        <div>
+        <div class="taskText">
 
-          <b>
-            ${escapeHTML(x.task.name)}
-          </b>
+          <strong>${escapeHTML(item.title)}</strong>
 
-          <br>
-
-          <span class="upcomingDate">
-            ${escapeHTML(
-              formatDate(x.task.dueDate)
-            )}
-          </span>
-
-          <br>
-
-          <small>
-            ${escapeHTML(x.project.name)}
-          </small>
+          <div class="smallText">
+            ${escapeHTML(item.project)}
+            · ${formatDate(item.date)}
+          </div>
 
         </div>
-
-        <button
-          onclick="openProject(${x.project.id})">
-          Open
-        </button>
 
       </div>
 
-    `).join("");
+    `)
+    .join("");
 
 }
 
 
-/* =========================
+/* =========================================================
    PROJECTS
-   ========================= */
+   ========================================================= */
 
 function renderProjects(){
 
-  const list=
-    document.getElementById(
-      "projectsList"
-    );
-
-
-  list.innerHTML=
-    data.projects.map(p=>{
-
-      const completed=
-        p.tasks.filter(t=>t.done).length;
-
-
-      const total=p.tasks.length;
-
-
-      return `
-
-        <div class="card">
-
-          <h3>
-            ${escapeHTML(p.name)}
-          </h3>
-
-          <span class="badge">
-            ${escapeHTML(p.category)}
-          </span>
-
-          <p>
-            ${escapeHTML(p.description)}
-          </p>
-
-          <p>
-            <b>Progress:</b>
-            ${completed}/${total} tasks
-          </p>
-
-          <button
-            onclick="openProject(${p.id})">
-            Open Project
-          </button>
-
-        </div>
-
-      `;
-
-    }).join("");
-
-}
-
-
-/* =========================
-   PROJECT WORKSPACE
-   ========================= */
-
-function openProject(id){
-
-  const project=
-    data.projects.find(
-      p=>p.id===id
-    );
-
-
-  if(!project)
-    return;
-
-
-  if(!Array.isArray(project.answers))
-    project.answers=[];
-
-
-  document.getElementById(
-    "workspaceContent"
-  ).innerHTML=`
-
-    <h2>
-      ${escapeHTML(project.name)}
-    </h2>
-
-    <span class="badge">
-      ${escapeHTML(project.category)}
-    </span>
-
-    <p>
-      ${escapeHTML(project.description)}
-    </p>
-
-
-    <!-- TASKS -->
-
-    <div class="card">
-
-      <h3>📋 Tasks</h3>
-
-      ${
-        project.tasks.length?
-
-        project.tasks.map((task,i)=>`
-
-          <div class="task">
-
-            <input
-              type="checkbox"
-              ${task.done?"checked":""}
-              onchange="
-                toggleTask(${project.id},${i})
-              ">
-
-            <span
-              class="${task.done?"done":""}">
-
-              ${escapeHTML(task.name)}
-
-            </span>
-
-          </div>
-
-
-          <label>
-            📅 Due Date
-          </label>
-
-          <input
-            type="date"
-            value="${escapeHTML(task.dueDate||"")}"
-            onchange="
-              setTaskDate(
-                ${project.id},
-                ${i},
-                this.value
-              )
-            ">
-
-        `).join("")
-
-        :
-
-        "<p>No tasks yet.</p>"
-      }
-
-
-      <input
-        id="newTask"
-        placeholder="Add a task">
-
-      <button
-        onclick="addTask(${project.id})">
-        ＋ Add Task
-      </button>
-
-    </div>
-
-
-    <!-- MATERIALS -->
-
-    <div class="card">
-
-      <h3>🛒 Materials</h3>
-
-      <p>
-        Add materials and supplies needed
-        for this project.
-      </p>
-
-      <input
-        id="materialName"
-        placeholder="Material or supply">
-
-      <input
-        id="materialQuantity"
-        placeholder="Quantity">
-
-      <button
-        onclick="addMaterial(${project.id})">
-        ＋ Add Material
-      </button>
-
-
-      ${
-        project.materials.length?
-
-        project.materials.map((material,index)=>`
-
-          <div class="item">
-
-            <div>
-
-              <b>
-                ${escapeHTML(material.name)}
-              </b>
-
-              ${
-                material.quantity?
-
-                `<br>
-                 <small>
-                   Quantity:
-                   ${escapeHTML(material.quantity)}
-                 </small>`
-
-                :
-
-                ""
-              }
-
-            </div>
-
-
-            <button
-              onclick="
-                addMaterialToShopping(
-                  ${project.id},
-                  ${index}
-                )
-              ">
-
-              🛒 Add
-
-            </button>
-
-          </div>
-
-        `).join("")
-
-        :
-
-        "<p>No materials added yet.</p>"
-      }
-
-    </div>
-
-
-    <!-- BUDGET -->
-
-    <div class="card">
-
-      <h3>💰 Project Budget</h3>
-
-      <p>
-        Estimated budget:
-        <b>
-          $${Number(project.budget||0).toFixed(2)}
-        </b>
-      </p>
-
-    </div>
-
-
-    <!-- QUESTIONS AND ANSWERS -->
-
-    <div class="card">
-
-      <h3>❓ Project Details & Answers</h3>
-
-      ${
-        project.answers.length?
-
-        project.answers.map(item=>`
-
-          <div class="planQuestion">
-
-            <b>
-              ${escapeHTML(item.question)}
-            </b>
-
-            <br>
-
-            <span>
-              ${
-                item.answer?
-                escapeHTML(item.answer):
-                "<em>No answer provided</em>"
-              }
-            </span>
-
-          </div>
-
-        `).join("")
-
-        :
-
-        "<p>No planning questions saved for this project.</p>"
-      }
-
-    </div>
-
-
-    <!-- HOME RECORDS -->
-
-    <div class="card">
-
-      <h3>🏠 Permanent Home Records</h3>
-
-      <p>
-        Paint, flooring, tile, fixtures,
-        appliances and other confirmed
-        products will be saved here.
-      </p>
-
-      ${
-        project.records.length?
-
-        project.records.map(record=>`
-
-          <div class="item">
-
-            <div>
-
-              <b>
-                ${escapeHTML(record.name)}
-              </b>
-
-              <br>
-
-              <small>
-                ${escapeHTML(
-                  record.type||"Home Record"
-                )}
-              </small>
-
-            </div>
-
-          </div>
-
-        `).join("")
-
-        :
-
-        "<p>No permanent records yet.</p>"
-      }
-
-    </div>
-
-
-    <button
-      class="secondary"
-      onclick="showPage('projects')">
-
-      ← Back to Projects
-
-    </button>
-
-  `;
-
-
-  showPage("workspace");
-
-}
-
-
-function toggleTask(projectId,index){
-
-  const project=
-    data.projects.find(
-      p=>p.id===projectId
-    );
-
-
-  if(!project)
-    return;
-
-
-  project.tasks[index].done=
-    !project.tasks[index].done;
-
-
-  saveData();
-
-  renderHome();
-
-  openProject(projectId);
-
-}
-
-
-function setTaskDate(
-  projectId,
-  index,
-  date
-){
-
-  const project=
-    data.projects.find(
-      p=>p.id===projectId
-    );
-
-
-  if(!project)
-    return;
-
-
-  if(!project.tasks[index])
-    return;
-
-
-  project.tasks[index].dueDate=date;
-
-
-  saveData();
-
-  renderHome();
-
-  openProject(projectId);
-
-}
-
-
-function addMaterial(projectId){
-
-  const nameInput=
-    document.getElementById(
-      "materialName"
-    );
-
-
-  const quantityInput=
-    document.getElementById(
-      "materialQuantity"
-    );
-
-
-  const name=
-    nameInput.value.trim();
-
-
-  const quantity=
-    quantityInput.value.trim();
-
-
-  if(!name)
-    return;
-
-
-  const project=
-    data.projects.find(
-      p=>p.id===projectId
-    );
-
-
-  if(!project)
-    return;
-
-
-  if(!Array.isArray(project.materials))
-    project.materials=[];
-
-
-  project.materials.push({
-
-    id:Date.now(),
-
-    name:name,
-
-    quantity:quantity,
-
-    addedToShopping:false
-
-  });
-
-
-  saveData();
-
-  openProject(projectId);
-
-}
-
-
-function addMaterialToShopping(
-  projectId,
-  materialIndex
-){
-
-  const project=
-    data.projects.find(
-      p=>p.id===projectId
-    );
-
-
-  if(!project)
-    return;
-
-
-  const material=
-    project.materials[materialIndex];
-
-
-  if(!material)
-    return;
-
-
-  if(material.addedToShopping){
-
-    alert(
-      "This material is already on the Shopping List."
-    );
+  const box =
+    document.getElementById("projectsList");
+
+
+  if(!data.projects.length){
+
+    box.innerHTML = `
+      <div class="card empty">
+        No projects yet.<br><br>
+        Start one with <strong>＋ New Project</strong>
+        or use <strong>✨ Build My Plan</strong>.
+      </div>
+    `;
 
     return;
 
   }
 
 
-  data.shopping.push({
+  box.innerHTML = data.projects.map(project => {
 
-    id:Date.now(),
+    const total = project.tasks.length;
 
-    name:material.name,
+    const completed =
+      project.tasks.filter(t => t.done).length;
 
-    projectId:project.id,
-
-    quantity:material.quantity||"",
-
-    purchased:false
-
-  });
+    const percent =
+      total ? Math.round(completed / total * 100) : 0;
 
 
-  material.addedToShopping=true;
+    return `
 
+      <div
+        class="card projectCard"
+        onclick="openProject('${project.id}')">
 
-  saveData();
+        <h3>
+          ${escapeHTML(project.name)}
+        </h3>
 
+        <div class="projectMeta">
 
-  alert(
-    "Added to Shopping List!"
-  );
+          ${escapeHTML(project.category || "Home")}
+          ${project.budget ? ` · Budget $${Number(project.budget).toFixed(0)}` : ""}
 
+        </div>
 
-  openProject(projectId);
+        <p>
+          ${escapeHTML(project.description || "No description yet.")}
+        </p>
 
-}
+        <div class="smallText">
+          ${completed} of ${total} tasks complete
+        </div>
 
+        <div class="progress">
+          <div style="width:${percent}%"></div>
+        </div>
 
-function addTask(projectId){
+      </div>
 
-  const input=
-    document.getElementById(
-      "newTask"
-    );
+    `;
 
-
-  if(!input.value.trim())
-    return;
-
-
-  const project=
-    data.projects.find(
-      p=>p.id===projectId
-    );
-
-
-  if(!project)
-    return;
-
-
-  project.tasks.push({
-
-    name:input.value.trim(),
-
-    done:false,
-
-    dueDate:""
-
-  });
-
-
-  saveData();
-
-  openProject(projectId);
+  }).join("");
 
 }
 
+
+/* =========================================================
+   NEW PROJECT
+   ========================================================= */
 
 function newProject(){
 
-  const name=
+  const name =
     prompt("Project name:");
 
-
-  if(!name)
+  if(!name){
     return;
+  }
 
 
-  const category=
-    prompt("Category:")||"Custom";
+  const category =
+    prompt("Category:", "Home");
 
 
-  const id=Date.now();
+  const id =
+    Date.now().toString();
 
 
   data.projects.push({
@@ -1862,7 +1192,7 @@ function newProject(){
 
     name:name,
 
-    category:category,
+    category:category || "Home",
 
     description:"",
 
@@ -1885,567 +1215,174 @@ function newProject(){
 
   renderProjects();
 
+  openProject(id);
+
 }
 
 
-/* =========================
-   BUILD MY PLAN
-   ========================= */
+/* =========================================================
+   OPEN PROJECT
+   ========================================================= */
 
-function buildMyPlan(){
+function openProject(id){
 
-  const name=
-    prompt(
-      "What are you building?\n\nExample: Fence"
-    );
+  const project =
+    data.projects.find(p => p.id === id);
 
 
-  if(!name)
+  if(!project){
     return;
-
-
-  const projectName=
-    name.trim();
-
-
-  if(!projectName)
-    return;
-
-
-  const description=
-    prompt(
-      "Tell me a little about the project (optional):"
-    )||"";
-
-
-  const lowerName=
-    projectName.toLowerCase();
-
-
-  let questions=[];
-
-
-  if(lowerName.includes("fence")){
-
-    questions=[
-
-      {
-        question:
-          "How many linear feet of fence are needed?",
-        answer:""
-      },
-
-      {
-        question:
-          "What fence style do you want?",
-        answer:""
-      },
-
-      {
-        question:
-          "What height should the fence be?",
-        answer:""
-      },
-
-      {
-        question:
-          "Where should the gates go?",
-        answer:""
-      },
-
-      {
-        question:
-          "What gate sizes are needed?",
-        answer:""
-      },
-
-      {
-        question:
-          "What is your target budget?",
-        answer:""
-      },
-
-      {
-        question:
-          "Are there any HOA or property-line requirements?",
-        answer:""
-      }
-
-    ];
-
-  }else{
-
-    questions=[
-
-      {
-        question:
-          "What are the project dimensions?",
-        answer:""
-      },
-
-      {
-        question:
-          "What materials do you want to use?",
-        answer:""
-      },
-
-      {
-        question:
-          "What is your target budget?",
-        answer:""
-      },
-
-      {
-        question:
-          "Are there any special requirements?",
-        answer:""
-      }
-
-    ];
-
   }
 
 
-  aiPlanDraft={
-
-    name:
-      lowerName.includes("fence")?
-      "🪚 "+projectName:
-      "🛠️ "+projectName,
-
-    category:
-      lowerName.includes("fence")?
-      "Exterior":
-      "Custom",
-
-    description:
-      description||
-      (
-        lowerName.includes("fence")?
-        "Design and build the property fence.":
-        "New home project."
-      ),
-
-    budget:0,
-
-    answers:questions,
-
-    tasks:[],
-
-    materials:[],
-
-    questions:questions.map(
-      item=>item.question
-    )
-
-  };
+  showPage("projectDetailPage");
 
 
-  showPlanQuestions();
-
-}
-
-
-function showPlanQuestions(){
-
-  const preview=
-    document.getElementById(
-      "workspaceContent"
-    );
+  const box =
+    document.getElementById("projectDetail");
 
 
-  preview.innerHTML=`
+  const total =
+    project.tasks.length;
 
-    <h2>
-      ✨ Let's Build Your Plan
-    </h2>
+  const completed =
+    project.tasks.filter(t => t.done).length;
 
 
-    <p>
-      A few answers will help The List
-      create a more useful project plan.
-    </p>
-
+  box.innerHTML = `
 
     <div class="card">
 
-      <h3>🏠 Project</h3>
+      <button
+        class="secondary"
+        onclick="showPage('projectsPage')">
+        ← Back to Projects
+      </button>
+
+      <h2 style="margin-top:15px;">
+        ${escapeHTML(project.name)}
+      </h2>
+
+      <div class="projectMeta">
+        ${escapeHTML(project.category || "Home")}
+      </div>
 
       <p>
-        <b>
-          ${escapeHTML(aiPlanDraft.name)}
-        </b>
+        ${escapeHTML(project.description || "")}
       </p>
 
-      <p>
-        ${escapeHTML(aiPlanDraft.description)}
-      </p>
+      <div class="smallText">
+        ${completed} of ${total} tasks complete
+      </div>
 
     </div>
 
 
     <div class="card">
 
-      <h3>❓ Tell Me About Your Project</h3>
+      <h2>✅ Tasks</h2>
 
-      ${
-        aiPlanDraft.answers.map(
-          (item,index)=>`
+      <div id="projectTasks"></div>
+
+      <hr>
+
+      <input
+        id="newTaskText"
+        placeholder="Add a task">
+
+      <input
+        id="newTaskDate"
+        type="date">
+
+      <button onclick="addTask('${project.id}')">
+        ＋ Add Task
+      </button>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>🧰 Materials</h2>
+
+      <div id="projectMaterials"></div>
+
+      <hr>
+
+      <input
+        id="newMaterialName"
+        placeholder="Material">
+
+      <input
+        id="newMaterialQty"
+        placeholder="Quantity">
+
+      <button onclick="addMaterial('${project.id}')">
+        ＋ Add Material
+      </button>
+
+    </div>
+
+
+    ${
+      project.budget
+      ? `
+        <div class="card">
+          <h2>💰 Budget</h2>
+          <strong>$${Number(project.budget).toFixed(2)}</strong>
+        </div>
+      `
+      : ""
+    }
+
+
+    ${
+      project.answers && project.answers.length
+      ? `
+
+        <div class="card">
+
+          <h2>❓ Project Details & Answers</h2>
+
+          ${project.answers.map(a => `
 
             <div class="answerBox">
 
-              <label>
-                ${escapeHTML(item.question)}
-              </label>
+              <strong>
+                ${escapeHTML(a.question)}
+              </strong>
 
-              <input
-                id="aiAnswer${index}"
-                placeholder="Enter your answer">
+              <div style="margin-top:5px;">
+                ${escapeHTML(a.answer)}
+              </div>
 
             </div>
 
-          `
-        ).join("")
-      }
+          `).join("")}
 
-    </div>
+        </div>
+
+      `
+      : ""
+    }
 
 
     <div class="card">
 
-      <button
-        onclick="generateAIPlanFromAnswers()">
-
-        ✨ Build My Plan
-
-      </button>
-
-
-      <button
-        class="secondary"
-        onclick="cancelAIPlan()"
-        style="margin-top:10px;">
-
-        ← Cancel
-
-      </button>
-
-    </div>
-
-  `;
-
-
-  showPage("workspace");
-
-}
-
-
-function generateAIPlanFromAnswers(){
-
-  if(!aiPlanDraft)
-    return;
-
-
-  aiPlanDraft.answers=
-    aiPlanDraft.answers.map(
-      (item,index)=>{
-
-        const input=
-          document.getElementById(
-            "aiAnswer"+index
-          );
-
-
-        return {
-
-          question:item.question,
-
-          answer:
-            input?
-            input.value.trim():
-            ""
-
-        };
-
-      }
-    );
-
-
-  aiPlanDraft.questions=
-    aiPlanDraft.answers.map(item=>{
-
-      if(item.answer)
-        return item.question+
-          " — "+
-          item.answer;
-
-      return item.question;
-
-    });
-
-
-  const lowerName=
-    aiPlanDraft.name.toLowerCase();
-
-
-  /*
-    Stage 1 built-in planner.
-
-    Later this section can be connected
-    to a real AI service.
-  */
-
-
-  if(lowerName.includes("fence")){
-
-    aiPlanDraft.tasks=[
-
-      "Measure property and fence runs",
-
-      "Verify property boundaries",
-
-      "Check local requirements and permits",
-
-      "Check HOA requirements",
-
-      "Confirm fence style and height",
-
-      "Confirm gate locations and sizes",
-
-      "Calculate total linear footage",
-
-      "Determine post spacing",
-
-      "Calculate number of posts",
-
-      "Calculate rails or panels",
-
-      "Calculate concrete requirements",
-
-      "Price materials",
-
-      "Purchase materials",
-
-      "Mark fence and post locations",
-
-      "Dig post holes",
-
-      "Set fence posts",
-
-      "Install rails or panels",
-
-      "Build and install gates",
-
-      "Final inspection and cleanup"
-
-    ];
-
-
-    aiPlanDraft.materials=[
-
-      {
-        name:"Fence posts",
-        quantity:"Calculate after measuring"
-      },
-
-      {
-        name:"Fence panels or pickets",
-        quantity:"Calculate from fence length"
-      },
-
-      {
-        name:"Rails",
-        quantity:"Calculate from fence design"
-      },
-
-      {
-        name:"Gate hardware",
-        quantity:"As required"
-      },
-
-      {
-        name:"Concrete",
-        quantity:"Calculate from number of posts"
-      },
-
-      {
-        name:"Post caps",
-        quantity:"One per post"
-      },
-
-      {
-        name:"Exterior screws / fasteners",
-        quantity:"As required"
-      },
-
-      {
-        name:"Gravel",
-        quantity:"As required"
-      }
-
-    ];
-
-  }else{
-
-    aiPlanDraft.tasks=[
-
-      "Define project goals",
-
-      "Measure project area",
-
-      "Research project requirements",
-
-      "Plan materials",
-
-      "Create shopping list",
-
-      "Set project budget",
-
-      "Prepare work area",
-
-      "Complete project",
-
-      "Inspect completed work",
-
-      "Clean up"
-
-    ];
-
-
-    aiPlanDraft.materials=[];
-
-  }
-
-
-  const budgetAnswer=
-    aiPlanDraft.answers.find(
-      item=>
-        item.question
-          .toLowerCase()
-          .includes("budget")
-    );
-
-
-  if(budgetAnswer){
-
-    const numbers=
-      budgetAnswer.answer
-        .replace(/[^0-9.]/g,"");
-
-
-    aiPlanDraft.budget=
-      Number(numbers)||0;
-
-  }
-
-
-  showPlanPreview();
-
-}
-
-
-function showPlanPreview(){
-
-  const preview=
-    document.getElementById(
-      "workspaceContent"
-    );
-
-
-  preview.innerHTML=`
-
-    <h2>
-      ✨ Build Your Project Plan
-    </h2>
-
-
-    <span class="badge">
-      ${escapeHTML(aiPlanDraft.category)}
-    </span>
-
-
-    <div class="card">
-
-      <h3>🏠 Project Details</h3>
-
-      <label>Project Name</label>
-
-      <input
-        id="aiProjectName"
-        value="${escapeHTML(aiPlanDraft.name)}">
-
-
-      <label>Description</label>
+      <h2>📁 Permanent Home Records</h2>
+
+      <p class="muted">
+        Store important measurements, receipts, warranties,
+        paint colors, product information and other permanent
+        records for this project.
+      </p>
 
       <textarea
-        id="aiProjectDescription"
-        rows="3">${escapeHTML(aiPlanDraft.description)}</textarea>
+        id="projectNotes"
+        placeholder="Project records and notes">${escapeHTML(project.notes || "")}</textarea>
 
-
-      <label>Estimated Budget</label>
-
-      <input
-        id="aiProjectBudget"
-        type="number"
-        min="0"
-        step="1"
-        placeholder="Enter estimated budget"
-        value="${aiPlanDraft.budget||""}">
-
-    </div>
-
-
-    <div class="card">
-
-      <h3>📋 Tasks</h3>
-
-      <p>
-        Edit the plan before adding it to your project.
-      </p>
-
-
-      <div id="aiTasksList">
-
-        ${
-          aiPlanDraft.tasks.map(
-            (task,index)=>`
-
-              <div
-                class="item"
-                style="
-                  display:flex;
-                  gap:8px;
-                  align-items:center;
-                ">
-
-                <input
-                  id="aiTask${index}"
-                  value="${escapeHTML(task)}"
-                  style="flex:1;">
-
-                <button
-                  class="secondary"
-                  onclick="removeAIPlanTask(${index})">
-
-                  🗑️
-
-                </button>
-
-              </div>
-
-            `
-          ).join("")
-        }
-
-      </div>
-
-
-      <button
-        onclick="addAIPlanTask()"
-        style="margin-top:10px;">
-
-        ＋ Add Task
-
+      <button onclick="saveProjectNotes('${project.id}')">
+        Save Records
       </button>
 
     </div>
@@ -2453,139 +1390,10 @@ function showPlanPreview(){
 
     <div class="card">
 
-      <h3>🛒 Materials</h3>
-
-
-      <div id="aiMaterialsList">
-
-        ${
-          aiPlanDraft.materials.length?
-
-          aiPlanDraft.materials.map(
-            (material,index)=>`
-
-              <div
-                class="item"
-                style="
-                  display:flex;
-                  gap:8px;
-                  align-items:center;
-                ">
-
-                <div style="flex:1;">
-
-                  <input
-                    id="aiMaterialName${index}"
-                    value="${escapeHTML(material.name)}"
-                    placeholder="Material name">
-
-                  <input
-                    id="aiMaterialQuantity${index}"
-                    value="${escapeHTML(material.quantity)}"
-                    placeholder="Quantity">
-
-                </div>
-
-
-                <button
-                  class="secondary"
-                  onclick="removeAIPlanMaterial(${index})">
-
-                  🗑️
-
-                </button>
-
-              </div>
-
-            `
-          ).join("")
-
-          :
-
-          "<p>No materials added yet.</p>"
-
-        }
-
-      </div>
-
-
       <button
-        onclick="addAIPlanMaterial()"
-        style="margin-top:10px;">
-
-        ＋ Add Material
-
-      </button>
-
-    </div>
-
-
-    <div class="card">
-
-      <h3>❓ Your Answers</h3>
-
-      ${
-        aiPlanDraft.answers.length?
-
-        aiPlanDraft.answers.map(item=>`
-
-          <div class="planQuestion">
-
-            <b>
-              ${escapeHTML(item.question)}
-            </b>
-
-            <br>
-
-            <span>
-
-              ${
-                item.answer?
-                escapeHTML(item.answer):
-                "<em>No answer provided</em>"
-              }
-
-            </span>
-
-          </div>
-
-        `).join("")
-
-        :
-
-        "<p>No answers provided.</p>"
-
-      }
-
-    </div>
-
-
-    <div class="card">
-
-      <h3>🤖 Plan Review</h3>
-
-      <p>
-        Review and edit everything above.
-        Nothing will be added to your Projects until
-        you approve the plan.
-      </p>
-
-
-      <button
-        onclick="addAIPlanToProjects()">
-
-        ✅ Add Plan to Project
-
-      </button>
-
-
-      <button
-        class="secondary"
-        onclick="cancelAIPlan()"
-        style="margin-top:10px;">
-
-        ← Cancel
-
+        class="danger"
+        onclick="deleteProject('${project.id}')">
+        Delete Project
       </button>
 
     </div>
@@ -2593,638 +1401,439 @@ function showPlanPreview(){
   `;
 
 
-  showPage("workspace");
+  renderProjectTasks(project);
+
+  renderProjectMaterials(project);
 
 }
 
 
-function saveAIPlanEdits(){
+/* =========================================================
+   PROJECT TASKS
+   ========================================================= */
 
-  if(!aiPlanDraft)
-    return;
+function renderProjectTasks(project){
 
+  const box =
+    document.getElementById("projectTasks");
 
-  const name=
-    document.getElementById(
-      "aiProjectName"
-    );
 
+  if(!project.tasks.length){
 
-  const description=
-    document.getElementById(
-      "aiProjectDescription"
-    );
-
-
-  const budget=
-    document.getElementById(
-      "aiProjectBudget"
-    );
-
-
-  if(name)
-    aiPlanDraft.name=
-      name.value.trim();
-
-
-  if(description)
-    aiPlanDraft.description=
-      description.value.trim();
-
-
-  if(budget)
-    aiPlanDraft.budget=
-      Number(budget.value)||0;
-
-
-  aiPlanDraft.tasks=
-    aiPlanDraft.tasks
-      .map((task,index)=>{
-
-        const input=
-          document.getElementById(
-            "aiTask"+index
-          );
-
-
-        return input?
-          input.value.trim():
-          task;
-
-      })
-      .filter(task=>task);
-
-
-  aiPlanDraft.materials=
-    aiPlanDraft.materials
-      .map((material,index)=>{
-
-        const nameInput=
-          document.getElementById(
-            "aiMaterialName"+index
-          );
-
-
-        const quantityInput=
-          document.getElementById(
-            "aiMaterialQuantity"+index
-          );
-
-
-        return {
-
-          name:
-            nameInput?
-            nameInput.value.trim():
-            material.name,
-
-          quantity:
-            quantityInput?
-            quantityInput.value.trim():
-            material.quantity
-
-        };
-
-      })
-      .filter(material=>material.name);
-
-}
-
-
-function addAIPlanTask(){
-
-  saveAIPlanEdits();
-
-
-  aiPlanDraft.tasks.push(
-    "New task"
-  );
-
-
-  showPlanPreview();
-
-}
-
-
-function removeAIPlanTask(index){
-
-  saveAIPlanEdits();
-
-
-  aiPlanDraft.tasks.splice(
-    index,
-    1
-  );
-
-
-  showPlanPreview();
-
-}
-
-
-function addAIPlanMaterial(){
-
-  saveAIPlanEdits();
-
-
-  aiPlanDraft.materials.push({
-
-    name:"New material",
-
-    quantity:"Enter quantity"
-
-  });
-
-
-  showPlanPreview();
-
-}
-
-
-function removeAIPlanMaterial(index){
-
-  saveAIPlanEdits();
-
-
-  aiPlanDraft.materials.splice(
-    index,
-    1
-  );
-
-
-  showPlanPreview();
-
-}
-
-
-function cancelAIPlan(){
-
-  aiPlanDraft=null;
-
-  showPage("projects");
-
-}
-
-
-function addAIPlanToProjects(){
-
-  if(!aiPlanDraft)
-    return;
-
-
-  saveAIPlanEdits();
-
-
-  if(!aiPlanDraft.name){
-
-    alert(
-      "Please enter a project name."
-    );
+    box.innerHTML =
+      `<div class="empty">No tasks yet.</div>`;
 
     return;
 
   }
 
 
-  const id=
-    Date.now();
+  box.innerHTML =
+    project.tasks.map((task,index) => `
+
+      <div class="task">
+
+        <input
+          type="checkbox"
+          ${task.done ? "checked" : ""}
+          onchange="toggleTask('${project.id}',${index})">
+
+        <div class="taskText">
+
+          <div class="${task.done ? "done" : ""}">
+            ${escapeHTML(task.text)}
+          </div>
+
+          ${
+            task.dueDate
+            ? `<div class="smallText">
+                 Due ${formatDate(task.dueDate)}
+               </div>`
+            : ""
+          }
+
+        </div>
+
+        <button
+          class="small secondary"
+          onclick="deleteTask('${project.id}',${index})">
+          ×
+        </button>
+
+      </div>
+
+    `).join("");
+
+}
 
 
-  data.projects.push({
+function toggleTask(projectId,index){
 
-    id:id,
+  const project =
+    data.projects.find(p => p.id === projectId);
 
-    name:aiPlanDraft.name,
+  if(!project) return;
 
-    category:aiPlanDraft.category,
+  project.tasks[index].done =
+    !project.tasks[index].done;
 
-    description:aiPlanDraft.description,
+  saveData();
 
-    answers:
-      aiPlanDraft.answers||[],
+  openProject(projectId);
 
-
-    tasks:
-      aiPlanDraft.tasks.map(task=>({
-
-        name:task,
-
-        done:false,
-
-        dueDate:""
-
-      })),
+}
 
 
-    materials:
-      aiPlanDraft.materials.map(material=>({
+function addTask(projectId){
 
-        id:Date.now()+Math.random(),
+  const project =
+    data.projects.find(p => p.id === projectId);
 
-        name:material.name,
-
-        quantity:material.quantity,
-
-        addedToShopping:false
-
-      })),
+  if(!project) return;
 
 
-    records:[],
+  const text =
+    document.getElementById("newTaskText").value.trim();
 
-    notes:"",
+  if(!text){
+    return;
+  }
 
-    budget:
-      aiPlanDraft.budget||0
+
+  const dueDate =
+    document.getElementById("newTaskDate").value;
+
+
+  project.tasks.push({
+
+    id:Date.now().toString(),
+
+    text:text,
+
+    done:false,
+
+    dueDate:dueDate || ""
 
   });
 
 
   saveData();
 
-
-  aiPlanDraft=null;
-
-
-  alert(
-    "Your approved project plan has been added to The List!"
-  );
-
-
-  showPage("projects");
+  openProject(projectId);
 
 }
 
 
-/* =========================
-   HOME INFORMATION
-   ========================= */
+function deleteTask(projectId,index){
 
-function renderHomeInfo(){
+  const project =
+    data.projects.find(p => p.id === projectId);
 
-  const h=data.home;
-
-
-  document.getElementById(
-    "homeLocation"
-  ).value=h.location||"";
+  if(!project) return;
 
 
-  document.getElementById(
-    "homeYearBuilt"
-  ).value=h.yearBuilt||"";
+  project.tasks.splice(index,1);
 
+  saveData();
 
-  document.getElementById(
-    "homeBuilder"
-  ).value=h.builder||"";
-
-
-  document.getElementById(
-    "homeSquareFeet"
-  ).value=h.squareFeet||"";
-
-
-  document.getElementById(
-    "homeExteriorColor"
-  ).value=h.exteriorColor||"";
-
-
-  document.getElementById(
-    "homeTrimColor"
-  ).value=h.trimColor||"";
-
-
-  document.getElementById(
-    "homeRoofColor"
-  ).value=h.roofColor||"";
-
-
-  document.getElementById(
-    "homeLawnArea"
-  ).value=h.lawnArea||"";
-
-
-  document.getElementById(
-    "homeLawnGrass"
-  ).value=h.lawnGrass||"";
-
-
-  document.getElementById(
-    "homeLawnGoal"
-  ).value=h.lawnGoal||"";
-
-
-  document.getElementById(
-    "homeGardenSize"
-  ).value=h.gardenSize||"";
-
-
-  document.getElementById(
-    "homeGardenNotes"
-  ).value=h.gardenNotes||"";
-
-
-  document.getElementById(
-    "homeIrrigationNotes"
-  ).value=h.irrigationNotes||"";
-
-
-  document.getElementById(
-    "homeDrainageNotes"
-  ).value=h.drainageNotes||"";
-
-
-  document.getElementById(
-    "homeNotes"
-  ).value=h.notes||"";
+  openProject(projectId);
 
 }
 
 
-function saveHomeInfo(){
+/* =========================================================
+   PROJECT MATERIALS
+   ========================================================= */
 
-  data.home.location=
-    document.getElementById(
-      "homeLocation"
-    ).value;
+function renderProjectMaterials(project){
 
-
-  data.home.yearBuilt=
-    document.getElementById(
-      "homeYearBuilt"
-    ).value;
+  const box =
+    document.getElementById("projectMaterials");
 
 
-  data.home.builder=
-    document.getElementById(
-      "homeBuilder"
-    ).value;
+  if(!project.materials.length){
+
+    box.innerHTML =
+      `<div class="empty">No materials yet.</div>`;
+
+    return;
+
+  }
 
 
-  data.home.squareFeet=
-    document.getElementById(
-      "homeSquareFeet"
-    ).value;
+  box.innerHTML =
+    project.materials.map((m,index) => `
+
+      <div class="material">
+
+        <div class="materialName">
+
+          <strong>
+            ${escapeHTML(m.name)}
+          </strong>
+
+          <div class="smallText">
+            ${escapeHTML(m.quantity || "")}
+          </div>
+
+        </div>
+
+        <button
+          class="small secondary"
+          onclick="addMaterialToShopping('${project.id}',${index})">
+          🛒 Add
+        </button>
+
+        <button
+          class="small secondary"
+          onclick="deleteMaterial('${project.id}',${index})">
+          ×
+        </button>
+
+      </div>
+
+    `).join("");
+
+}
 
 
-  data.home.exteriorColor=
-    document.getElementById(
-      "homeExteriorColor"
-    ).value;
+function addMaterial(projectId){
+
+  const project =
+    data.projects.find(p => p.id === projectId);
+
+  if(!project) return;
 
 
-  data.home.trimColor=
-    document.getElementById(
-      "homeTrimColor"
-    ).value;
+  const name =
+    document.getElementById("newMaterialName")
+      .value.trim();
+
+  if(!name){
+    return;
+  }
 
 
-  data.home.roofColor=
-    document.getElementById(
-      "homeRoofColor"
-    ).value;
+  const quantity =
+    document.getElementById("newMaterialQty")
+      .value.trim();
 
 
-  data.home.lawnArea=
-    document.getElementById(
-      "homeLawnArea"
-    ).value;
+  project.materials.push({
 
+    id:Date.now().toString(),
 
-  data.home.lawnGrass=
-    document.getElementById(
-      "homeLawnGrass"
-    ).value;
+    name:name,
 
+    quantity:quantity || ""
 
-  data.home.lawnGoal=
-    document.getElementById(
-      "homeLawnGoal"
-    ).value;
-
-
-  data.home.gardenSize=
-    document.getElementById(
-      "homeGardenSize"
-    ).value;
-
-
-  data.home.gardenNotes=
-    document.getElementById(
-      "homeGardenNotes"
-    ).value;
-
-
-  data.home.irrigationNotes=
-    document.getElementById(
-      "homeIrrigationNotes"
-    ).value;
-
-
-  data.home.drainageNotes=
-    document.getElementById(
-      "homeDrainageNotes"
-    ).value;
-
-
-  data.home.notes=
-    document.getElementById(
-      "homeNotes"
-    ).value;
+  });
 
 
   saveData();
 
-
-  alert(
-    "Home Information saved!"
-  );
-
-
-  showPage("home");
+  openProject(projectId);
 
 }
 
 
-/* =========================
-   SHOPPING
-   ========================= */
+function deleteMaterial(projectId,index){
 
-function addShopping(){
+  const project =
+    data.projects.find(p => p.id === projectId);
 
-  const input=
-    document.getElementById(
-      "shoppingInput"
-    );
+  if(!project) return;
 
 
-  const projectSelect=
-    document.getElementById(
-      "shoppingProject"
-    );
+  project.materials.splice(index,1);
+
+  saveData();
+
+  openProject(projectId);
+
+}
 
 
-  const quantity=
-    document.getElementById(
-      "shoppingQuantity"
-    );
+function addMaterialToShopping(projectId,index){
+
+  const project =
+    data.projects.find(p => p.id === projectId);
+
+  if(!project) return;
 
 
-  if(!input.value.trim())
-    return;
+  const material =
+    project.materials[index];
 
 
   data.shopping.push({
 
-    id:Date.now(),
+    id:Date.now().toString(),
 
-    name:input.value.trim(),
+    name:material.name,
 
-    projectId:
-      projectSelect.value?
-      Number(projectSelect.value):
-      null,
+    quantity:material.quantity,
 
-    quantity:
-      quantity.value.trim(),
+    project:project.name,
 
-    purchased:false
+    done:false
 
   });
 
 
-  input.value="";
+  saveData();
 
-  quantity.value="";
+
+  alert("Added to Shopping List.");
+
+}
+
+
+/* =========================================================
+   PROJECT RECORDS
+   ========================================================= */
+
+function saveProjectNotes(projectId){
+
+  const project =
+    data.projects.find(p => p.id === projectId);
+
+  if(!project) return;
+
+
+  project.notes =
+    document.getElementById("projectNotes").value;
 
 
   saveData();
 
-  renderShopping();
+  alert("Project records saved.");
 
 }
 
+
+function deleteProject(projectId){
+
+  if(!confirm("Delete this project?")){
+    return;
+  }
+
+
+  data.projects =
+    data.projects.filter(p => p.id !== projectId);
+
+
+  saveData();
+
+  showPage("projectsPage");
+
+}
+
+
+/* =========================================================
+   SHOPPING
+   ========================================================= */
 
 function renderShopping(){
 
-  const projectSelect=
-    document.getElementById(
-      "shoppingProject"
-    );
+  const box =
+    document.getElementById("shoppingList");
 
 
-  projectSelect.innerHTML=
-    `<option value="">
-      No Project
-    </option>`+
+  if(!data.shopping.length){
 
-    data.projects.map(p=>
-      `<option value="${p.id}">
-        ${escapeHTML(p.name)}
-      </option>`
-    ).join("");
+    box.innerHTML =
+      `<div class="card empty">
+        Shopping list is empty.
+      </div>`;
 
+    return;
 
-  const list=
-    document.getElementById(
-      "shoppingList"
-    );
+  }
 
 
-  list.innerHTML=
+  box.innerHTML = data.shopping.map((item,index) => `
 
-    data.shopping.length?
+    <div class="card">
 
-    data.shopping.map(item=>{
+      <div class="row">
 
-      const project=
-        data.projects.find(
-          p=>p.id===item.projectId
-        );
+        <div style="flex:1;">
 
+          <strong class="${item.done ? "done" : ""}">
+            ${escapeHTML(item.name)}
+          </strong>
 
-      const projectName=
-        project?
-        project.name:
-        "No Project";
+          ${
+            item.quantity
+            ? `<div class="smallText">
+                ${escapeHTML(item.quantity)}
+               </div>`
+            : ""
+          }
 
-
-      return `
-
-        <div class="item">
-
-          <label
-            style="
-              display:flex;
-              align-items:center;
-              gap:10px;
-              font-weight:400;
-            ">
-
-            <input
-              type="checkbox"
-              style="
-                width:auto;
-                margin:0;
-              "
-              ${item.purchased?"checked":""}
-              onchange="
-                toggleShopping(${item.id})
-              ">
-
-
-            <span
-              class="${item.purchased?"done":""}">
-
-              ${escapeHTML(item.name)}
-
-              <br>
-
-              <small>
-
-                ${escapeHTML(projectName)}
-
-                ${
-                  item.quantity?
-
-                  " • "+
-                  escapeHTML(item.quantity):
-
-                  ""
-                }
-
-              </small>
-
-            </span>
-
-          </label>
+          ${
+            item.project
+            ? `<div class="smallText">
+                From: ${escapeHTML(item.project)}
+               </div>`
+            : ""
+          }
 
         </div>
 
-      `;
+        <button
+          class="small secondary"
+          onclick="toggleShopping(${index})">
+          ${item.done ? "Undo" : "Done"}
+        </button>
 
-    }).join("")
+        <button
+          class="small secondary"
+          onclick="deleteShopping(${index})">
+          ×
+        </button>
 
-    :
+      </div>
 
-    "<p>No shopping items yet.</p>";
+    </div>
+
+  `).join("");
 
 }
 
 
-function toggleShopping(id){
+function addShoppingItem(){
 
-  const item=
-    data.shopping.find(
-      x=>x.id===id
-    );
+  const input =
+    document.getElementById("shoppingInput");
 
 
-  if(item)
-    item.purchased=
-      !item.purchased;
+  const name =
+    input.value.trim();
 
+
+  if(!name){
+    return;
+  }
+
+
+  data.shopping.push({
+
+    id:Date.now().toString(),
+
+    name:name,
+
+    quantity:"",
+
+    project:"",
+
+    done:false
+
+  });
+
+
+  input.value = "";
 
   saveData();
 
@@ -3233,714 +1842,51 @@ function toggleShopping(id){
 }
 
 
-/* =========================
+function toggleShopping(index){
+
+  data.shopping[index].done =
+    !data.shopping[index].done;
+
+  saveData();
+
+  renderShopping();
+
+}
+
+
+function deleteShopping(index){
+
+  data.shopping.splice(index,1);
+
+  saveData();
+
+  renderShopping();
+
+}
+
+
+/* =========================================================
    CALENDAR
-   ========================= */
+   ========================================================= */
 
-function changeMonth(amount){
+function getTasksForDate(dateString){
 
-  calendarViewDate.setMonth(
-    calendarViewDate.getMonth()+amount
-  );
+  const results = [];
 
 
-  renderCalendar();
+  data.projects.forEach(project => {
 
-}
+    project.tasks.forEach(task => {
 
-
-function renderCalendarToday(){
-
-  const container=
-    document.getElementById(
-      "calendarTodaySummary"
-    );
-
-
-  if(!container)
-    return;
-
-
-  const today=
-    new Date();
-
-
-  const todayKey=
-    dateToKey(today);
-
-
-  const nextSeven=[];
-
-  const overdue=[];
-
-  const todayTasks=[];
-
-  const todayEvents=[];
-
-
-  data.projects.forEach(project=>{
-
-    project.tasks.forEach((task,index)=>{
-
-      if(
-        task.dueDate &&
-        !task.done
-      ){
-
-        if(task.dueDate < todayKey){
-
-          overdue.push({
-            project,
-            task,
-            index
-          });
-
-        }
-
-
-        if(task.dueDate === todayKey){
-
-          todayTasks.push({
-            project,
-            task,
-            index
-          });
-
-        }
-
-
-        if(
-          task.dueDate > todayKey
-        ){
-
-          const taskDate=
-            new Date(
-              Number(task.dueDate.split("-")[0]),
-              Number(task.dueDate.split("-")[1])-1,
-              Number(task.dueDate.split("-")[2])
-            );
-
-
-          const diff=
-            Math.round(
-              (
-                taskDate-today
-              )/
-              86400000
-            );
-
-
-          if(
-            diff>=1 &&
-            diff<=7
-          ){
-
-            nextSeven.push({
-              project,
-              task,
-              index
-            });
-
-          }
-
-        }
-
-      }
-
-    });
-
-  });
-
-
-  data.calendar.forEach(event=>{
-
-    if(event.date===todayKey){
-
-      todayEvents.push(event);
-
-    }
-
-  });
-
-
-  data.calendar.forEach(event=>{
-
-    if(
-      event.date &&
-      event.date>todayKey
-    ){
-
-      const parts=
-        event.date.split("-");
-
-
-      const eventDate=
-        new Date(
-          Number(parts[0]),
-          Number(parts[1])-1,
-          Number(parts[2])
-        );
-
-
-      const diff=
-        Math.round(
-          (
-            eventDate-today
-          )/
-          86400000
-        );
-
-
-      if(
-        diff>=1 &&
-        diff<=7
-      ){
-
-        nextSeven.push({
-          event
-        });
-
-      }
-
-    }
-
-  });
-
-
-  nextSeven.sort((a,b)=>{
-
-    const dateA=
-      a.task?
-      a.task.dueDate:
-      a.event.date;
-
-
-    const dateB=
-      b.task?
-      b.task.dueDate:
-      b.event.date;
-
-
-    return dateA.localeCompare(dateB);
-
-  });
-
-
-  let html="";
-
-
-  if(overdue.length){
-
-    html+=`
-
-      <div class="todaySection">
-
-        <h3>⚠️ Overdue</h3>
-
-    `;
-
-
-    overdue.forEach(x=>{
-
-      html+=`
-
-        <div class="item">
-
-          <div>
-
-            <b>
-              ${escapeHTML(x.task.name)}
-            </b>
-
-            <br>
-
-            <span class="badge overdueBadge">
-
-              Due
-              ${escapeHTML(
-                formatDate(x.task.dueDate)
-              )}
-
-            </span>
-
-            <br>
-
-            <small>
-              ${escapeHTML(x.project.name)}
-            </small>
-
-          </div>
-
-
-          <button
-            onclick="
-              openProject(${x.project.id})
-            ">
-
-            Open
-
-          </button>
-
-        </div>
-
-      `;
-
-    });
-
-
-    html+=`
-      </div>
-    `;
-
-  }
-
-
-  if(todayTasks.length){
-
-    html+=`
-
-      <div class="todaySection">
-
-        <h3>📋 Tasks Today</h3>
-
-    `;
-
-
-    todayTasks.forEach(x=>{
-
-      html+=`
-
-        <div class="item">
-
-          <div>
-
-            <b>
-              ${escapeHTML(x.task.name)}
-            </b>
-
-            <br>
-
-            <small>
-              ${escapeHTML(x.project.name)}
-            </small>
-
-          </div>
-
-
-          <button
-            onclick="
-              openProject(${x.project.id})
-            ">
-
-            Open
-
-          </button>
-
-        </div>
-
-      `;
-
-    });
-
-
-    html+=`
-      </div>
-    `;
-
-  }
-
-
-  if(todayEvents.length){
-
-    html+=`
-
-      <div class="todaySection">
-
-        <h3>📅 Events Today</h3>
-
-    `;
-
-
-    todayEvents.forEach(event=>{
-
-      html+=`
-
-        <div class="item">
-
-          <div>
-
-            <b>
-              ${escapeHTML(event.title)}
-            </b>
-
-            <br>
-
-            <span class="badge todayBadge">
-              Today
-            </span>
-
-          </div>
-
-        </div>
-
-      `;
-
-    });
-
-
-    html+=`
-      </div>
-    `;
-
-  }
-
-
-  if(nextSeven.length){
-
-    html+=`
-
-      <div class="todaySection">
-
-        <h3>🔜 Next 7 Days</h3>
-
-    `;
-
-
-    nextSeven.forEach(x=>{
-
-      if(x.task){
-
-        html+=`
-
-          <div class="item">
-
-            <div>
-
-              <b>
-                📋 ${escapeHTML(x.task.name)}
-              </b>
-
-              <br>
-
-              <span class="badge upcomingBadge">
-
-                ${escapeHTML(
-                  formatDate(x.task.dueDate)
-                )}
-
-              </span>
-
-              <br>
-
-              <small>
-                ${escapeHTML(x.project.name)}
-              </small>
-
-            </div>
-
-
-            <button
-              onclick="
-                openProject(${x.project.id})
-              ">
-
-              Open
-
-            </button>
-
-          </div>
-
-        `;
-
-      }else{
-
-        html+=`
-
-          <div class="item">
-
-            <div>
-
-              <b>
-                📅 ${escapeHTML(x.event.title)}
-              </b>
-
-              <br>
-
-              <span class="badge upcomingBadge">
-
-                ${escapeHTML(
-                  formatDate(x.event.date)
-                )}
-
-              </span>
-
-            </div>
-
-          </div>
-
-        `;
-
-      }
-
-    });
-
-
-    html+=`
-      </div>
-    `;
-
-  }
-
-
-  if(!html){
-
-    html=`
-
-      <p class="todayEmpty">
-        Nothing scheduled. You're all caught up! 🎉
-      </p>
-
-    `;
-
-  }
-
-
-  container.innerHTML=html;
-
-}
-
-
-function renderCalendar(){
-
-  const year=
-    calendarViewDate.getFullYear();
-
-
-  const month=
-    calendarViewDate.getMonth();
-
-
-  const title=
-    calendarViewDate.toLocaleDateString(
-      undefined,
-      {
-        month:"long",
-        year:"numeric"
-      }
-    );
-
-
-  document.getElementById(
-    "calendarMonthTitle"
-  ).textContent=title;
-
-
-  const grid=
-    document.getElementById(
-      "calendarGrid"
-    );
-
-
-  const dayNames=[
-
-    "Sun",
-    "Mon",
-    "Tue",
-    "Wed",
-    "Thu",
-    "Fri",
-    "Sat"
-
-  ];
-
-
-  let html=
-    dayNames.map(day=>
-      `<div class="calendarDayName">
-        ${day}
-      </div>`
-    ).join("");
-
-
-  const firstDay=
-    new Date(
-      year,
-      month,
-      1
-    ).getDay();
-
-
-  const daysInMonth=
-    new Date(
-      year,
-      month+1,
-      0
-    ).getDate();
-
-
-  for(
-    let i=0;
-    i<firstDay;
-    i++
-  ){
-
-    html+=
-      `<div class="calendarDay empty"></div>`;
-
-  }
-
-
-  const todayKey=
-    dateToKey(new Date());
-
-
-  for(
-    let day=1;
-    day<=daysInMonth;
-    day++
-  ){
-
-    const date=
-      new Date(
-        year,
-        month,
-        day
-      );
-
-
-    const key=
-      dateToKey(date);
-
-
-    const selected=
-      selectedCalendarDate===key;
-
-
-    const isToday=
-      todayKey===key;
-
-
-    const taskItems=
-      getTasksForDate(key);
-
-
-    const eventItems=
-      getEventsForDate(key);
-
-
-    const allItems=[
-
-      ...taskItems.map(x=>({
-
-        text:x.task.name,
-
-        type:"task"
-
-      })),
-
-      ...eventItems.map(x=>({
-
-        text:x.title,
-
-        type:"event"
-
-      }))
-
-    ];
-
-
-    const visibleItems=
-      allItems.slice(0,2);
-
-
-    const remaining=
-      allItems.length-
-      visibleItems.length;
-
-
-    html+=`
-
-      <div
-        class="
-          calendarDay
-          ${isToday?"today":""}
-          ${selected?"selected":""}
-        "
-        onclick="
-          selectCalendarDate('${key}')
-        ">
-
-        <div class="calendarNumber">
-          ${day}
-        </div>
-
-
-        <div class="calendarDots">
-
-          ${
-            visibleItems.map(item=>`
-
-              <span class="calendarDot">
-
-                ${
-                  item.type==="task"?
-                  "📋":
-                  "📅"
-                }
-
-                ${escapeHTML(item.text)}
-
-              </span>
-
-            `).join("")
-          }
-
-
-          ${
-            remaining>0?
-
-            `<span class="calendarMore">
-              +${remaining} more
-            </span>`
-
-            :
-
-            ""
-          }
-
-        </div>
-
-      </div>
-
-    `;
-
-  }
-
-
-  grid.innerHTML=html;
-
-
-  renderSelectedDate();
-
-}
-
-
-function getTasksForDate(date){
-
-  const results=[];
-
-
-  data.projects.forEach(project=>{
-
-    project.tasks.forEach((task,index)=>{
-
-      if(task.dueDate===date){
+      if(task.dueDate === dateString){
 
         results.push({
 
-          project,
-          task,
-          index
+          title:task.text,
+
+          project:project.name,
+
+          type:"Task"
 
         });
 
@@ -3956,320 +1902,395 @@ function getTasksForDate(date){
 }
 
 
-function getEventsForDate(date){
+function getEventsForDate(dateString){
 
-  return data.calendar.filter(
-    item=>item.date===date
-  );
+  return data.calendar
+    .filter(item => item.date === dateString)
+    .map(item => ({
+
+      title:item.title,
+
+      project:item.type || "Calendar",
+
+      type:item.type || "Calendar"
+
+    }));
 
 }
 
 
-function selectCalendarDate(date){
+function renderCalendar(){
 
-  selectedCalendarDate=date;
+  const year =
+    currentCalendarDate.getFullYear();
+
+  const month =
+    currentCalendarDate.getMonth();
+
+
+  document.getElementById("calendarMonth")
+    .textContent =
+      currentCalendarDate.toLocaleDateString(
+        undefined,
+        {
+          month:"long",
+          year:"numeric"
+        }
+      );
+
+
+  const grid =
+    document.getElementById("calendarGrid");
+
+
+  grid.innerHTML = "";
+
+
+  const firstDay =
+    new Date(year,month,1).getDay();
+
+
+  const daysInMonth =
+    new Date(year,month + 1,0).getDate();
+
+
+  const today =
+    new Date();
+
+  const todayString =
+    dateKey(today);
+
+
+  for(let i=0;i<firstDay;i++){
+
+    const empty =
+      document.createElement("div");
+
+    grid.appendChild(empty);
+
+  }
+
+
+  for(let day=1;day<=daysInMonth;day++){
+
+    const date =
+      new Date(year,month,day);
+
+    const key =
+      dateKey(date);
+
+
+    const cell =
+      document.createElement("div");
+
+    cell.className =
+      "calendarDay";
+
+
+    if(key === todayString){
+      cell.classList.add("today");
+    }
+
+
+    if(key === selectedCalendarDate){
+      cell.classList.add("selected");
+    }
+
+
+    const tasks =
+      getTasksForDate(key);
+
+    const events =
+      getEventsForDate(key);
+
+
+    const items =
+      [...tasks,...events];
+
+
+    cell.innerHTML = `
+
+      <div class="dayNumber">
+        ${day}
+      </div>
+
+      ${items.slice(0,2).map(item => `
+
+        <div class="calendarItem">
+          ${escapeHTML(item.title)}
+        </div>
+
+      `).join("")}
+
+      ${
+        items.length > 2
+        ? `<div class="moreItems">
+             +${items.length - 2} more
+           </div>`
+        : ""
+      }
+
+    `;
+
+
+    cell.onclick = () => {
+
+      selectCalendarDate(key);
+
+    };
+
+
+    grid.appendChild(cell);
+
+  }
+
+
+  renderSelectedDate();
+
+}
+
+
+function selectCalendarDate(key){
+
+  selectedCalendarDate = key;
+
+  document.getElementById("calendarDate").value = key;
 
   renderCalendar();
+
+  renderSelectedDate();
 
 }
 
 
 function renderSelectedDate(){
 
-  const title=
-    document.getElementById(
-      "selectedDateTitle"
-    );
-
-
-  const container=
-    document.getElementById(
-      "selectedDateTasks"
-    );
+  const box =
+    document.getElementById("selectedDateCard");
 
 
   if(!selectedCalendarDate){
 
-    title.textContent=
-      "📅 Select a Date";
-
-
-    container.innerHTML=
-      `<p class="selectedDateEmpty">
-        Tap a date on the calendar.
-      </p>`;
-
+    box.innerHTML = "";
 
     return;
 
   }
 
 
-  title.textContent=
-    "📅 "+
-    formatDate(
-      selectedCalendarDate
+  const tasks =
+    getTasksForDate(selectedCalendarDate);
+
+  const events =
+    getEventsForDate(selectedCalendarDate);
+
+
+  const items =
+    [...tasks,...events];
+
+
+  box.innerHTML = `
+
+    <div class="card">
+
+      <h2>
+        📅 ${formatDate(selectedCalendarDate)}
+      </h2>
+
+      ${
+        items.length
+        ? items.map(item => `
+
+            <div class="task">
+
+              <div class="taskText">
+
+                <strong>
+                  ${escapeHTML(item.title)}
+                </strong>
+
+                <div class="smallText">
+                  ${escapeHTML(item.project)}
+                </div>
+
+              </div>
+
+            </div>
+
+          `).join("")
+        : `<div class="empty">
+             Nothing scheduled for this day.
+           </div>`
+      }
+
+    </div>
+
+  `;
+
+}
+
+
+function changeMonth(amount){
+
+  currentCalendarDate =
+    new Date(
+      currentCalendarDate.getFullYear(),
+      currentCalendarDate.getMonth() + amount,
+      1
     );
 
 
-  const tasks=
-    getTasksForDate(
-      selectedCalendarDate
-    );
-
-
-  const events=
-    getEventsForDate(
-      selectedCalendarDate
-    );
-
-
-  let html="";
-
-
-  tasks.forEach(x=>{
-
-    html+=`
-
-      <div class="item">
-
-        <div>
-
-          <b>
-            📋 ${escapeHTML(x.task.name)}
-          </b>
-
-          <br>
-
-          <small>
-            ${escapeHTML(x.project.name)}
-          </small>
-
-        </div>
-
-
-        <button
-          onclick="
-            openProject(${x.project.id})
-          ">
-
-          Open
-
-        </button>
-
-      </div>
-
-    `;
-
-  });
-
-
-  events.forEach(event=>{
-
-    html+=`
-
-      <div class="item">
-
-        <div>
-
-          <b>
-            📅 ${escapeHTML(event.title)}
-          </b>
-
-        </div>
-
-      </div>
-
-    `;
-
-  });
-
-
-  if(!html){
-
-    html=
-      "<p>No tasks or events on this date.</p>";
-
-  }
-
-
-  container.innerHTML=html;
+  renderCalendar();
 
 }
 
 
 function addCalendar(){
 
-  const title=
-    document.getElementById(
-      "calendarTitle"
-    ).value.trim();
+  const date =
+    document.getElementById("calendarDate").value;
+
+  const title =
+    document.getElementById("calendarTitle").value.trim();
+
+  const type =
+    document.getElementById("calendarType").value;
 
 
-  const date=
-    document.getElementById(
-      "calendarDate"
-    ).value;
+  if(!date || !title){
 
+    alert("Please enter a date and title.");
 
-  if(!title || !date)
     return;
-
-
-  data.calendar.push({
-
-    id:Date.now(),
-
-    title:title,
-
-    date:date
-
-  });
-
-
-  document.getElementById(
-    "calendarTitle"
-  ).value="";
-
-
-  document.getElementById(
-    "calendarDate"
-  ).value="";
-
-
-  saveData();
-
-
-  selectedCalendarDate=date;
-
-
-  const parts=date.split("-");
-
-
-  if(parts.length===3){
-
-    calendarViewDate=
-      new Date(
-        Number(parts[0]),
-        Number(parts[1])-1,
-        1
-      );
 
   }
 
 
-  renderCalendarToday();
+  data.calendar.push({
+
+    id:Date.now().toString(),
+
+    date:date,
+
+    title:title,
+
+    type:type
+
+  });
+
+
+  document.getElementById("calendarTitle").value = "";
+
+  saveData();
 
   renderCalendar();
 
   renderCalendarList();
-
-  renderHome();
 
 }
 
 
 function renderCalendarList(){
 
-  const list=
-    document.getElementById(
-      "calendarList"
-    );
+  const box =
+    document.getElementById("calendarList");
 
 
-  list.innerHTML=
+  if(!data.calendar.length){
 
-    data.calendar.length?
+    box.innerHTML =
+      `<div class="empty">No calendar items yet.</div>`;
 
-    data.calendar
-      .slice()
-      .sort((a,b)=>
-        (a.date||"")
-          .localeCompare(
-            b.date||""
-          )
-      )
-      .map(x=>`
+    return;
 
-        <div class="item">
+  }
 
-          <div>
 
-            <b>
-              ${escapeHTML(x.title)}
-            </b>
+  const sorted =
+    [...data.calendar]
+      .sort((a,b) => a.date.localeCompare(b.date));
 
-            <br>
 
-            <span class="badge">
+  box.innerHTML =
+    sorted.map(item => `
 
-              ${escapeHTML(
-                formatDate(x.date)
-              )}
+      <div class="task">
 
-            </span>
+        <div class="taskText">
 
+          <strong>
+            ${escapeHTML(item.title)}
+          </strong>
+
+          <div class="smallText">
+            ${formatDate(item.date)}
+            · ${escapeHTML(item.type)}
           </div>
 
         </div>
 
-      `).join("")
+        <button
+          class="small secondary"
+          onclick="deleteCalendar('${item.id}')">
+          ×
+        </button>
 
-    :
+      </div>
 
-    "<p>No calendar events yet.</p>";
+    `).join("");
 
 }
 
 
-/* =========================
+function deleteCalendar(id){
+
+  data.calendar =
+    data.calendar.filter(item => item.id !== id);
+
+  saveData();
+
+  renderCalendar();
+
+  renderCalendarList();
+
+}
+
+
+/* =========================================================
    MAINTENANCE
-   ========================= */
+   ========================================================= */
 
 function addMaintenance(){
 
-  const name=
-    document.getElementById(
-      "maintenanceName"
-    ).value.trim();
+  const name =
+    document.getElementById("maintenanceName")
+      .value.trim();
 
-
-  if(!name)
+  if(!name){
     return;
+  }
 
 
   data.maintenance.push({
 
-    id:Date.now(),
+    id:Date.now().toString(),
 
     name:name,
 
-    due:
-      document.getElementById(
-        "maintenanceDue"
-      ).value,
+    dueDate:
+      document.getElementById("maintenanceDue").value,
 
     notes:
-      document.getElementById(
-        "maintenanceNotes"
-      ).value
+      document.getElementById("maintenanceNotes").value
 
   });
 
 
-  document.getElementById(
-    "maintenanceName"
-  ).value="";
+  document.getElementById("maintenanceName").value = "";
 
+  document.getElementById("maintenanceDue").value = "";
 
-  document.getElementById(
-    "maintenanceDue"
-  ).value="";
-
-
-  document.getElementById(
-    "maintenanceNotes"
-  ).value="";
+  document.getElementById("maintenanceNotes").value = "";
 
 
   saveData();
@@ -4281,107 +2302,1787 @@ function addMaintenance(){
 
 function renderMaintenance(){
 
-  const list=
-    document.getElementById(
-      "maintenanceList"
-    );
+  const box =
+    document.getElementById("maintenanceList");
 
 
-  list.innerHTML=
+  if(!data.maintenance.length){
 
-    data.maintenance.length?
+    box.innerHTML =
+      `<div class="card empty">
+        No maintenance items yet.
+      </div>`;
 
-    data.maintenance.map(x=>`
+    return;
 
-      <div class="item">
-
-        <div>
-
-          <b>
-            ${escapeHTML(x.name)}
-          </b>
-
-          <br>
-
-          <span class="badge">
-
-            Due:
-            ${escapeHTML(
-              formatDate(x.due)
-            )}
-
-          </span>
+  }
 
 
-          ${
-            x.notes?
+  box.innerHTML =
+    data.maintenance.map((item,index) => `
 
-            `<p>
-              ${escapeHTML(x.notes)}
-            </p>`
+      <div class="card">
 
-            :
+        <div class="row">
 
-            ""
-          }
+          <div style="flex:1;">
+
+            <strong>
+              ${escapeHTML(item.name)}
+            </strong>
+
+            ${
+              item.dueDate
+              ? `<div class="smallText">
+                  Due ${formatDate(item.dueDate)}
+                 </div>`
+              : ""
+            }
+
+            ${
+              item.notes
+              ? `<p class="smallText">
+                  ${escapeHTML(item.notes)}
+                 </p>`
+              : ""
+            }
+
+          </div>
+
+          <button
+            class="small secondary"
+            onclick="deleteMaintenance(${index})">
+            ×
+          </button>
 
         </div>
 
       </div>
 
-    `).join("")
-
-    :
-
-    "<p>No maintenance items yet.</p>";
+    `).join("");
 
 }
 
 
-/* =========================
+function deleteMaintenance(index){
+
+  data.maintenance.splice(index,1);
+
+  saveData();
+
+  renderMaintenance();
+
+}
+
+
+/* =========================================================
+   HOME INFORMATION
+   ========================================================= */
+
+function renderHomeInfo(){
+
+  const h = data.home;
+
+
+  document.getElementById("homeLocation").value =
+    h.location || "";
+
+  document.getElementById("homeYearBuilt").value =
+    h.yearBuilt || "";
+
+  document.getElementById("homeBuilder").value =
+    h.builder || "";
+
+  document.getElementById("homeSquareFeet").value =
+    h.squareFeet || "";
+
+  document.getElementById("homeExteriorColor").value =
+    h.exteriorColor || "";
+
+  document.getElementById("homeTrimColor").value =
+    h.trimColor || "";
+
+  document.getElementById("homeRoofColor").value =
+    h.roofColor || "";
+
+  document.getElementById("homeLawnArea").value =
+    h.lawnArea || "";
+
+  document.getElementById("homeLawnGrass").value =
+    h.lawnGrass || "";
+
+  document.getElementById("homeLawnGoal").value =
+    h.lawnGoal || "";
+
+  document.getElementById("homeGardenSize").value =
+    h.gardenSize || "";
+
+  document.getElementById("homeGardenNotes").value =
+    h.gardenNotes || "";
+
+  document.getElementById("homeIrrigationNotes").value =
+    h.irrigationNotes || "";
+
+  document.getElementById("homeDrainageNotes").value =
+    h.drainageNotes || "";
+
+  document.getElementById("homeNotes").value =
+    h.notes || "";
+
+}
+
+
+function saveHomeInfo(){
+
+  data.home = {
+
+    location:
+      document.getElementById("homeLocation").value,
+
+    yearBuilt:
+      Number(document.getElementById("homeYearBuilt").value) || "",
+
+    builder:
+      document.getElementById("homeBuilder").value,
+
+    squareFeet:
+      Number(document.getElementById("homeSquareFeet").value) || "",
+
+    exteriorColor:
+      document.getElementById("homeExteriorColor").value,
+
+    trimColor:
+      document.getElementById("homeTrimColor").value,
+
+    roofColor:
+      document.getElementById("homeRoofColor").value,
+
+    lawnArea:
+      document.getElementById("homeLawnArea").value,
+
+    lawnGrass:
+      document.getElementById("homeLawnGrass").value,
+
+    lawnGoal:
+      document.getElementById("homeLawnGoal").value,
+
+    gardenSize:
+      document.getElementById("homeGardenSize").value,
+
+    gardenNotes:
+      document.getElementById("homeGardenNotes").value,
+
+    irrigationNotes:
+      document.getElementById("homeIrrigationNotes").value,
+
+    drainageNotes:
+      document.getElementById("homeDrainageNotes").value,
+
+    notes:
+      document.getElementById("homeNotes").value
+
+  };
+
+
+  saveData();
+
+
+  document.getElementById("homeInfoSaved")
+    .textContent = "✓ Home information saved.";
+
+}
+
+
+/* =========================================================
    FAMILY
-   ========================= */
+   ========================================================= */
 
 function renderFamily(){
 
-  document.getElementById(
-    "familySaved"
-  ).textContent=
-    data.familyNote||"";
-
-
-  document.getElementById(
-    "familyNote"
-  ).value=
-    data.familyNote||"";
+  document.getElementById("familyNote").value =
+    data.family.note || "";
 
 }
 
 
 function saveFamilyNote(){
 
-  data.familyNote=
-    document.getElementById(
-      "familyNote"
-    ).value;
+  data.family.note =
+    document.getElementById("familyNote").value;
 
 
   saveData();
 
 
-  document.getElementById(
-    "familySaved"
-  ).textContent=
-    data.familyNote;
+  document.getElementById("familySaved")
+    .textContent =
+      "✓ Family note saved.";
 
 }
 
 
-/* =========================
-   INITIAL LOAD
-   ========================= */
+/* =========================================================
+   BUILD MY PLAN
+   ========================================================= */
 
-renderHome();
+function buildMyPlan(){
+
+  const name =
+    prompt(
+      "What project do you want to plan?"
+    );
+
+
+  if(!name){
+    return;
+  }
+
+
+  const description =
+    prompt(
+      "Briefly describe what you want to accomplish:",
+      ""
+    ) || "";
+
+
+  const isFence =
+    /fence/i.test(name);
+
+
+  const questions =
+    isFence
+    ? [
+
+        {
+          id:"length",
+          question:
+            "How many linear feet of fence are needed?",
+          placeholder:
+            "Example: 180"
+        },
+
+        {
+          id:"style",
+          question:
+            "What fence style do you want?",
+          placeholder:
+            "Example: 6 ft privacy wood fence"
+        },
+
+        {
+          id:"height",
+          question:
+            "What height should the fence be?",
+          placeholder:
+            "Example: 6 ft"
+        },
+
+        {
+          id:"gates",
+          question:
+            "How many gates are needed?",
+          placeholder:
+            "Example: 2"
+        },
+
+        {
+          id:"gateWidths",
+          question:
+            "What is the width of each gate?",
+          placeholder:
+            "Example: 4 ft and 5 ft"
+        },
+
+        {
+          id:"budget",
+          question:
+            "What is your target budget?",
+          placeholder:
+            "Example: $3000"
+        },
+
+        {
+          id:"requirements",
+          question:
+            "Are there any HOA, property-line, utility or other requirements?",
+          placeholder:
+            "Describe anything that applies."
+        },
+
+        {
+          id:"postSpacing",
+          question:
+            "What post spacing do you want?",
+          placeholder:
+            "Example: 8 ft",
+          defaultValue:"8"
+        },
+
+        {
+          id:"panelWidth",
+          question:
+            "What is the width of each fence panel or picket?",
+          placeholder:
+            "Example: 8 ft panel or 5.5 in picket",
+          defaultValue:"8"
+        },
+
+        {
+          id:"rails",
+          question:
+            "How many horizontal rails should each fence section have?",
+          placeholder:
+            "Example: 3",
+          defaultValue:"3"
+        },
+
+        {
+          id:"corners",
+          question:
+            "How many corners will the fence have?",
+          placeholder:
+            "Example: 4",
+          defaultValue:"4"
+        },
+
+        {
+          id:"endPoints",
+          question:
+            "How many fence endpoints are there?",
+          placeholder:
+            "Example: 2",
+          defaultValue:"2"
+        }
+
+      ]
+
+    : [
+
+        {
+          id:"size",
+          question:
+            "What are the project dimensions?",
+          placeholder:
+            "Example: 20 ft × 12 ft"
+        },
+
+        {
+          id:"materials",
+          question:
+            "What materials or products are you considering?",
+          placeholder:
+            "List anything you already know."
+        },
+
+        {
+          id:"finish",
+          question:
+            "What finished result do you want?",
+          placeholder:
+            "Describe the look/function."
+        },
+
+        {
+          id:"budget",
+          question:
+            "What is your target budget?",
+          placeholder:
+            "Example: $2000"
+        }
+
+      ];
+
+
+  showPlanQuestions(
+    name,
+    description,
+    questions
+  );
+
+}
+
+
+function showPlanQuestions(
+  name,
+  description,
+  questions
+){
+
+  const box =
+    document.getElementById("projectDetail");
+
+
+  showPage("projectDetailPage");
+
+
+  box.innerHTML = `
+
+    <div class="card">
+
+      <button
+        class="secondary"
+        onclick="showPage('projectsPage')">
+        ← Cancel
+      </button>
+
+      <h2 style="margin-top:15px;">
+        ✨ Build My Plan
+      </h2>
+
+      <p>
+        Answer these questions and The List will build
+        a project plan, task list and material estimate.
+      </p>
+
+      <label>Project Name</label>
+
+      <input
+        id="planProjectName"
+        value="${escapeAttribute(name)}">
+
+      <label>Description</label>
+
+      <textarea
+        id="planDescription">${escapeHTML(description)}</textarea>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>📐 Project Details</h2>
+
+      <div id="planQuestions"></div>
+
+    </div>
+
+
+    <div class="card">
+
+      <button onclick="generateAIPlanFromAnswers()">
+        ✨ Calculate & Build Plan
+      </button>
+
+      <button
+        class="secondary"
+        style="margin-top:10px;"
+        onclick="showPage('projectsPage')">
+        Cancel
+      </button>
+
+    </div>
+
+  `;
+
+
+  const qbox =
+    document.getElementById("planQuestions");
+
+
+  qbox.innerHTML =
+    questions.map((q,index) => `
+
+      <div class="answerBox">
+
+        <label>
+          ${index + 1}. ${escapeHTML(q.question)}
+        </label>
+
+        <input
+          id="planAnswer_${escapeAttribute(q.id)}"
+          placeholder="${escapeAttribute(q.placeholder || "")}"
+          value="${escapeAttribute(q.defaultValue || "")}">
+
+      </div>
+
+    `).join("");
+
+
+  editingPlan = {
+    name:name,
+    description:description,
+    questions:questions
+  };
+
+}
+
+
+function getPlanAnswer(id){
+
+  const el =
+    document.getElementById(
+      "planAnswer_" + id
+    );
+
+
+  return el ? el.value.trim() : "";
+
+}
+
+
+function calculateFenceMaterials(answers){
+
+  const totalFeet =
+    Math.max(
+      0,
+      parseFloat(
+        answers.length
+      ) || 0
+    );
+
+
+  const postSpacing =
+    Math.max(
+      1,
+      parseFloat(
+        answers.postSpacing
+      ) || 8
+    );
+
+
+  const railsPerSection =
+    Math.max(
+      1,
+      Math.ceil(
+        parseFloat(
+          answers.rails
+        ) || 3
+      )
+    );
+
+
+  const gateCount =
+    Math.max(
+      0,
+      Math.ceil(
+        parseFloat(
+          answers.gates
+        ) || 0
+      )
+    );
+
+
+  const gateNumbers =
+    extractAllNumbers(
+      answers.gateWidths
+    );
+
+
+  let gateWidthTotal = 0;
+
+
+  if(gateCount > 0 && gateNumbers.length){
+
+    const normalizedWidths =
+      gateNumbers.map(n => {
+
+        const text =
+          answers.gateWidths.toLowerCase();
+
+
+        if(
+          text.includes('"') ||
+          text.includes(" inch")
+        ){
+
+          return n / 12;
+
+        }
+
+
+        return n;
+
+      });
+
+
+    if(normalizedWidths.length === 1){
+
+      gateWidthTotal =
+        normalizedWidths[0] * gateCount;
+
+    }else{
+
+      gateWidthTotal =
+        normalizedWidths
+          .slice(0,gateCount)
+          .reduce(
+            (sum,n) => sum + n,
+            0
+          );
+
+
+      if(
+        normalizedWidths.length < gateCount
+      ){
+
+        gateWidthTotal =
+          normalizedWidths[0] * gateCount;
+
+      }
+
+    }
+
+  }
+
+
+  const fenceRun =
+    Math.max(
+      0,
+      totalFeet - gateWidthTotal
+    );
+
+
+  const sections =
+    fenceRun > 0
+    ? Math.ceil(
+        fenceRun / postSpacing
+      )
+    : 0;
+
+
+  const corners =
+    Math.max(
+      0,
+      Math.ceil(
+        parseFloat(
+          answers.corners
+        ) || 0
+      )
+    );
+
+
+  const endpoints =
+    Math.max(
+      0,
+      Math.ceil(
+        parseFloat(
+          answers.endPoints
+        ) || 0
+      )
+    );
+
+
+  /*
+    Base posts:
+    one post per section plus one terminal post.
+    Additional posts are added for corners/endpoints
+    and gate openings.
+  */
+
+  const gatePosts =
+    gateCount * 2;
+
+
+  const basePosts =
+    sections > 0
+    ? sections + 1
+    : 0;
+
+
+  const posts =
+    Math.max(
+      0,
+      basePosts +
+      corners +
+      Math.max(0,endpoints - 2) +
+      gatePosts
+    );
+
+
+  const rails =
+    sections * railsPerSection;
+
+
+  const panelInfo =
+    calculateFenceCovering(
+      fenceRun,
+      answers.panelWidth
+    );
+
+
+  const panelsOrPickets =
+    Math.ceil(
+      panelInfo.required *
+      1.10
+    );
+
+
+  const concreteBags =
+    posts * 2;
+
+
+  const gravelBags =
+    posts;
+
+
+  const postCaps =
+    posts;
+
+
+  const fastenerBoxes =
+    Math.max(
+      1,
+      Math.ceil(
+        totalFeet / 100
+      )
+    );
+
+
+  return {
+
+    totalFeet,
+
+    gateCount,
+
+    gateWidthTotal,
+
+    fenceRun,
+
+    postSpacing,
+
+    sections,
+
+    corners,
+
+    endpoints,
+
+    posts,
+
+    railsPerSection,
+
+    rails,
+
+    coveringType:
+      panelInfo.type,
+
+    coveringWidth:
+      panelInfo.width,
+
+    coveringRequired:
+      panelInfo.required,
+
+    coveringWithWaste:
+      panelsOrPickets,
+
+    concreteBags,
+
+    gravelBags,
+
+    postCaps,
+
+    fastenerBoxes
+
+  };
+
+}
+
+
+function calculateFenceCovering(
+  fenceRun,
+  widthText
+){
+
+  const lower =
+    String(widthText || "").toLowerCase();
+
+
+  const numbers =
+    extractAllNumbers(widthText);
+
+
+  const width =
+    numbers.length
+    ? numbers[0]
+    : 8;
+
+
+  if(
+    lower.includes("picket") ||
+    lower.includes("inch") ||
+    lower.includes('"')
+  ){
+
+    let inches = width;
+
+
+    if(
+      !lower.includes("inch") &&
+      !lower.includes('"')
+    ){
+
+      inches = width;
+
+    }
+
+
+    return {
+
+      type:"pickets",
+
+      width:inches / 12,
+
+      required:
+        fenceRun /
+        Math.max(
+          .01,
+          inches / 12
+        )
+
+    };
+
+  }
+
+
+  return {
+
+    type:"panels",
+
+    width:width,
+
+    required:
+      fenceRun /
+      Math.max(.01,width)
+
+  };
+
+}
+
+
+function generateAIPlanFromAnswers(){
+
+  if(!editingPlan){
+    return;
+  }
+
+
+  const name =
+    document.getElementById(
+      "planProjectName"
+    ).value.trim();
+
+
+  const description =
+    document.getElementById(
+      "planDescription"
+    ).value.trim();
+
+
+  if(!name){
+
+    alert("Please enter a project name.");
+
+    return;
+
+  }
+
+
+  const answers = {};
+
+
+  editingPlan.questions.forEach(q => {
+
+    answers[q.id] =
+      getPlanAnswer(q.id);
+
+  });
+
+
+  const answerRecords =
+    editingPlan.questions.map(q => ({
+
+      question:q.question,
+
+      answer:
+        answers[q.id] || "Not provided."
+
+    }));
+
+
+  const isFence =
+    /fence/i.test(name);
+
+
+  let calculation = null;
+
+  let tasks = [];
+
+  let materials = [];
+
+  let budget = 0;
+
+
+  if(isFence){
+
+    calculation =
+      calculateFenceMaterials(
+        answers
+      );
+
+
+    budget =
+      extractNumber(
+        answers.budget
+      );
+
+
+    tasks = [
+
+      "Measure the entire fence line",
+
+      "Verify property boundaries",
+
+      "Check HOA and local requirements",
+
+      "Locate underground utilities",
+
+      "Confirm fence style and height",
+
+      "Confirm gate locations",
+
+      "Confirm gate widths",
+
+      "Confirm post spacing",
+
+      "Confirm corners and endpoints",
+
+      "Calculate final material quantities",
+
+      "Price materials",
+
+      "Purchase materials",
+
+      "Mark post locations",
+
+      "Dig post holes",
+
+      "Set and align fence posts",
+
+      "Install horizontal rails",
+
+      "Install fence panels or pickets",
+
+      "Install gates and gate hardware",
+
+      "Install post caps",
+
+      "Inspect the completed fence",
+
+      "Clean up the work area"
+
+    ];
+
+
+    materials = [
+
+      {
+        name:"Fence posts",
+        quantity:
+          `${calculation.posts} posts`
+      },
+
+      {
+        name:
+          calculation.coveringType === "pickets"
+          ? "Fence pickets"
+          : "Fence panels",
+
+        quantity:
+          `${calculation.coveringWithWaste} ${
+            calculation.coveringType
+          }`
+      },
+
+      {
+        name:"Horizontal rails",
+        quantity:
+          `${calculation.rails} rails`
+      },
+
+      {
+        name:"Concrete",
+        quantity:
+          `Planning allowance: ${calculation.concreteBags} bags`
+      },
+
+      {
+        name:"Gravel",
+        quantity:
+          `Planning allowance: ${calculation.gravelBags} bags`
+      },
+
+      {
+        name:"Post caps",
+        quantity:
+          `${calculation.postCaps}`
+      },
+
+      {
+        name:"Exterior fence screws / fasteners",
+        quantity:
+          `${calculation.fastenerBoxes} box(es)`
+      },
+
+      {
+        name:"Gate hardware",
+        quantity:
+          `${calculation.gateCount} gate(s)`
+      }
+
+    ];
+
+  }else{
+
+    budget =
+      extractNumber(
+        answers.budget
+      );
+
+
+    tasks = [
+
+      "Confirm project dimensions",
+
+      "Confirm desired finished result",
+
+      "Research and confirm materials",
+
+      "Measure the project area",
+
+      "Calculate material quantities",
+
+      "Add reasonable waste allowance",
+
+      "Price materials",
+
+      "Purchase materials",
+
+      "Prepare the work area",
+
+      "Complete the project",
+
+      "Inspect finished work",
+
+      "Clean up",
+
+      "Save measurements and product information"
+
+    ];
+
+
+    materials = [
+
+      {
+        name:"Primary project materials",
+        quantity:
+          "Calculate after confirming dimensions"
+      },
+
+      {
+        name:"Fasteners / installation supplies",
+        quantity:
+          "Determine after material selection"
+      },
+
+      {
+        name:"Finishing materials",
+        quantity:
+          "Determine from selected finish"
+      }
+
+    ];
+
+  }
+
+
+  editingPlan = {
+
+    name:name,
+
+    description:description,
+
+    answers:answerRecords,
+
+    calculation:calculation,
+
+    tasks:tasks.map(text => ({
+
+      id:Date.now().toString() +
+         Math.random(),
+
+      text:text,
+
+      done:false,
+
+      dueDate:""
+
+    })),
+
+    materials:materials.map(m => ({
+
+      id:Date.now().toString() +
+         Math.random(),
+
+      name:m.name,
+
+      quantity:m.quantity
+
+    })),
+
+    budget:budget,
+
+    isFence:isFence
+
+  };
+
+
+  showPlanPreview();
+
+}
+
+
+function showPlanPreview(){
+
+  const plan =
+    editingPlan;
+
+
+  const box =
+    document.getElementById("projectDetail");
+
+
+  let calculationHTML = "";
+
+
+  if(plan.calculation){
+
+    const c =
+      plan.calculation;
+
+
+    calculationHTML = `
+
+      <div class="card">
+
+        <h2>📐 Material Calculation</h2>
+
+        <div class="calcBox">
+
+          ${calcLine(
+            "Total fence length",
+            `${c.totalFeet} ft`
+          )}
+
+          ${calcLine(
+            "Gate openings",
+            `${c.gateCount} gate(s) / ${formatNumber(c.gateWidthTotal)} ft`
+          )}
+
+          ${calcLine(
+            "Normal fence run",
+            `${formatNumber(c.fenceRun)} ft`
+          )}
+
+          ${calcLine(
+            "Post spacing",
+            `${c.postSpacing} ft`
+          )}
+
+          ${calcLine(
+            "Fence sections",
+            c.sections
+          )}
+
+          ${calcLine(
+            "Corners",
+            c.corners
+          )}
+
+          ${calcLine(
+            "Endpoints",
+            c.endpoints
+          )}
+
+          ${calcLine(
+            "Fence posts",
+            c.posts
+          )}
+
+          ${calcLine(
+            "Rails",
+            `${c.rails} (${c.sections} × ${c.railsPerSection})`
+          )}
+
+          ${calcLine(
+            c.coveringType === "pickets"
+            ? "Pickets required before waste"
+            : "Panels required before waste",
+            formatNumber(c.coveringRequired)
+          )}
+
+          ${calcLine(
+            c.coveringType === "pickets"
+            ? "Pickets including 10% waste"
+            : "Panels including 10% waste",
+            c.coveringWithWaste
+          )}
+
+          ${calcLine(
+            "Concrete planning allowance",
+            `${c.concreteBags} bags`
+          )}
+
+          ${calcLine(
+            "Gravel planning allowance",
+            `${c.gravelBags} bags`
+          )}
+
+          ${calcLine(
+            "Post caps",
+            c.postCaps
+          )}
+
+          ${calcLine(
+            "Fastener boxes",
+            c.fastenerBoxes
+          )}
+
+        </div>
+
+        <div class="warning">
+
+          ⚠️ These are planning quantities, not a final
+          construction takeoff. Verify actual measurements,
+          fence layout, gate construction, post size,
+          local requirements and manufacturer instructions
+          before purchasing materials.
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  box.innerHTML = `
+
+    <div class="card">
+
+      <button
+        class="secondary"
+        onclick="showPage('projectsPage')">
+        ← Cancel
+      </button>
+
+      <h2 style="margin-top:15px;">
+        ✨ Review Your Plan
+      </h2>
+
+      <p>
+        The List calculated the plan below.
+        You can edit anything before saving it.
+      </p>
+
+    </div>
+
+
+    ${calculationHTML}
+
+
+    <div class="card">
+
+      <h2>📋 Project Details</h2>
+
+      <label>Project Name</label>
+
+      <input
+        id="previewName"
+        value="${escapeAttribute(plan.name)}">
+
+
+      <label>Description</label>
+
+      <textarea
+        id="previewDescription">${escapeHTML(plan.description)}</textarea>
+
+
+      <label>Budget</label>
+
+      <input
+        id="previewBudget"
+        type="number"
+        step="0.01"
+        value="${plan.budget || ""}">
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>✅ Tasks</h2>
+
+      <div id="planTaskList">
+
+        ${plan.tasks.map((task,index) => `
+
+          <div class="task">
+
+            <div class="taskText">
+
+              <input
+                id="planTask_${index}"
+                value="${escapeAttribute(task.text)}">
+
+            </div>
+
+            <button
+              class="small secondary"
+              onclick="removeAIPlanTask(${index})">
+              ×
+            </button>
+
+          </div>
+
+        `).join("")}
+
+      </div>
+
+
+      <button
+        class="secondary"
+        onclick="addAIPlanTask()">
+        ＋ Add Task
+      </button>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>🧰 Materials</h2>
+
+      <p class="smallText">
+        Calculated quantities are editable.
+      </p>
+
+      <div id="planMaterialList">
+
+        ${plan.materials.map((material,index) => `
+
+          <div class="answerBox">
+
+            <input
+              id="planMaterialName_${index}"
+              value="${escapeAttribute(material.name)}">
+
+            <input
+              id="planMaterialQty_${index}"
+              value="${escapeAttribute(material.quantity)}">
+
+            <button
+              class="small secondary"
+              onclick="removeAIPlanMaterial(${index})">
+              Remove
+            </button>
+
+          </div>
+
+        `).join("")}
+
+      </div>
+
+
+      <button
+        class="secondary"
+        onclick="addAIPlanMaterial()">
+        ＋ Add Material
+      </button>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>❓ Answers</h2>
+
+      ${plan.answers.map(a => `
+
+        <div class="answerBox">
+
+          <strong>
+            ${escapeHTML(a.question)}
+          </strong>
+
+          <div style="margin-top:5px;">
+            ${escapeHTML(a.answer)}
+          </div>
+
+        </div>
+
+      `).join("")}
+
+    </div>
+
+
+    <div class="card">
+
+      <button onclick="saveAIPlanEdits()">
+        💾 Save Project
+      </button>
+
+      <button
+        class="secondary"
+        style="margin-top:10px;"
+        onclick="buildMyPlan()">
+        Start Over
+      </button>
+
+    </div>
+
+  `;
+
+}
+
+
+function calcLine(label,value){
+
+  return `
+
+    <div class="calcLine">
+
+      <span>
+        ${escapeHTML(String(label))}
+      </span>
+
+      <span class="calcValue">
+        ${escapeHTML(String(value))}
+      </span>
+
+    </div>
+
+  `;
+
+}
+
+
+function saveAIPlanEdits(){
+
+  if(!editingPlan){
+    return;
+  }
+
+
+  editingPlan.name =
+    document.getElementById("previewName")
+      .value.trim();
+
+
+  editingPlan.description =
+    document.getElementById("previewDescription")
+      .value.trim();
+
+
+  editingPlan.budget =
+    parseFloat(
+      document.getElementById("previewBudget")
+        .value
+    ) || 0;
+
+
+  editingPlan.tasks.forEach((task,index) => {
+
+    const input =
+      document.getElementById(
+        `planTask_${index}`
+      );
+
+    if(input){
+      task.text = input.value.trim();
+    }
+
+  });
+
+
+  editingPlan.materials.forEach((material,index) => {
+
+    const name =
+      document.getElementById(
+        `planMaterialName_${index}`
+      );
+
+    const qty =
+      document.getElementById(
+        `planMaterialQty_${index}`
+      );
+
+
+    if(name){
+      material.name = name.value.trim();
+    }
+
+    if(qty){
+      material.quantity = qty.value.trim();
+    }
+
+  });
+
+
+  addAIPlanToProjects();
+
+}
+
+
+function addAIPlanTask(){
+
+  if(!editingPlan){
+    return;
+  }
+
+
+  editingPlan.tasks.push({
+
+    id:Date.now().toString(),
+
+    text:"New task",
+
+    done:false,
+
+    dueDate:""
+
+  });
+
+
+  showPlanPreview();
+
+}
+
+
+function removeAIPlanTask(index){
+
+  if(!editingPlan){
+    return;
+  }
+
+
+  editingPlan.tasks.splice(index,1);
+
+  showPlanPreview();
+
+}
+
+
+function addAIPlanMaterial(){
+
+  if(!editingPlan){
+    return;
+  }
+
+
+  editingPlan.materials.push({
+
+    id:Date.now().toString(),
+
+    name:"New material",
+
+    quantity:""
+
+  });
+
+
+  showPlanPreview();
+
+}
+
+
+function removeAIPlanMaterial(index){
+
+  if(!editingPlan){
+    return;
+  }
+
+
+  editingPlan.materials.splice(index,1);
+
+  showPlanPreview();
+
+}
+
+
+function addAIPlanToProjects(){
+
+  if(!editingPlan){
+    return;
+  }
+
+
+  const project = {
+
+    id:Date.now().toString(),
+
+    name:editingPlan.name,
+
+    category:
+      editingPlan.isFence
+      ? "Exterior"
+      : "Home",
+
+    description:
+      editingPlan.description,
+
+    tasks:
+      editingPlan.tasks,
+
+    materials:
+      editingPlan.materials,
+
+    records:[],
+
+    notes:"",
+
+    budget:
+      editingPlan.budget || 0,
+
+    answers:
+      editingPlan.answers
+
+  };
+
+
+  data.projects.push(project);
+
+  saveData();
+
+
+  editingPlan = null;
+
+
+  alert(
+    "✓ Project saved to The List."
+  );
+
+
+  openProject(project.id);
+
+}
+
+
+/* =========================================================
+   UTILITY FUNCTIONS
+   ========================================================= */
+
+function extractNumber(text){
+
+  const match =
+    String(text || "")
+      .replace(/,/g,"")
+      .match(/-?\d+(\.\d+)?/);
+
+
+  return match
+    ? parseFloat(match[0])
+    : 0;
+
+}
+
+
+function extractAllNumbers(text){
+
+  return (
+    String(text || "")
+      .replace(/,/g,"")
+      .match(/-?\d+(\.\d+)?/g) || []
+  ).map(Number);
+
+}
+
+
+function formatNumber(number){
+
+  return Number(number)
+    .toFixed(2)
+    .replace(/\.00$/,"")
+    .replace(/(\.\d)0$/,"$1");
+
+}
+
+
+function dateKey(date){
+
+  const y =
+    date.getFullYear();
+
+  const m =
+    String(date.getMonth()+1)
+      .padStart(2,"0");
+
+  const d =
+    String(date.getDate())
+      .padStart(2,"0");
+
+
+  return `${y}-${m}-${d}`;
+
+}
+
+
+function formatDate(dateString){
+
+  if(!dateString){
+    return "";
+  }
+
+
+  const parts =
+    dateString.split("-");
+
+
+  if(parts.length !== 3){
+    return dateString;
+  }
+
+
+  return new Date(
+    Number(parts[0]),
+    Number(parts[1])-1,
+    Number(parts[2])
+  ).toLocaleDateString(
+    undefined,
+    {
+      month:"short",
+      day:"numeric",
+      year:"numeric"
+    }
+  );
+
+}
+
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+function escapeAttribute(value){
+
+  return escapeHTML(value)
+    .replace(/`/g,"&#096;");
+
+}
+
+
+/* =========================================================
+   START APP
+   ========================================================= */
+
+showPage("homePage");
 
 </script>
 
