@@ -118,6 +118,10 @@ button.small{
   font-size:13px;
 }
 
+button.success{
+  background:#287a3d;
+}
+
 input,
 textarea,
 select{
@@ -279,6 +283,41 @@ label{
   margin-top:10px;
 }
 
+.warning strong{
+  display:block;
+  margin-bottom:4px;
+}
+
+.successBox{
+  background:#edf8ef;
+  border:1px solid #b9ddc0;
+  padding:11px;
+  border-radius:10px;
+  font-size:13px;
+  margin-top:10px;
+}
+
+.sectionLabel{
+  font-size:12px;
+  font-weight:800;
+  color:#777;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  margin-top:18px;
+  margin-bottom:6px;
+}
+
+.takeoffHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.takeoffHeader h3{
+  margin:0;
+}
+
 .calendarHeader{
   display:flex;
   justify-content:space-between;
@@ -415,9 +454,7 @@ hr{
 
 <main>
 
-<!-- =========================
-     HOME
-     ========================= -->
+<!-- HOME -->
 
 <section id="homePage">
 
@@ -482,9 +519,7 @@ hr{
 </section>
 
 
-<!-- =========================
-     PROJECTS
-     ========================= -->
+<!-- PROJECTS -->
 
 <section id="projectsPage" class="hidden">
 
@@ -503,9 +538,7 @@ hr{
 </section>
 
 
-<!-- =========================
-     SHOPPING
-     ========================= -->
+<!-- SHOPPING -->
 
 <section id="shoppingPage" class="hidden">
 
@@ -524,9 +557,7 @@ hr{
 </section>
 
 
-<!-- =========================
-     CALENDAR
-     ========================= -->
+<!-- CALENDAR -->
 
 <section id="calendarPage" class="hidden">
 
@@ -594,9 +625,7 @@ hr{
 </section>
 
 
-<!-- =========================
-     MAINTENANCE
-     ========================= -->
+<!-- MAINTENANCE -->
 
 <section id="maintenancePage" class="hidden">
 
@@ -624,9 +653,7 @@ hr{
 </section>
 
 
-<!-- =========================
-     HOME INFORMATION
-     ========================= -->
+<!-- HOME INFORMATION -->
 
 <section id="homeInfoPage" class="hidden">
 
@@ -690,9 +717,7 @@ hr{
 </section>
 
 
-<!-- =========================
-     FAMILY
-     ========================= -->
+<!-- FAMILY -->
 
 <section id="familyPage" class="hidden">
 
@@ -719,9 +744,7 @@ hr{
 </section>
 
 
-<!-- =========================
-     OPEN PROJECT
-     ========================= -->
+<!-- PROJECT DETAIL -->
 
 <section id="projectDetailPage" class="hidden">
 
@@ -777,7 +800,6 @@ const defaultData = {
 
 
 let data = loadData();
-
 
 let currentCalendarDate = new Date();
 
@@ -838,6 +860,14 @@ function loadData(){
       if(typeof p.notes !== "string") p.notes = "";
 
       if(typeof p.budget !== "number") p.budget = 0;
+
+      if(!p.takeoff){
+        p.takeoff = null;
+      }
+
+      if(!p.calculation){
+        p.calculation = p.takeoff || null;
+      }
 
       p.tasks.forEach(t => {
 
@@ -1147,6 +1177,12 @@ function renderProjects(){
           ${escapeHTML(project.description || "No description yet.")}
         </p>
 
+        ${
+          project.takeoff
+          ? `<span class="badge">📐 Material Takeoff</span>`
+          : ""
+        }
+
         <div class="smallText">
           ${completed} of ${total} tasks complete
         </div>
@@ -1206,7 +1242,11 @@ function newProject(){
 
     budget:0,
 
-    answers:[]
+    answers:[],
+
+    takeoff:null,
+
+    calculation:null
 
   });
 
@@ -1278,6 +1318,13 @@ function openProject(id){
     </div>
 
 
+    ${
+      project.takeoff
+      ? renderSavedTakeoffHTML(project)
+      : ""
+    }
+
+
     <div class="card">
 
       <h2>✅ Tasks</h2>
@@ -1304,6 +1351,18 @@ function openProject(id){
     <div class="card">
 
       <h2>🧰 Materials</h2>
+
+      ${
+        project.takeoff
+        ? `
+          <button
+            class="success"
+            onclick="addAllProjectMaterialsToShopping('${project.id}')">
+            🛒 Add All Materials to Shopping List
+          </button>
+        `
+        : ""
+      }
 
       <div id="projectMaterials"></div>
 
@@ -1404,6 +1463,224 @@ function openProject(id){
   renderProjectTasks(project);
 
   renderProjectMaterials(project);
+
+}
+
+
+/* =========================================================
+   SAVED TAKEOFF
+   ========================================================= */
+
+function renderSavedTakeoffHTML(project){
+
+  const c = project.takeoff;
+
+  if(!c){
+    return "";
+  }
+
+
+  return `
+
+    <div class="card">
+
+      <div class="takeoffHeader">
+
+        <h2>📐 Material Takeoff</h2>
+
+        <span class="badge">
+          Contractor Planning
+        </span>
+
+      </div>
+
+      <div class="calcBox">
+
+        ${calcLine(
+          "Total fence length",
+          `${formatNumber(c.totalFeet)} ft`
+        )}
+
+        ${calcLine(
+          "Single gates",
+          `${c.singleGateCount} / ${formatNumber(c.singleGateWidthTotal)} ft`
+        )}
+
+        ${calcLine(
+          "Double gates",
+          `${c.doubleGateCount} / ${formatNumber(c.doubleGateWidthTotal)} ft`
+        )}
+
+        ${calcLine(
+          "Total gate opening",
+          `${formatNumber(c.gateWidthTotal)} ft`
+        )}
+
+        ${calcLine(
+          "Net fence run",
+          `${formatNumber(c.fenceRun)} ft`
+        )}
+
+        ${calcLine(
+          "Post spacing",
+          `${formatNumber(c.postSpacing)} ft`
+        )}
+
+        ${calcLine(
+          "Fence sections",
+          c.sections
+        )}
+
+        ${calcLine(
+          "Line posts",
+          c.linePosts
+        )}
+
+        ${calcLine(
+          "Corner posts",
+          c.cornerPosts
+        )}
+
+        ${calcLine(
+          "End posts",
+          c.endPosts
+        )}
+
+        ${calcLine(
+          "Gate posts",
+          c.gatePosts
+        )}
+
+        ${calcLine(
+          "Total posts",
+          c.totalPosts
+        )}
+
+        ${calcLine(
+          "Rails per section",
+          c.railsPerSection
+        )}
+
+        ${calcLine(
+          "Total rails",
+          c.totalRails
+        )}
+
+        ${calcLine(
+          c.coveringType === "pickets"
+          ? "Pickets before waste"
+          : "Panels before waste",
+          formatNumber(c.coveringRequired)
+        )}
+
+        ${calcLine(
+          c.coveringType === "pickets"
+          ? "Pickets + 10% waste"
+          : "Panels + 10% waste",
+          c.coveringWithWaste
+        )}
+
+        ${calcLine(
+          "Post size",
+          c.postSize
+        )}
+
+        ${calcLine(
+          "Hole diameter",
+          `${formatNumber(c.holeDiameter)} in`
+        )}
+
+        ${calcLine(
+          "Hole depth",
+          `${formatNumber(c.holeDepth)} in`
+        )}
+
+        ${calcLine(
+          "Concrete volume",
+          `${formatNumber(c.concreteVolume)} cu ft`
+        )}
+
+        ${calcLine(
+          "80-lb concrete bags",
+          c.concreteBags
+        )}
+
+        ${calcLine(
+          "Gravel",
+          `${c.gravelBags} bag(s)`
+        )}
+
+        ${calcLine(
+          "Post caps",
+          c.postCaps
+        )}
+
+        ${calcLine(
+          "Fastener boxes",
+          c.fastenerBoxes
+        )}
+
+        ${calcLine(
+          "Single gate hinges",
+          c.singleGateHinges
+        )}
+
+        ${calcLine(
+          "Double gate hinges",
+          c.doubleGateHinges
+        )}
+
+        ${calcLine(
+          "Gate latches",
+          c.gateLatches
+        )}
+
+        ${calcLine(
+          "Drop rods",
+          c.dropRods
+        )}
+
+      </div>
+
+      ${
+        c.warnings && c.warnings.length
+        ? `
+          <div class="warning">
+
+            <strong>⚠️ Review before buying</strong>
+
+            ${c.warnings.map(w => `
+              <div>• ${escapeHTML(w)}</div>
+            `).join("")}
+
+          </div>
+        `
+        : `
+          <div class="successBox">
+            ✓ The measurements passed the basic planning checks.
+            Final field measurements and local requirements
+            should still be verified before construction.
+          </div>
+        `
+      }
+
+      <div class="warning">
+
+        <strong>Planning estimate</strong>
+
+        Concrete, gravel, fasteners and gate hardware are
+        calculated as planning allowances. Actual quantities
+        depend on the fence manufacturer, post size, soil,
+        gate construction and installation method.
+
+        This calculator does not determine building-code,
+        permit or HOA compliance.
+
+      </div>
+
+    </div>
+
+  `;
 
 }
 
@@ -1685,6 +1962,50 @@ function addMaterialToShopping(projectId,index){
 
 
   alert("Added to Shopping List.");
+
+}
+
+
+function addAllProjectMaterialsToShopping(projectId){
+
+  const project =
+    data.projects.find(p => p.id === projectId);
+
+  if(!project || !project.materials.length){
+    return;
+  }
+
+
+  project.materials.forEach(material => {
+
+    data.shopping.push({
+
+      id:
+        Date.now().toString() +
+        Math.random(),
+
+      name:material.name,
+
+      quantity:material.quantity,
+
+      project:project.name,
+
+      done:false
+
+    });
+
+  });
+
+
+  saveData();
+
+
+  alert(
+    `✓ Added ${project.materials.length} material items to the Shopping List.`
+  );
+
+
+  renderHome();
 
 }
 
@@ -2551,146 +2872,8 @@ function buildMyPlan(){
 
   const questions =
     isFence
-    ? [
-
-        {
-          id:"length",
-          question:
-            "How many linear feet of fence are needed?",
-          placeholder:
-            "Example: 180"
-        },
-
-        {
-          id:"style",
-          question:
-            "What fence style do you want?",
-          placeholder:
-            "Example: 6 ft privacy wood fence"
-        },
-
-        {
-          id:"height",
-          question:
-            "What height should the fence be?",
-          placeholder:
-            "Example: 6 ft"
-        },
-
-        {
-          id:"gates",
-          question:
-            "How many gates are needed?",
-          placeholder:
-            "Example: 2"
-        },
-
-        {
-          id:"gateWidths",
-          question:
-            "What is the width of each gate?",
-          placeholder:
-            "Example: 4 ft and 5 ft"
-        },
-
-        {
-          id:"budget",
-          question:
-            "What is your target budget?",
-          placeholder:
-            "Example: $3000"
-        },
-
-        {
-          id:"requirements",
-          question:
-            "Are there any HOA, property-line, utility or other requirements?",
-          placeholder:
-            "Describe anything that applies."
-        },
-
-        {
-          id:"postSpacing",
-          question:
-            "What post spacing do you want?",
-          placeholder:
-            "Example: 8 ft",
-          defaultValue:"8"
-        },
-
-        {
-          id:"panelWidth",
-          question:
-            "What is the width of each fence panel or picket?",
-          placeholder:
-            "Example: 8 ft panel or 5.5 in picket",
-          defaultValue:"8"
-        },
-
-        {
-          id:"rails",
-          question:
-            "How many horizontal rails should each fence section have?",
-          placeholder:
-            "Example: 3",
-          defaultValue:"3"
-        },
-
-        {
-          id:"corners",
-          question:
-            "How many corners will the fence have?",
-          placeholder:
-            "Example: 4",
-          defaultValue:"4"
-        },
-
-        {
-          id:"endPoints",
-          question:
-            "How many fence endpoints are there?",
-          placeholder:
-            "Example: 2",
-          defaultValue:"2"
-        }
-
-      ]
-
-    : [
-
-        {
-          id:"size",
-          question:
-            "What are the project dimensions?",
-          placeholder:
-            "Example: 20 ft × 12 ft"
-        },
-
-        {
-          id:"materials",
-          question:
-            "What materials or products are you considering?",
-          placeholder:
-            "List anything you already know."
-        },
-
-        {
-          id:"finish",
-          question:
-            "What finished result do you want?",
-          placeholder:
-            "Describe the look/function."
-        },
-
-        {
-          id:"budget",
-          question:
-            "What is your target budget?",
-          placeholder:
-            "Example: $2000"
-        }
-
-      ];
+    ? getFenceQuestions()
+    : getGenericQuestions();
 
 
   showPlanQuestions(
@@ -2701,6 +2884,237 @@ function buildMyPlan(){
 
 }
 
+
+/* =========================================================
+   FENCE QUESTIONS
+   ========================================================= */
+
+function getFenceQuestions(){
+
+  return [
+
+    {
+      id:"length",
+      question:
+        "How many linear feet of fence are needed?",
+      placeholder:
+        "Example: 180"
+    },
+
+    {
+      id:"style",
+      question:
+        "What fence style do you want?",
+      placeholder:
+        "Example: 6 ft privacy wood fence"
+    },
+
+    {
+      id:"height",
+      question:
+        "What height should the fence be?",
+      placeholder:
+        "Example: 6"
+    },
+
+    {
+      id:"construction",
+      question:
+        "How will the fence be built?",
+      type:"select",
+      options:[
+        "Fence panels",
+        "Individual pickets"
+      ],
+      defaultValue:"Fence panels"
+    },
+
+    {
+      id:"panelWidth",
+      question:
+        "What is the panel width in feet?",
+      placeholder:
+        "Example: 8"
+    },
+
+    {
+      id:"picketWidth",
+      question:
+        "If using individual pickets, what is the picket width in inches?",
+      placeholder:
+        "Example: 5.5"
+    },
+
+    {
+      id:"picketSpacing",
+      question:
+        "If using individual pickets, what gap should be between pickets in inches?",
+      placeholder:
+        "Example: 0.5",
+      defaultValue:"0.5"
+    },
+
+    {
+      id:"singleGateCount",
+      question:
+        "How many SINGLE gates?",
+      placeholder:
+        "Example: 2",
+      defaultValue:"0"
+    },
+
+    {
+      id:"singleGateWidths",
+      question:
+        "What is the width of each SINGLE gate in feet? Enter one width per gate, separated by commas.",
+      placeholder:
+        "Example: 4, 4"
+    },
+
+    {
+      id:"doubleGateCount",
+      question:
+        "How many DOUBLE gates?",
+      placeholder:
+        "Example: 1",
+      defaultValue:"0"
+    },
+
+    {
+      id:"doubleGateWidths",
+      question:
+        "What is the opening width of each DOUBLE gate in feet? Enter one width per gate, separated by commas.",
+      placeholder:
+        "Example: 10"
+    },
+
+    {
+      id:"postSpacing",
+      question:
+        "What post spacing do you want?",
+      placeholder:
+        "Example: 8",
+      defaultValue:"8"
+    },
+
+    {
+      id:"postSize",
+      question:
+        "What post size are you planning to use?",
+      placeholder:
+        "Example: 4 × 4 pressure-treated"
+    },
+
+    {
+      id:"holeDiameter",
+      question:
+        "What post-hole diameter should be used for the planning calculation?",
+      placeholder:
+        "Example: 10",
+        defaultValue:"10"
+    },
+
+    {
+      id:"holeDepth",
+      question:
+        "What post-hole depth should be used for the planning calculation?",
+      placeholder:
+        "Example: 30",
+        defaultValue:"30"
+    },
+
+    {
+      id:"rails",
+      question:
+        "How many horizontal rails per fence section?",
+      placeholder:
+        "Example: 3",
+      defaultValue:"3"
+    },
+
+    {
+      id:"corners",
+      question:
+        "How many fence corners?",
+      placeholder:
+        "Example: 4",
+      defaultValue:"4"
+    },
+
+    {
+      id:"endPoints",
+      question:
+        "How many normal fence endpoints?",
+      placeholder:
+        "Example: 2",
+      defaultValue:"2"
+    },
+
+    {
+      id:"budget",
+      question:
+        "What is your target budget?",
+      placeholder:
+        "Example: 3000"
+    },
+
+    {
+      id:"requirements",
+      question:
+        "Are there any HOA, property-line, utility or other requirements?",
+      placeholder:
+        "Describe anything that applies."
+    }
+
+  ];
+
+}
+
+
+function getGenericQuestions(){
+
+  return [
+
+    {
+      id:"size",
+      question:
+        "What are the project dimensions?",
+      placeholder:
+        "Example: 20 ft × 12 ft"
+    },
+
+    {
+      id:"materials",
+      question:
+        "What materials or products are you considering?",
+      placeholder:
+        "List anything you already know."
+    },
+
+    {
+      id:"finish",
+      question:
+        "What finished result do you want?",
+      placeholder:
+        "Describe the look/function."
+    },
+
+    {
+      id:"budget",
+      question:
+        "What is your target budget?",
+      placeholder:
+        "Example: 2000"
+    }
+
+  ];
+
+}
+
+
+/* =========================================================
+   SHOW PLAN QUESTIONS
+   ========================================================= */
 
 function showPlanQuestions(
   name,
@@ -2730,8 +3144,8 @@ function showPlanQuestions(
       </h2>
 
       <p>
-        Answer these questions and The List will build
-        a project plan, task list and material estimate.
+        Answer the questions below and The List will
+        calculate a material takeoff where supported.
       </p>
 
       <label>Project Name</label>
@@ -2780,28 +3194,66 @@ function showPlanQuestions(
 
 
   qbox.innerHTML =
-    questions.map((q,index) => `
+    questions.map((q,index) => {
 
-      <div class="answerBox">
+      if(q.type === "select"){
 
-        <label>
-          ${index + 1}. ${escapeHTML(q.question)}
-        </label>
+        return `
 
-        <input
-          id="planAnswer_${escapeAttribute(q.id)}"
-          placeholder="${escapeAttribute(q.placeholder || "")}"
-          value="${escapeAttribute(q.defaultValue || "")}">
+          <div class="answerBox">
 
-      </div>
+            <label>
+              ${index + 1}. ${escapeHTML(q.question)}
+            </label>
 
-    `).join("");
+            <select id="planAnswer_${escapeAttribute(q.id)}">
+
+              ${q.options.map(option => `
+
+                <option
+                  ${option === q.defaultValue ? "selected" : ""}>
+                  ${escapeHTML(option)}
+                </option>
+
+              `).join("")}
+
+            </select>
+
+          </div>
+
+        `;
+
+      }
+
+
+      return `
+
+        <div class="answerBox">
+
+          <label>
+            ${index + 1}. ${escapeHTML(q.question)}
+          </label>
+
+          <input
+            id="planAnswer_${escapeAttribute(q.id)}"
+            placeholder="${escapeAttribute(q.placeholder || "")}"
+            value="${escapeAttribute(q.defaultValue || "")}">
+
+        </div>
+
+      `;
+
+    }).join("");
 
 
   editingPlan = {
+
     name:name,
+
     description:description,
+
     questions:questions
+
   };
 
 }
@@ -2820,107 +3272,186 @@ function getPlanAnswer(id){
 }
 
 
+/* =========================================================
+   FENCE CALCULATOR
+   ========================================================= */
+
 function calculateFenceMaterials(answers){
 
+  const warnings = [];
+
+
   const totalFeet =
-    Math.max(
-      0,
-      parseFloat(
-        answers.length
-      ) || 0
+    parsePositiveNumber(
+      answers.length
     );
+
+
+  const height =
+    parsePositiveNumber(
+      answers.height
+    );
+
+
+  const construction =
+    String(
+      answers.construction || "Fence panels"
+    );
+
+
+  const isPickets =
+    /picket/i.test(construction);
 
 
   const postSpacing =
-    Math.max(
-      1,
-      parseFloat(
-        answers.postSpacing
-      ) || 8
+    parsePositiveNumber(
+      answers.postSpacing
+    ) || 8;
+
+
+  const singleGateCount =
+    parseCount(
+      answers.singleGateCount
     );
 
 
-  const railsPerSection =
-    Math.max(
-      1,
-      Math.ceil(
-        parseFloat(
-          answers.rails
-        ) || 3
-      )
+  const doubleGateCount =
+    parseCount(
+      answers.doubleGateCount
     );
 
 
-  const gateCount =
-    Math.max(
-      0,
-      Math.ceil(
-        parseFloat(
-          answers.gates
-        ) || 0
-      )
+  const singleGateWidths =
+    parseWidthList(
+      answers.singleGateWidths
     );
 
 
-  const gateNumbers =
-    extractAllNumbers(
-      answers.gateWidths
+  const doubleGateWidths =
+    parseWidthList(
+      answers.doubleGateWidths
     );
 
 
-  let gateWidthTotal = 0;
+  const singleGateWidthTotal =
+    singleGateWidths
+      .slice(0,singleGateCount)
+      .reduce(
+        (sum,n) => sum + n,
+        0
+      );
 
 
-  if(gateCount > 0 && gateNumbers.length){
-
-    const normalizedWidths =
-      gateNumbers.map(n => {
-
-        const text =
-          answers.gateWidths.toLowerCase();
-
-
-        if(
-          text.includes('"') ||
-          text.includes(" inch")
-        ){
-
-          return n / 12;
-
-        }
+  const doubleGateWidthTotal =
+    doubleGateWidths
+      .slice(0,doubleGateCount)
+      .reduce(
+        (sum,n) => sum + n,
+        0
+      );
 
 
-        return n;
+  if(
+    singleGateCount > 0 &&
+    singleGateWidths.length === 0
+  ){
 
-      });
+    warnings.push(
+      "Single gates were specified, but no single-gate widths were entered."
+    );
 
-
-    if(normalizedWidths.length === 1){
-
-      gateWidthTotal =
-        normalizedWidths[0] * gateCount;
-
-    }else{
-
-      gateWidthTotal =
-        normalizedWidths
-          .slice(0,gateCount)
-          .reduce(
-            (sum,n) => sum + n,
-            0
-          );
+  }
 
 
-      if(
-        normalizedWidths.length < gateCount
-      ){
+  if(
+    doubleGateCount > 0 &&
+    doubleGateWidths.length === 0
+  ){
 
-        gateWidthTotal =
-          normalizedWidths[0] * gateCount;
+    warnings.push(
+      "Double gates were specified, but no double-gate widths were entered."
+    );
 
-      }
+  }
 
-    }
+
+  if(
+    singleGateCount > 0 &&
+    singleGateWidths.length < singleGateCount
+  ){
+
+    warnings.push(
+      "There are fewer single-gate widths than single gates. Missing gates were not included in the opening total."
+    );
+
+  }
+
+
+  if(
+    doubleGateCount > 0 &&
+    doubleGateWidths.length < doubleGateCount
+  ){
+
+    warnings.push(
+      "There are fewer double-gate widths than double gates. Missing gates were not included in the opening total."
+    );
+
+  }
+
+
+  if(
+    singleGateWidths.length > singleGateCount
+  ){
+
+    warnings.push(
+      "More single-gate widths were entered than the number of single gates. Extra widths were ignored."
+    );
+
+  }
+
+
+  if(
+    doubleGateWidths.length > doubleGateCount
+  ){
+
+    warnings.push(
+      "More double-gate widths were entered than the number of double gates. Extra widths were ignored."
+    );
+
+  }
+
+
+  const gateWidthTotal =
+    singleGateWidthTotal +
+    doubleGateWidthTotal;
+
+
+  if(totalFeet <= 0){
+
+    warnings.push(
+      "Total fence length must be greater than zero."
+    );
+
+  }
+
+
+  if(postSpacing <= 0){
+
+    warnings.push(
+      "Post spacing must be greater than zero."
+    );
+
+  }
+
+
+  if(
+    gateWidthTotal >= totalFeet &&
+    totalFeet > 0
+  ){
+
+    warnings.push(
+      "Gate openings are equal to or larger than the total fence length."
+    );
 
   }
 
@@ -2940,99 +3471,443 @@ function calculateFenceMaterials(answers){
     : 0;
 
 
-  const corners =
+  const cornerPosts =
     Math.max(
       0,
-      Math.ceil(
-        parseFloat(
-          answers.corners
-        ) || 0
-      )
+      parseCount(answers.corners)
     );
 
 
-  const endpoints =
+  const endPosts =
     Math.max(
       0,
-      Math.ceil(
-        parseFloat(
-          answers.endPoints
-        ) || 0
-      )
+      parseCount(answers.endPoints)
     );
 
 
   /*
-    Base posts:
-    one post per section plus one terminal post.
-    Additional posts are added for corners/endpoints
-    and gate openings.
+    Line posts are the ordinary posts between
+    the special posts. Gate posts are counted
+    separately so they are not accidentally hidden
+    inside the normal line-post calculation.
   */
 
-  const gatePosts =
-    gateCount * 2;
-
-
-  const basePosts =
+  const basePostPositions =
     sections > 0
     ? sections + 1
     : 0;
 
 
-  const posts =
+  const gatePosts =
+    (singleGateCount * 2) +
+    (doubleGateCount * 2);
+
+
+  const specialNormalPosts =
+    cornerPosts +
+    endPosts;
+
+
+  const linePosts =
     Math.max(
       0,
-      basePosts +
-      corners +
-      Math.max(0,endpoints - 2) +
-      gatePosts
+      basePostPositions -
+      specialNormalPosts
     );
 
 
-  const rails =
+  const totalPosts =
+    linePosts +
+    cornerPosts +
+    endPosts +
+    gatePosts;
+
+
+  if(
+    specialNormalPosts > basePostPositions &&
+    basePostPositions > 0
+  ){
+
+    warnings.push(
+      "Corners plus endpoints exceed the number of normal fence post positions. Review the layout."
+    );
+
+  }
+
+
+  if(
+    gateWidthTotal > 0 &&
+    gateWidthTotal < totalFeet &&
+    gateWidthTotal > totalFeet * .5
+  ){
+
+    warnings.push(
+      "Gate openings consume more than half of the total fence length. Verify the measurements."
+    );
+
+  }
+
+
+  let railsPerSection =
+    parsePositiveNumber(
+      answers.rails
+    );
+
+
+  if(!railsPerSection){
+
+    if(height <= 4){
+      railsPerSection = 2;
+    }else if(height <= 6){
+      railsPerSection = 3;
+    }else{
+      railsPerSection = 4;
+    }
+
+  }
+
+
+  railsPerSection =
+    Math.max(
+      1,
+      Math.ceil(railsPerSection)
+    );
+
+
+  const totalRails =
     sections * railsPerSection;
 
 
-  const panelInfo =
-    calculateFenceCovering(
-      fenceRun,
-      answers.panelWidth
-    );
+  let coveringRequired = 0;
+
+  let coveringWithWaste = 0;
+
+  let coveringWidth = 0;
+
+  let picketCenterSpacing = 0;
 
 
-  const panelsOrPickets =
-    Math.ceil(
-      panelInfo.required *
-      1.10
+  if(isPickets){
+
+    const picketWidth =
+      parsePositiveNumber(
+        answers.picketWidth
+      ) || 5.5;
+
+
+    const picketSpacing =
+      parseNonNegativeNumber(
+        answers.picketSpacing
+      );
+
+
+    if(
+      !parsePositiveNumber(
+        answers.picketWidth
+      )
+    ){
+
+      warnings.push(
+        "Picket width was not entered. A planning default of 5.5 inches was used."
+      );
+
+    }
+
+
+    if(
+      picketSpacing < 0
+    ){
+
+      warnings.push(
+        "Picket spacing cannot be negative."
+      );
+
+    }
+
+
+    picketCenterSpacing =
+      picketWidth +
+      picketSpacing;
+
+
+    coveringWidth =
+      picketWidth;
+
+
+    coveringRequired =
+      fenceRun > 0
+      ? Math.ceil(
+          fenceRun * 12 /
+          Math.max(
+            .01,
+            picketCenterSpacing
+          )
+        )
+      : 0;
+
+
+    coveringWithWaste =
+      Math.ceil(
+        coveringRequired * 1.10
+      );
+
+  }else{
+
+    const panelWidth =
+      parsePositiveNumber(
+        answers.panelWidth
+      ) || 8;
+
+
+    if(
+      !parsePositiveNumber(
+        answers.panelWidth
+      )
+    ){
+
+      warnings.push(
+        "Panel width was not entered. A planning default of 8 feet was used."
+      );
+
+    }
+
+
+    coveringWidth =
+      panelWidth;
+
+
+    coveringRequired =
+      fenceRun > 0
+      ? Math.ceil(
+          fenceRun / panelWidth
+        )
+      : 0;
+
+
+    coveringWithWaste =
+      Math.ceil(
+        coveringRequired * 1.10
+      );
+
+  }
+
+
+  const postSize =
+    answers.postSize ||
+    "4 × 4 planning assumption";
+
+
+  const holeDiameter =
+    parsePositiveNumber(
+      answers.holeDiameter
+    ) || 10;
+
+
+  const holeDepth =
+    parsePositiveNumber(
+      answers.holeDepth
+    ) || 30;
+
+
+  if(
+    !parsePositiveNumber(
+      answers.holeDiameter
+    )
+  ){
+
+    warnings.push(
+      "Hole diameter was not entered. A planning default of 10 inches was used."
     );
+
+  }
+
+
+  if(
+    !parsePositiveNumber(
+      answers.holeDepth
+    )
+  ){
+
+    warnings.push(
+      "Hole depth was not entered. A planning default of 30 inches was used."
+    );
+
+  }
+
+
+  /*
+    Concrete calculation:
+    cylindrical hole volume × total posts.
+    Then divide by an assumed 0.60 cubic-foot yield
+    for an 80-lb bag.
+
+    This is a planning allowance only.
+  */
+
+  const holeRadiusFeet =
+    holeDiameter / 12 / 2;
+
+
+  const holeDepthFeet =
+    holeDepth / 12;
+
+
+  const holeVolume =
+    Math.PI *
+    Math.pow(holeRadiusFeet,2) *
+    holeDepthFeet;
+
+
+  const concreteVolume =
+    holeVolume *
+    totalPosts;
 
 
   const concreteBags =
-    posts * 2;
+    totalPosts > 0
+    ? Math.ceil(
+        concreteVolume / .60 * 1.10
+      )
+    : 0;
 
+
+  /*
+    Gravel allowance:
+    1 bag per post is intentionally conservative
+    as a simple planning allowance.
+  */
 
   const gravelBags =
-    posts;
+    totalPosts > 0
+    ? totalPosts
+    : 0;
 
 
   const postCaps =
-    posts;
+    totalPosts;
 
 
-  const fastenerBoxes =
-    Math.max(
-      1,
-      Math.ceil(
-        totalFeet / 100
-      )
+  /*
+    Fastener planning:
+    Panels:
+      approximately 1 box per 4 panels.
+    Pickets:
+      approximately 1 box per 150 pickets.
+  */
+
+  let fastenerBoxes;
+
+
+  if(isPickets){
+
+    fastenerBoxes =
+      coveringWithWaste > 0
+      ? Math.max(
+          1,
+          Math.ceil(
+            coveringWithWaste / 150
+          )
+        )
+      : 0;
+
+  }else{
+
+    fastenerBoxes =
+      coveringWithWaste > 0
+      ? Math.max(
+          1,
+          Math.ceil(
+            coveringWithWaste / 4
+          )
+        )
+      : 0;
+
+  }
+
+
+  const singleGateHinges =
+    singleGateCount * 2;
+
+
+  const doubleGateHinges =
+    doubleGateCount * 4;
+
+
+  const totalGates =
+    singleGateCount +
+    doubleGateCount;
+
+
+  const gateLatches =
+    totalGates;
+
+
+  const dropRods =
+    doubleGateCount * 2;
+
+
+  if(
+    singleGateCount +
+    doubleGateCount > 0 &&
+    totalFeet > 0
+  ){
+
+    warnings.push(
+      "Gate posts and gate construction materials are planning quantities. Verify the actual gate manufacturer or gate-building design."
     );
+
+  }
+
+
+  if(
+    height > 0 &&
+    height > 8
+  ){
+
+    warnings.push(
+      "Fence height exceeds 8 feet. Verify engineering, permitting and local requirements."
+    );
+
+  }
+
+
+  if(
+    height > 0 &&
+    height <= 4 &&
+    parsePositiveNumber(answers.rails) === 0
+  ){
+
+    warnings.push(
+      "Two rails were selected as the automatic planning default for a fence 4 feet or shorter."
+    );
+
+  }
 
 
   return {
 
+    calculatorType:"fence",
+
     totalFeet,
 
-    gateCount,
+    height,
+
+    style:
+      answers.style || "",
+
+    construction,
+
+    singleGateCount,
+
+    singleGateWidths,
+
+    singleGateWidthTotal,
+
+    doubleGateCount,
+
+    doubleGateWidths,
+
+    doubleGateWidthTotal,
 
     gateWidthTotal,
 
@@ -3042,27 +3917,40 @@ function calculateFenceMaterials(answers){
 
     sections,
 
-    corners,
+    linePosts,
 
-    endpoints,
+    cornerPosts,
 
-    posts,
+    endPosts,
+
+    gatePosts,
+
+    totalPosts,
+
+    postSize,
 
     railsPerSection,
 
-    rails,
+    totalRails,
 
     coveringType:
-      panelInfo.type,
+      isPickets
+      ? "pickets"
+      : "panels",
 
-    coveringWidth:
-      panelInfo.width,
+    coveringWidth,
 
-    coveringRequired:
-      panelInfo.required,
+    picketCenterSpacing,
 
-    coveringWithWaste:
-      panelsOrPickets,
+    coveringRequired,
+
+    coveringWithWaste,
+
+    holeDiameter,
+
+    holeDepth,
+
+    concreteVolume,
 
     concreteBags,
 
@@ -3070,83 +3958,29 @@ function calculateFenceMaterials(answers){
 
     postCaps,
 
-    fastenerBoxes
+    fastenerBoxes,
+
+    singleGateHinges,
+
+    doubleGateHinges,
+
+    gateLatches,
+
+    dropRods,
+
+    warnings,
+
+    requirements:
+      answers.requirements || ""
 
   };
 
 }
 
 
-function calculateFenceCovering(
-  fenceRun,
-  widthText
-){
-
-  const lower =
-    String(widthText || "").toLowerCase();
-
-
-  const numbers =
-    extractAllNumbers(widthText);
-
-
-  const width =
-    numbers.length
-    ? numbers[0]
-    : 8;
-
-
-  if(
-    lower.includes("picket") ||
-    lower.includes("inch") ||
-    lower.includes('"')
-  ){
-
-    let inches = width;
-
-
-    if(
-      !lower.includes("inch") &&
-      !lower.includes('"')
-    ){
-
-      inches = width;
-
-    }
-
-
-    return {
-
-      type:"pickets",
-
-      width:inches / 12,
-
-      required:
-        fenceRun /
-        Math.max(
-          .01,
-          inches / 12
-        )
-
-    };
-
-  }
-
-
-  return {
-
-    type:"panels",
-
-    width:width,
-
-    required:
-      fenceRun /
-      Math.max(.01,width)
-
-  };
-
-}
-
+/* =========================================================
+   PLAN GENERATION
+   ========================================================= */
 
 function generateAIPlanFromAnswers(){
 
@@ -3237,15 +4071,23 @@ function generateAIPlanFromAnswers(){
 
       "Confirm fence style and height",
 
+      "Confirm panel or picket construction",
+
       "Confirm gate locations",
 
-      "Confirm gate widths",
+      "Confirm single gate widths",
+
+      "Confirm double gate openings",
 
       "Confirm post spacing",
 
+      "Confirm post size",
+
+      "Confirm post-hole diameter and depth",
+
       "Confirm corners and endpoints",
 
-      "Calculate final material quantities",
+      "Review material takeoff",
 
       "Price materials",
 
@@ -3261,74 +4103,26 @@ function generateAIPlanFromAnswers(){
 
       "Install fence panels or pickets",
 
-      "Install gates and gate hardware",
+      "Build or install gates",
+
+      "Install gate hinges and latches",
+
+      "Install drop rods on double gates",
 
       "Install post caps",
 
       "Inspect the completed fence",
 
-      "Clean up the work area"
+      "Clean up the work area",
+
+      "Save final measurements and receipts"
 
     ];
 
 
-    materials = [
-
-      {
-        name:"Fence posts",
-        quantity:
-          `${calculation.posts} posts`
-      },
-
-      {
-        name:
-          calculation.coveringType === "pickets"
-          ? "Fence pickets"
-          : "Fence panels",
-
-        quantity:
-          `${calculation.coveringWithWaste} ${
-            calculation.coveringType
-          }`
-      },
-
-      {
-        name:"Horizontal rails",
-        quantity:
-          `${calculation.rails} rails`
-      },
-
-      {
-        name:"Concrete",
-        quantity:
-          `Planning allowance: ${calculation.concreteBags} bags`
-      },
-
-      {
-        name:"Gravel",
-        quantity:
-          `Planning allowance: ${calculation.gravelBags} bags`
-      },
-
-      {
-        name:"Post caps",
-        quantity:
-          `${calculation.postCaps}`
-      },
-
-      {
-        name:"Exterior fence screws / fasteners",
-        quantity:
-          `${calculation.fastenerBoxes} box(es)`
-      },
-
-      {
-        name:"Gate hardware",
-        quantity:
-          `${calculation.gateCount} gate(s)`
-      }
-
-    ];
+    materials = buildFenceMaterialList(
+      calculation
+    );
 
   }else{
 
@@ -3404,10 +4198,12 @@ function generateAIPlanFromAnswers(){
 
     calculation:calculation,
 
-    tasks:tasks.map(text => ({
+    tasks:tasks.map((text,index) => ({
 
-      id:Date.now().toString() +
-         Math.random(),
+      id:
+        Date.now().toString() +
+        "-" +
+        index,
 
       text:text,
 
@@ -3417,10 +4213,12 @@ function generateAIPlanFromAnswers(){
 
     })),
 
-    materials:materials.map(m => ({
+    materials:materials.map((m,index) => ({
 
-      id:Date.now().toString() +
-         Math.random(),
+      id:
+        Date.now().toString() +
+        "-" +
+        index,
 
       name:m.name,
 
@@ -3439,6 +4237,244 @@ function generateAIPlanFromAnswers(){
 
 }
 
+
+/* =========================================================
+   FENCE MATERIAL LIST
+   ========================================================= */
+
+function buildFenceMaterialList(c){
+
+  const materials = [];
+
+
+  materials.push({
+
+    name:
+      `Fence posts — ${c.postSize}`,
+
+    quantity:
+      `${c.totalPosts} posts`
+
+  });
+
+
+  if(c.cornerPosts > 0){
+
+    materials.push({
+
+      name:
+        `Corner posts — ${c.postSize}`,
+
+      quantity:
+        `${c.cornerPosts} posts`
+
+    });
+
+  }
+
+
+  if(c.endPosts > 0){
+
+    materials.push({
+
+      name:
+        `End posts — ${c.postSize}`,
+
+      quantity:
+        `${c.endPosts} posts`
+
+    });
+
+  }
+
+
+  if(c.gatePosts > 0){
+
+    materials.push({
+
+      name:
+        `Gate posts — ${c.postSize}`,
+
+      quantity:
+        `${c.gatePosts} posts`
+
+    });
+
+  }
+
+
+  if(c.linePosts > 0){
+
+    materials.push({
+
+      name:
+        `Line posts — ${c.postSize}`,
+
+      quantity:
+        `${c.linePosts} posts`
+
+    });
+
+  }
+
+
+  materials.push({
+
+    name:
+      c.coveringType === "pickets"
+      ? "Fence pickets"
+      : "Fence panels",
+
+    quantity:
+      `${c.coveringWithWaste} ${
+        c.coveringType
+      } including 10% waste`
+
+  });
+
+
+  materials.push({
+
+    name:"Horizontal fence rails",
+
+    quantity:
+      `${c.totalRails} rails`
+
+  });
+
+
+  materials.push({
+
+    name:"Concrete — 80 lb bags",
+
+    quantity:
+      `${c.concreteBags} bags planning allowance`
+
+  });
+
+
+  materials.push({
+
+    name:"Base gravel",
+
+    quantity:
+      `${c.gravelBags} bags planning allowance`
+
+  });
+
+
+  materials.push({
+
+    name:"Post caps",
+
+    quantity:
+      `${c.postCaps}`
+
+  });
+
+
+  materials.push({
+
+    name:"Exterior fence screws / fasteners",
+
+    quantity:
+      `${c.fastenerBoxes} box(es) planning allowance`
+
+  });
+
+
+  if(c.singleGateCount > 0){
+
+    materials.push({
+
+      name:"Single gate hinges",
+
+      quantity:
+        `${c.singleGateHinges}`
+
+    });
+
+  }
+
+
+  if(c.doubleGateCount > 0){
+
+    materials.push({
+
+      name:"Double gate hinges",
+
+      quantity:
+        `${c.doubleGateHinges}`
+
+    });
+
+  }
+
+
+  if(c.gateLatches > 0){
+
+    materials.push({
+
+      name:"Gate latches",
+
+      quantity:
+        `${c.gateLatches}`
+
+    });
+
+  }
+
+
+  if(c.dropRods > 0){
+
+    materials.push({
+
+      name:"Drop rods for double gates",
+
+      quantity:
+        `${c.dropRods}`
+
+    });
+
+  }
+
+
+  if(c.singleGateCount > 0){
+
+    materials.push({
+
+      name:"Single gate construction materials",
+
+      quantity:
+        `${c.singleGateCount} gate(s) — verify actual gate design`
+
+    });
+
+  }
+
+
+  if(c.doubleGateCount > 0){
+
+    materials.push({
+
+      name:"Double gate construction materials",
+
+      quantity:
+        `${c.doubleGateCount} gate(s) — verify actual gate design`
+
+    });
+
+  }
+
+
+  return materials;
+
+}
+
+
+/* =========================================================
+   PLAN PREVIEW
+   ========================================================= */
 
 function showPlanPreview(){
 
@@ -3463,28 +4499,56 @@ function showPlanPreview(){
 
       <div class="card">
 
-        <h2>📐 Material Calculation</h2>
+        <div class="takeoffHeader">
+
+          <h2>📐 Material Takeoff</h2>
+
+          <span class="badge">
+            Fence Calculator
+          </span>
+
+        </div>
 
         <div class="calcBox">
 
           ${calcLine(
             "Total fence length",
-            `${c.totalFeet} ft`
+            `${formatNumber(c.totalFeet)} ft`
           )}
 
           ${calcLine(
-            "Gate openings",
-            `${c.gateCount} gate(s) / ${formatNumber(c.gateWidthTotal)} ft`
+            "Fence height",
+            `${formatNumber(c.height)} ft`
           )}
 
           ${calcLine(
-            "Normal fence run",
+            "Construction",
+            c.construction
+          )}
+
+          ${calcLine(
+            "Single gates",
+            `${c.singleGateCount} / ${formatNumber(c.singleGateWidthTotal)} ft`
+          )}
+
+          ${calcLine(
+            "Double gates",
+            `${c.doubleGateCount} / ${formatNumber(c.doubleGateWidthTotal)} ft`
+          )}
+
+          ${calcLine(
+            "Total gate opening",
+            `${formatNumber(c.gateWidthTotal)} ft`
+          )}
+
+          ${calcLine(
+            "Net fence run",
             `${formatNumber(c.fenceRun)} ft`
           )}
 
           ${calcLine(
             "Post spacing",
-            `${c.postSpacing} ft`
+            `${formatNumber(c.postSpacing)} ft`
           )}
 
           ${calcLine(
@@ -3493,47 +4557,103 @@ function showPlanPreview(){
           )}
 
           ${calcLine(
-            "Corners",
-            c.corners
+            "Line posts",
+            c.linePosts
           )}
 
           ${calcLine(
-            "Endpoints",
-            c.endpoints
+            "Corner posts",
+            c.cornerPosts
           )}
 
           ${calcLine(
-            "Fence posts",
-            c.posts
+            "End posts",
+            c.endPosts
           )}
 
           ${calcLine(
-            "Rails",
-            `${c.rails} (${c.sections} × ${c.railsPerSection})`
+            "Gate posts",
+            c.gatePosts
+          )}
+
+          ${calcLine(
+            "Total posts",
+            c.totalPosts
+          )}
+
+          ${calcLine(
+            "Rails per section",
+            c.railsPerSection
+          )}
+
+          ${calcLine(
+            "Total rails",
+            c.totalRails
           )}
 
           ${calcLine(
             c.coveringType === "pickets"
-            ? "Pickets required before waste"
-            : "Panels required before waste",
+            ? "Pickets before waste"
+            : "Panels before waste",
             formatNumber(c.coveringRequired)
           )}
 
           ${calcLine(
             c.coveringType === "pickets"
-            ? "Pickets including 10% waste"
-            : "Panels including 10% waste",
+            ? "Pickets + 10% waste"
+            : "Panels + 10% waste",
             c.coveringWithWaste
           )}
 
+          ${
+            c.coveringType === "pickets"
+            ? calcLine(
+                "Picket width",
+                `${formatNumber(c.coveringWidth)} in`
+              )
+            : calcLine(
+                "Panel width",
+                `${formatNumber(c.coveringWidth)} ft`
+              )
+          }
+
+          ${
+            c.coveringType === "pickets"
+            ? calcLine(
+                "Picket center spacing",
+                `${formatNumber(c.picketCenterSpacing)} in`
+              )
+            : ""
+          }
+
           ${calcLine(
-            "Concrete planning allowance",
-            `${c.concreteBags} bags`
+            "Post size",
+            c.postSize
           )}
 
           ${calcLine(
-            "Gravel planning allowance",
-            `${c.gravelBags} bags`
+            "Hole diameter",
+            `${formatNumber(c.holeDiameter)} in`
+          )}
+
+          ${calcLine(
+            "Hole depth",
+            `${formatNumber(c.holeDepth)} in`
+          )}
+
+          ${calcLine(
+            "Concrete volume",
+            `${formatNumber(c.concreteVolume)} cu ft`
+          )}
+
+          ${calcLine(
+            "80-lb concrete bags",
+            c.concreteBags
+          )}
+
+          ${calcLine(
+            "Gravel",
+            `${c.gravelBags} bag(s)`
           )}
 
           ${calcLine(
@@ -3546,15 +4666,65 @@ function showPlanPreview(){
             c.fastenerBoxes
           )}
 
+          ${calcLine(
+            "Single gate hinges",
+            c.singleGateHinges
+          )}
+
+          ${calcLine(
+            "Double gate hinges",
+            c.doubleGateHinges
+          )}
+
+          ${calcLine(
+            "Gate latches",
+            c.gateLatches
+          )}
+
+          ${calcLine(
+            "Drop rods",
+            c.dropRods
+          )}
+
         </div>
+
+
+        ${
+          c.warnings && c.warnings.length
+          ? `
+
+            <div class="warning">
+
+              <strong>⚠️ Review before buying</strong>
+
+              ${c.warnings.map(w => `
+                <div>• ${escapeHTML(w)}</div>
+              `).join("")}
+
+            </div>
+
+          `
+          : `
+
+            <div class="successBox">
+              ✓ The measurements passed the basic planning checks.
+            </div>
+
+          `
+        }
+
 
         <div class="warning">
 
-          ⚠️ These are planning quantities, not a final
-          construction takeoff. Verify actual measurements,
-          fence layout, gate construction, post size,
-          local requirements and manufacturer instructions
-          before purchasing materials.
+          <strong>Planning estimate</strong>
+
+          Concrete, gravel, fasteners and gate hardware are
+          planning allowances. Actual quantities depend on
+          the fence manufacturer, post size, soil, gate
+          construction and installation method.
+
+          This calculator does not determine building-code,
+          permit or HOA compliance.
 
         </div>
 
@@ -3581,7 +4751,8 @@ function showPlanPreview(){
 
       <p>
         The List calculated the plan below.
-        You can edit anything before saving it.
+        You can edit the tasks and material quantities
+        before saving.
       </p>
 
     </div>
@@ -3704,6 +4875,18 @@ function showPlanPreview(){
 
     <div class="card">
 
+      <h2>🛒 Shopping</h2>
+
+      <p class="muted">
+        After saving the project, you can add the entire
+        material takeoff to your Shopping List with one tap.
+      </p>
+
+    </div>
+
+
+    <div class="card">
+
       <h2>❓ Answers</h2>
 
       ${plan.answers.map(a => `
@@ -3745,6 +4928,10 @@ function showPlanPreview(){
 }
 
 
+/* =========================================================
+   CALC LINE
+   ========================================================= */
+
 function calcLine(label,value){
 
   return `
@@ -3765,6 +4952,10 @@ function calcLine(label,value){
 
 }
 
+
+/* =========================================================
+   SAVE PLAN
+   ========================================================= */
 
 function saveAIPlanEdits(){
 
@@ -3833,6 +5024,10 @@ function saveAIPlanEdits(){
 }
 
 
+/* =========================================================
+   PLAN TASK EDITING
+   ========================================================= */
+
 function addAIPlanTask(){
 
   if(!editingPlan){
@@ -3842,9 +5037,11 @@ function addAIPlanTask(){
 
   editingPlan.tasks.push({
 
-    id:Date.now().toString(),
+    id:
+      Date.now().toString(),
 
-    text:"New task",
+    text:
+      "New task",
 
     done:false,
 
@@ -3872,6 +5069,10 @@ function removeAIPlanTask(index){
 }
 
 
+/* =========================================================
+   PLAN MATERIAL EDITING
+   ========================================================= */
+
 function addAIPlanMaterial(){
 
   if(!editingPlan){
@@ -3881,9 +5082,11 @@ function addAIPlanMaterial(){
 
   editingPlan.materials.push({
 
-    id:Date.now().toString(),
+    id:
+      Date.now().toString(),
 
-    name:"New material",
+    name:
+      "New material",
 
     quantity:""
 
@@ -3909,6 +5112,10 @@ function removeAIPlanMaterial(index){
 }
 
 
+/* =========================================================
+   SAVE PLAN TO PROJECTS
+   ========================================================= */
+
 function addAIPlanToProjects(){
 
   if(!editingPlan){
@@ -3918,9 +5125,11 @@ function addAIPlanToProjects(){
 
   const project = {
 
-    id:Date.now().toString(),
+    id:
+      Date.now().toString(),
 
-    name:editingPlan.name,
+    name:
+      editingPlan.name,
 
     category:
       editingPlan.isFence
@@ -3944,7 +5153,13 @@ function addAIPlanToProjects(){
       editingPlan.budget || 0,
 
     answers:
-      editingPlan.answers
+      editingPlan.answers,
+
+    takeoff:
+      editingPlan.calculation || null,
+
+    calculation:
+      editingPlan.calculation || null
 
   };
 
@@ -3993,6 +5208,59 @@ function extractAllNumbers(text){
       .replace(/,/g,"")
       .match(/-?\d+(\.\d+)?/g) || []
   ).map(Number);
+
+}
+
+
+function parsePositiveNumber(text){
+
+  const n =
+    extractNumber(text);
+
+  return n > 0 ? n : 0;
+
+}
+
+
+function parseNonNegativeNumber(text){
+
+  const n =
+    extractNumber(text);
+
+  return n >= 0 ? n : 0;
+
+}
+
+
+function parseCount(text){
+
+  const n =
+    extractNumber(text);
+
+  return n > 0
+    ? Math.ceil(n)
+    : 0;
+
+}
+
+
+function parseWidthList(text){
+
+  return String(text || "")
+    .split(/[,;]+/)
+    .map(value => {
+
+      const match =
+        value
+          .replace(/,/g,"")
+          .match(/\d+(\.\d+)?/);
+
+      return match
+        ? parseFloat(match[0])
+        : 0;
+
+    })
+    .filter(n => n > 0);
 
 }
 
