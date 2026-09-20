@@ -165,11 +165,6 @@ label{
   color:#777;
 }
 
-
-/* =========================================================
-   PROJECT CARDS
-   ========================================================= */
-
 .projectSwipe{
   position:relative;
   margin-bottom:14px;
@@ -308,6 +303,10 @@ label{
   padding:12px;
   border-radius:10px;
   margin-bottom:10px;
+}
+
+.planQuestion{
+  transition:opacity .15s ease;
 }
 
 .calcBox{
@@ -577,7 +576,6 @@ hr{
 
 </section>
 
-
 <section id="projectsPage" class="hidden">
 
   <div class="card">
@@ -598,7 +596,6 @@ hr{
 
 </section>
 
-
 <section id="shoppingPage" class="hidden">
 
   <div class="card">
@@ -614,7 +611,6 @@ hr{
   <div id="shoppingList"></div>
 
 </section>
-
 
 <section id="calendarPage" class="hidden">
 
@@ -681,7 +677,6 @@ hr{
 
 </section>
 
-
 <section id="maintenancePage" class="hidden">
 
   <div class="card">
@@ -706,7 +701,6 @@ hr{
   <div id="maintenanceList"></div>
 
 </section>
-
 
 <section id="homeInfoPage" class="hidden">
 
@@ -769,7 +763,6 @@ hr{
 
 </section>
 
-
 <section id="familyPage" class="hidden">
 
   <div class="card">
@@ -794,7 +787,6 @@ hr{
 
 </section>
 
-
 <section id="projectDetailPage" class="hidden">
 
   <div id="projectDetail"></div>
@@ -803,11 +795,9 @@ hr{
 
 </main>
 
-
 <script>
 
 const STORAGE_KEY = "theListDataV2";
-
 
 const defaultData = {
 
@@ -830,11 +820,8 @@ const defaultData = {
   },
 
   projects:[],
-
   shopping:[],
-
   maintenance:[],
-
   calendar:[],
 
   family:{
@@ -843,13 +830,9 @@ const defaultData = {
 
 };
 
-
 let data = loadData();
-
 let currentCalendarDate = new Date();
-
 let selectedCalendarDate = null;
-
 let editingPlan = null;
 
 
@@ -895,19 +878,7 @@ function loadData(){
       ...(parsed.family || {})
     };
 
-
-    /*
-      PROJECT DATA REPAIR
-
-      Older projects may have been saved before the
-      current project ID system was added.
-
-      We automatically give every project a permanent
-      ID if one is missing.
-    */
-
     let dataChanged = false;
-
 
     parsed.projects.forEach((p,index) => {
 
@@ -924,61 +895,50 @@ function loadData(){
             .substring(2,8);
 
         dataChanged = true;
-
       }
-
 
       if(!p.name){
         p.name = "Untitled Project";
         dataChanged = true;
       }
 
-
       if(!Array.isArray(p.tasks)){
         p.tasks = [];
         dataChanged = true;
       }
-
 
       if(!Array.isArray(p.materials)){
         p.materials = [];
         dataChanged = true;
       }
 
-
       if(!Array.isArray(p.records)){
         p.records = [];
         dataChanged = true;
       }
-
 
       if(!Array.isArray(p.answers)){
         p.answers = [];
         dataChanged = true;
       }
 
-
       if(typeof p.notes !== "string"){
         p.notes = "";
         dataChanged = true;
       }
-
 
       if(typeof p.budget !== "number"){
         p.budget = Number(p.budget) || 0;
         dataChanged = true;
       }
 
-
       if(!p.takeoff){
         p.takeoff = null;
       }
 
-
       if(!p.calculation){
         p.calculation = p.takeoff || null;
       }
-
 
       p.tasks.forEach(t => {
 
@@ -993,15 +953,12 @@ function loadData(){
               .substring(2,8);
 
           dataChanged = true;
-
         }
-
 
         if(typeof t.done !== "boolean"){
           t.done = false;
           dataChanged = true;
         }
-
 
         if(typeof t.dueDate === "undefined"){
           t.dueDate = "";
@@ -1009,7 +966,6 @@ function loadData(){
         }
 
       });
-
 
       p.materials.forEach(m => {
 
@@ -1024,17 +980,11 @@ function loadData(){
               .substring(2,8);
 
           dataChanged = true;
-
         }
 
       });
 
     });
-
-
-    /*
-      Save repaired project IDs immediately.
-    */
 
     if(dataChanged){
 
@@ -1044,7 +994,6 @@ function loadData(){
       );
 
     }
-
 
     return parsed;
 
@@ -1057,7 +1006,6 @@ function loadData(){
   }
 
 }
-
 
 function saveData(){
 
@@ -1084,7 +1032,6 @@ const pageIds = [
   "projectDetailPage"
 ];
 
-
 function showPage(pageId){
 
   pageIds.forEach(id => {
@@ -1100,10 +1047,8 @@ function showPage(pageId){
 
   });
 
-
   document.querySelectorAll("nav button")
     .forEach(btn => btn.classList.remove("active"));
-
 
   const map = {
     homePage:"navHome",
@@ -1115,7 +1060,6 @@ function showPage(pageId){
     familyPage:"navFamily"
   };
 
-
   if(map[pageId]){
 
     document
@@ -1123,7 +1067,6 @@ function showPage(pageId){
       .classList.add("active");
 
   }
-
 
   if(pageId === "homePage"){
     renderHome();
@@ -1166,7 +1109,6 @@ function renderHome(){
   document.getElementById("homeProjectCount")
     .textContent = data.projects.length;
 
-
   let openTasks = 0;
 
   data.projects.forEach(project => {
@@ -1181,33 +1123,26 @@ function renderHome(){
 
   });
 
-
   document.getElementById("homeOpenTasks")
     .textContent = openTasks;
-
 
   document.getElementById("homeShoppingCount")
     .textContent = data.shopping
       .filter(x => !x.done).length;
 
-
   document.getElementById("homeMaintenanceCount")
     .textContent = data.maintenance.length;
-
 
   renderHomeUpcoming();
 
 }
-
 
 function renderHomeUpcoming(){
 
   const box =
     document.getElementById("homeUpcoming");
 
-
   const upcoming = [];
-
 
   data.projects.forEach(project => {
 
@@ -1227,7 +1162,6 @@ function renderHomeUpcoming(){
 
   });
 
-
   data.calendar.forEach(item => {
 
     if(item.date){
@@ -1242,11 +1176,9 @@ function renderHomeUpcoming(){
 
   });
 
-
   upcoming.sort((a,b) =>
     a.date.localeCompare(b.date)
   );
-
 
   if(!upcoming.length){
 
@@ -1256,7 +1188,6 @@ function renderHomeUpcoming(){
     return;
 
   }
-
 
   box.innerHTML = upcoming
     .slice(0,6)
@@ -1292,7 +1223,6 @@ function renderProjects(){
   const box =
     document.getElementById("projectsList");
 
-
   if(!data.projects.length){
 
     box.innerHTML = `
@@ -1307,7 +1237,6 @@ function renderProjects(){
 
   }
 
-
   box.innerHTML = data.projects.map(project => {
 
     const total =
@@ -1315,22 +1244,18 @@ function renderProjects(){
       ? project.tasks.length
       : 0;
 
-
     const completed =
       Array.isArray(project.tasks)
       ? project.tasks.filter(t => t.done).length
       : 0;
-
 
     const percent =
       total
       ? Math.round(completed / total * 100)
       : 0;
 
-
     const projectId =
       escapeAttribute(project.id);
-
 
     return `
 
@@ -1346,7 +1271,6 @@ function renderProjects(){
           Delete
 
         </button>
-
 
         <div
           class="card projectCard"
@@ -1398,15 +1322,6 @@ function renderProjects(){
 
   }).join("");
 
-
-  /*
-    TAP ANYWHERE TO OPEN
-
-    We use event listeners instead of relying only on
-    inline onclick. This makes older repaired projects
-    open exactly like newly created projects.
-  */
-
   document
     .querySelectorAll(".projectCard")
     .forEach(card => {
@@ -1431,7 +1346,6 @@ function renderProjects(){
 
     });
 
-
   setupProjectSwipe();
 
 }
@@ -1450,15 +1364,10 @@ function setupProjectSwipe(){
       const card =
         wrapper.querySelector(".projectCard");
 
-
       let startX = 0;
-
       let currentX = 0;
-
       let dragging = false;
-
       let moved = false;
-
 
       card.addEventListener(
         "touchstart",
@@ -1472,15 +1381,12 @@ function setupProjectSwipe(){
             event.touches[0].clientX;
 
           currentX = startX;
-
           dragging = true;
-
           moved = false;
 
         },
         {passive:true}
       );
-
 
       card.addEventListener(
         "touchmove",
@@ -1490,23 +1396,15 @@ function setupProjectSwipe(){
             return;
           }
 
-
           currentX =
             event.touches[0].clientX;
-
 
           const delta =
             currentX - startX;
 
-
           if(Math.abs(delta) > 8){
             moved = true;
           }
-
-
-          /*
-            Only allow swiping left.
-          */
 
           if(delta < 0){
 
@@ -1530,7 +1428,6 @@ function setupProjectSwipe(){
         {passive:true}
       );
 
-
       card.addEventListener(
         "touchend",
         function(){
@@ -1539,18 +1436,10 @@ function setupProjectSwipe(){
             return;
           }
 
-
           dragging = false;
-
 
           const delta =
             currentX - startX;
-
-
-          /*
-            Reveal delete button after a
-            meaningful left swipe.
-          */
 
           if(delta <= -45){
 
@@ -1571,15 +1460,9 @@ function setupProjectSwipe(){
         }
       );
 
-
       card.addEventListener(
         "click",
         function(){
-
-          /*
-            If the user just swiped, don't open
-            the project when the touch becomes a click.
-          */
 
           if(moved){
 
@@ -1588,11 +1471,6 @@ function setupProjectSwipe(){
             return;
 
           }
-
-          /*
-            If delete panel is open, tapping the
-            project closes it instead of opening it.
-          */
 
           if(wrapper.dataset.open === "true"){
 
@@ -1624,10 +1502,8 @@ function newProject(){
     return;
   }
 
-
   const category =
     prompt("Category:", "Home");
-
 
   const id =
     "project-" +
@@ -1637,35 +1513,22 @@ function newProject(){
       .toString(36)
       .substring(2,8);
 
-
   data.projects.push({
 
     id:id,
-
     name:name,
-
     category:category || "Home",
-
     description:"",
-
     tasks:[],
-
     materials:[],
-
     records:[],
-
     notes:"",
-
     budget:0,
-
     answers:[],
-
     takeoff:null,
-
     calculation:null
 
   });
-
 
   saveData();
 
@@ -1687,7 +1550,6 @@ function openProject(id){
       p => String(p.id) === String(id)
     );
 
-
   if(!project){
 
     alert(
@@ -1698,20 +1560,16 @@ function openProject(id){
 
   }
 
-
   showPage("projectDetailPage");
-
 
   const box =
     document.getElementById("projectDetail");
-
 
   const total =
     project.tasks.length;
 
   const completed =
     project.tasks.filter(t => t.done).length;
-
 
   box.innerHTML = `
 
@@ -1741,13 +1599,11 @@ function openProject(id){
 
     </div>
 
-
     ${
       project.takeoff
       ? renderSavedTakeoffHTML(project)
       : ""
     }
-
 
     <div class="card">
 
@@ -1770,7 +1626,6 @@ function openProject(id){
       </button>
 
     </div>
-
 
     <div class="card">
 
@@ -1806,7 +1661,6 @@ function openProject(id){
 
     </div>
 
-
     ${
       project.budget
       ? `
@@ -1817,7 +1671,6 @@ function openProject(id){
       `
       : ""
     }
-
 
     ${
       project.answers && project.answers.length
@@ -1849,7 +1702,6 @@ function openProject(id){
       : ""
     }
 
-
     <div class="card">
 
       <h2>📁 Permanent Home Records</h2>
@@ -1870,7 +1722,6 @@ function openProject(id){
 
     </div>
 
-
     <div class="card">
 
       <button
@@ -1883,9 +1734,7 @@ function openProject(id){
 
   `;
 
-
   renderProjectTasks(project);
-
   renderProjectMaterials(project);
 
 }
@@ -1903,7 +1752,6 @@ function renderSavedTakeoffHTML(project){
     return "";
   }
 
-
   return `
 
     <div class="card">
@@ -1913,16 +1761,44 @@ function renderSavedTakeoffHTML(project){
         <h2>📐 Material Takeoff</h2>
 
         <span class="badge">
-          Contractor Planning
+          ${escapeHTML(
+            c.fenceType
+            ? getFenceTypeLabel(c.fenceType)
+            : "Fence Calculator"
+          )}
         </span>
 
       </div>
 
       <div class="calcBox">
 
+        ${
+          c.fenceType
+          ? calcLine(
+              "Fence type",
+              getFenceTypeLabel(c.fenceType)
+            )
+          : ""
+        }
+
+        ${c.style
+          ? calcLine("Style details", c.style)
+          : ""
+        }
+
         ${calcLine(
           "Total fence length",
           `${formatNumber(c.totalFeet)} ft`
+        )}
+
+        ${calcLine(
+          "Fence height",
+          `${formatNumber(c.height)} ft`
+        )}
+
+        ${calcLine(
+          "Construction",
+          c.construction || "N/A"
         )}
 
         ${calcLine(
@@ -1980,29 +1856,138 @@ function renderSavedTakeoffHTML(project){
           c.totalPosts
         )}
 
-        ${calcLine(
-          "Rails per section",
-          c.railsPerSection
-        )}
+        ${
+          c.fenceType === "chainLink"
+          ? `
 
-        ${calcLine(
-          "Total rails",
-          c.totalRails
-        )}
+            ${calcLine(
+              "Mesh gauge",
+              `${c.meshGauge || "Planning default"}`
+            )}
 
-        ${calcLine(
+            ${calcLine(
+              "Mesh required",
+              `${formatNumber(c.meshRequiredFeet)} ft`
+            )}
+
+            ${calcLine(
+              "Mesh rolls",
+              `${c.meshRolls} × ${formatNumber(c.meshRollLength)} ft`
+            )}
+
+            ${calcLine(
+              "Top rail",
+              c.topRail
+              ? `${c.topRailPieces} pieces`
+              : "No"
+            )}
+
+            ${
+              c.topRail
+              ? calcLine(
+                  "Top rail length",
+                  `${formatNumber(c.topRailPieceLength)} ft each`
+                )
+              : ""
+            }
+
+            ${calcLine(
+              "Tension wire",
+              c.tensionWire
+              ? `${formatNumber(c.tensionWireFeet)} ft`
+              : "No"
+            )}
+
+            ${calcLine(
+              "Fence ties",
+              c.fenceTieCount
+            )}
+
+            ${calcLine(
+              "Terminal posts",
+              c.terminalPosts
+            )}
+
+          `
+          : ""
+        }
+
+        ${
+          c.fenceType === "woodPrivacy" ||
+          c.fenceType === "woodPicket"
+          ? `
+
+            ${calcLine(
+              "Rails per section",
+              c.railsPerSection
+            )}
+
+            ${calcLine(
+              "Total rails",
+              c.totalRails
+            )}
+
+          `
+          : ""
+        }
+
+        ${
+          c.coveringType
+          ? calcLine(
+              c.coveringType === "pickets"
+              ? "Pickets before waste"
+              : c.coveringType === "mesh"
+              ? "Mesh required"
+              : "Panels before waste",
+              c.coveringType === "mesh"
+              ? `${formatNumber(c.meshRequiredFeet)} ft`
+              : formatNumber(c.coveringRequired)
+            )
+          : ""
+        }
+
+        ${
+          c.coveringType !== "mesh"
+          ? calcLine(
+              c.coveringType === "pickets"
+              ? "Pickets + 10% waste"
+              : "Panels + 10% waste",
+              c.coveringWithWaste
+            )
+          : ""
+        }
+
+        ${
+          c.coveringType === "mesh"
+          ? calcLine(
+              "Mesh purchased",
+              `${c.meshRolls} rolls / ${formatNumber(c.meshPurchasedFeet)} ft`
+            )
+          : ""
+        }
+
+        ${
           c.coveringType === "pickets"
-          ? "Pickets before waste"
-          : "Panels before waste",
-          formatNumber(c.coveringRequired)
-        )}
+          ? calcLine(
+              "Picket width",
+              `${formatNumber(c.coveringWidth)} in`
+            )
+          : c.coveringType !== "mesh"
+          ? calcLine(
+              "Panel width",
+              `${formatNumber(c.coveringWidth)} ft`
+            )
+          : ""
+        }
 
-        ${calcLine(
+        ${
           c.coveringType === "pickets"
-          ? "Pickets + 10% waste"
-          : "Panels + 10% waste",
-          c.coveringWithWaste
-        )}
+          ? calcLine(
+              "Picket center spacing",
+              `${formatNumber(c.picketCenterSpacing)} in`
+            )
+          : ""
+        }
 
         ${calcLine(
           "Post size",
@@ -2039,10 +2024,14 @@ function renderSavedTakeoffHTML(project){
           c.postCaps
         )}
 
-        ${calcLine(
-          "Fastener boxes",
-          c.fastenerBoxes
-        )}
+        ${
+          c.fastenerBoxes > 0
+          ? calcLine(
+              "Fastener boxes",
+              c.fastenerBoxes
+            )
+          : ""
+        }
 
         ${calcLine(
           "Single gate hinges",
@@ -2092,13 +2081,12 @@ function renderSavedTakeoffHTML(project){
 
         <strong>Planning estimate</strong>
 
-        Concrete, gravel, fasteners and gate hardware are
-        calculated as planning allowances. Actual quantities
-        depend on the fence manufacturer, post size, soil,
-        gate construction and installation method.
+        Quantities are planning allowances. Actual quantities
+        can change based on the fence manufacturer, exact
+        layout, soil, gate construction, post system and
+        installation method.
 
-        This calculator does not determine building-code,
-        permit or HOA compliance.
+        Verify manufacturer-specific hardware before purchasing.
 
       </div>
 
@@ -2118,7 +2106,6 @@ function renderProjectTasks(project){
   const box =
     document.getElementById("projectTasks");
 
-
   if(!project.tasks.length){
 
     box.innerHTML =
@@ -2127,7 +2114,6 @@ function renderProjectTasks(project){
     return;
 
   }
-
 
   box.innerHTML =
     project.tasks.map((task,index) => `
@@ -2167,7 +2153,6 @@ function renderProjectTasks(project){
 
 }
 
-
 function toggleTask(projectId,index){
 
   const project =
@@ -2186,7 +2171,6 @@ function toggleTask(projectId,index){
 
 }
 
-
 function addTask(projectId){
 
   const project =
@@ -2196,7 +2180,6 @@ function addTask(projectId){
 
   if(!project) return;
 
-
   const text =
     document.getElementById("newTaskText").value.trim();
 
@@ -2204,10 +2187,8 @@ function addTask(projectId){
     return;
   }
 
-
   const dueDate =
     document.getElementById("newTaskDate").value;
-
 
   project.tasks.push({
 
@@ -2216,20 +2197,16 @@ function addTask(projectId){
       Date.now().toString(),
 
     text:text,
-
     done:false,
-
     dueDate:dueDate || ""
 
   });
-
 
   saveData();
 
   openProject(projectId);
 
 }
-
 
 function deleteTask(projectId,index){
 
@@ -2239,7 +2216,6 @@ function deleteTask(projectId,index){
     );
 
   if(!project) return;
-
 
   project.tasks.splice(index,1);
 
@@ -2259,7 +2235,6 @@ function renderProjectMaterials(project){
   const box =
     document.getElementById("projectMaterials");
 
-
   if(!project.materials.length){
 
     box.innerHTML =
@@ -2268,7 +2243,6 @@ function renderProjectMaterials(project){
     return;
 
   }
-
 
   box.innerHTML =
     project.materials.map((m,index) => `
@@ -2305,7 +2279,6 @@ function renderProjectMaterials(project){
 
 }
 
-
 function addMaterial(projectId){
 
   const project =
@@ -2315,7 +2288,6 @@ function addMaterial(projectId){
 
   if(!project) return;
 
-
   const name =
     document.getElementById("newMaterialName")
       .value.trim();
@@ -2324,11 +2296,9 @@ function addMaterial(projectId){
     return;
   }
 
-
   const quantity =
     document.getElementById("newMaterialQty")
       .value.trim();
-
 
   project.materials.push({
 
@@ -2337,18 +2307,15 @@ function addMaterial(projectId){
       Date.now().toString(),
 
     name:name,
-
     quantity:quantity || ""
 
   });
-
 
   saveData();
 
   openProject(projectId);
 
 }
-
 
 function deleteMaterial(projectId,index){
 
@@ -2359,7 +2326,6 @@ function deleteMaterial(projectId,index){
 
   if(!project) return;
 
-
   project.materials.splice(index,1);
 
   saveData();
@@ -2367,7 +2333,6 @@ function deleteMaterial(projectId,index){
   openProject(projectId);
 
 }
-
 
 function addMaterialToShopping(projectId,index){
 
@@ -2378,10 +2343,8 @@ function addMaterialToShopping(projectId,index){
 
   if(!project) return;
 
-
   const material =
     project.materials[index];
-
 
   data.shopping.push({
 
@@ -2389,23 +2352,17 @@ function addMaterialToShopping(projectId,index){
       Date.now().toString(),
 
     name:material.name,
-
     quantity:material.quantity,
-
     project:project.name,
-
     done:false
 
   });
 
-
   saveData();
-
 
   alert("Added to Shopping List.");
 
 }
-
 
 function addAllProjectMaterialsToShopping(projectId){
 
@@ -2418,7 +2375,6 @@ function addAllProjectMaterialsToShopping(projectId){
     return;
   }
 
-
   project.materials.forEach(material => {
 
     data.shopping.push({
@@ -2428,25 +2384,19 @@ function addAllProjectMaterialsToShopping(projectId){
         Math.random(),
 
       name:material.name,
-
       quantity:material.quantity,
-
       project:project.name,
-
       done:false
 
     });
 
   });
 
-
   saveData();
-
 
   alert(
     `✓ Added ${project.materials.length} material items to the Shopping List.`
   );
-
 
   renderHome();
 
@@ -2466,17 +2416,14 @@ function saveProjectNotes(projectId){
 
   if(!project) return;
 
-
   project.notes =
     document.getElementById("projectNotes").value;
-
 
   saveData();
 
   alert("Project records saved.");
 
 }
-
 
 function deleteProject(projectId){
 
@@ -2485,11 +2432,9 @@ function deleteProject(projectId){
       p => String(p.id) === String(projectId)
     );
 
-
   if(!project){
     return;
   }
-
 
   if(!confirm(
     `Delete "${project.name}"?\n\nThis will permanently remove the project, its tasks, materials and project records.`
@@ -2497,15 +2442,12 @@ function deleteProject(projectId){
     return;
   }
 
-
   data.projects =
     data.projects.filter(
       p => String(p.id) !== String(projectId)
     );
 
-
   saveData();
-
 
   showPage("projectsPage");
 
@@ -2521,7 +2463,6 @@ function renderShopping(){
   const box =
     document.getElementById("shoppingList");
 
-
   if(!data.shopping.length){
 
     box.innerHTML =
@@ -2532,7 +2473,6 @@ function renderShopping(){
     return;
 
   }
-
 
   box.innerHTML = data.shopping.map((item,index) => `
 
@@ -2584,36 +2524,27 @@ function renderShopping(){
 
 }
 
-
 function addShoppingItem(){
 
   const input =
     document.getElementById("shoppingInput");
 
-
   const name =
     input.value.trim();
-
 
   if(!name){
     return;
   }
 
-
   data.shopping.push({
 
     id:Date.now().toString(),
-
     name:name,
-
     quantity:"",
-
     project:"",
-
     done:false
 
   });
-
 
   input.value = "";
 
@@ -2622,7 +2553,6 @@ function addShoppingItem(){
   renderShopping();
 
 }
-
 
 function toggleShopping(index){
 
@@ -2634,7 +2564,6 @@ function toggleShopping(index){
   renderShopping();
 
 }
-
 
 function deleteShopping(index){
 
@@ -2655,7 +2584,6 @@ function getTasksForDate(dateString){
 
   const results = [];
 
-
   data.projects.forEach(project => {
 
     project.tasks.forEach(task => {
@@ -2665,9 +2593,7 @@ function getTasksForDate(dateString){
         results.push({
 
           title:task.text,
-
           project:project.name,
-
           type:"Task"
 
         });
@@ -2678,11 +2604,9 @@ function getTasksForDate(dateString){
 
   });
 
-
   return results;
 
 }
-
 
 function getEventsForDate(dateString){
 
@@ -2691,15 +2615,12 @@ function getEventsForDate(dateString){
     .map(item => ({
 
       title:item.title,
-
       project:item.type || "Calendar",
-
       type:item.type || "Calendar"
 
     }));
 
 }
-
 
 function renderCalendar(){
 
@@ -2708,7 +2629,6 @@ function renderCalendar(){
 
   const month =
     currentCalendarDate.getMonth();
-
 
   document.getElementById("calendarMonth")
     .textContent =
@@ -2720,28 +2640,22 @@ function renderCalendar(){
         }
       );
 
-
   const grid =
     document.getElementById("calendarGrid");
 
-
   grid.innerHTML = "";
-
 
   const firstDay =
     new Date(year,month,1).getDay();
 
-
   const daysInMonth =
     new Date(year,month + 1,0).getDate();
-
 
   const today =
     new Date();
 
   const todayString =
     dateKey(today);
-
 
   for(let i=0;i<firstDay;i++){
 
@@ -2752,7 +2666,6 @@ function renderCalendar(){
 
   }
 
-
   for(let day=1;day<=daysInMonth;day++){
 
     const date =
@@ -2761,23 +2674,19 @@ function renderCalendar(){
     const key =
       dateKey(date);
 
-
     const cell =
       document.createElement("div");
 
     cell.className =
       "calendarDay";
 
-
     if(key === todayString){
       cell.classList.add("today");
     }
 
-
     if(key === selectedCalendarDate){
       cell.classList.add("selected");
     }
-
 
     const tasks =
       getTasksForDate(key);
@@ -2785,10 +2694,8 @@ function renderCalendar(){
     const events =
       getEventsForDate(key);
 
-
     const items =
       [...tasks,...events];
-
 
     cell.innerHTML = `
 
@@ -2814,23 +2721,19 @@ function renderCalendar(){
 
     `;
 
-
     cell.onclick = () => {
 
       selectCalendarDate(key);
 
     };
 
-
     grid.appendChild(cell);
 
   }
 
-
   renderSelectedDate();
 
 }
-
 
 function selectCalendarDate(key){
 
@@ -2844,12 +2747,10 @@ function selectCalendarDate(key){
 
 }
 
-
 function renderSelectedDate(){
 
   const box =
     document.getElementById("selectedDateCard");
-
 
   if(!selectedCalendarDate){
 
@@ -2859,17 +2760,14 @@ function renderSelectedDate(){
 
   }
 
-
   const tasks =
     getTasksForDate(selectedCalendarDate);
 
   const events =
     getEventsForDate(selectedCalendarDate);
 
-
   const items =
     [...tasks,...events];
-
 
   box.innerHTML = `
 
@@ -2911,7 +2809,6 @@ function renderSelectedDate(){
 
 }
 
-
 function changeMonth(amount){
 
   currentCalendarDate =
@@ -2921,11 +2818,9 @@ function changeMonth(amount){
       1
     );
 
-
   renderCalendar();
 
 }
-
 
 function addCalendar(){
 
@@ -2938,7 +2833,6 @@ function addCalendar(){
   const type =
     document.getElementById("calendarType").value;
 
-
   if(!date || !title){
 
     alert("Please enter a date and title.");
@@ -2947,19 +2841,14 @@ function addCalendar(){
 
   }
 
-
   data.calendar.push({
 
     id:Date.now().toString(),
-
     date:date,
-
     title:title,
-
     type:type
 
   });
-
 
   document.getElementById("calendarTitle").value = "";
 
@@ -2971,12 +2860,10 @@ function addCalendar(){
 
 }
 
-
 function renderCalendarList(){
 
   const box =
     document.getElementById("calendarList");
-
 
   if(!data.calendar.length){
 
@@ -2987,11 +2874,9 @@ function renderCalendarList(){
 
   }
 
-
   const sorted =
     [...data.calendar]
       .sort((a,b) => a.date.localeCompare(b.date));
-
 
   box.innerHTML =
     sorted.map(item => `
@@ -3023,7 +2908,6 @@ function renderCalendarList(){
 
 }
 
-
 function deleteCalendar(id){
 
   data.calendar =
@@ -3054,7 +2938,6 @@ function addMaintenance(){
     return;
   }
 
-
   data.maintenance.push({
 
     id:Date.now().toString(),
@@ -3069,13 +2952,9 @@ function addMaintenance(){
 
   });
 
-
   document.getElementById("maintenanceName").value = "";
-
   document.getElementById("maintenanceDue").value = "";
-
   document.getElementById("maintenanceNotes").value = "";
-
 
   saveData();
 
@@ -3083,12 +2962,10 @@ function addMaintenance(){
 
 }
 
-
 function renderMaintenance(){
 
   const box =
     document.getElementById("maintenanceList");
-
 
   if(!data.maintenance.length){
 
@@ -3100,7 +2977,6 @@ function renderMaintenance(){
     return;
 
   }
-
 
   box.innerHTML =
     data.maintenance.map((item,index) => `
@@ -3147,7 +3023,6 @@ function renderMaintenance(){
 
 }
 
-
 function deleteMaintenance(index){
 
   data.maintenance.splice(index,1);
@@ -3166,7 +3041,6 @@ function deleteMaintenance(index){
 function renderHomeInfo(){
 
   const h = data.home;
-
 
   document.getElementById("homeLocation").value =
     h.location || "";
@@ -3214,7 +3088,6 @@ function renderHomeInfo(){
     h.notes || "";
 
 }
-
 
 function saveHomeInfo(){
 
@@ -3267,9 +3140,7 @@ function saveHomeInfo(){
 
   };
 
-
   saveData();
-
 
   document.getElementById("homeInfoSaved")
     .textContent = "✓ Home information saved.";
@@ -3288,15 +3159,12 @@ function renderFamily(){
 
 }
 
-
 function saveFamilyNote(){
 
   data.family.note =
     document.getElementById("familyNote").value;
 
-
   saveData();
-
 
   document.getElementById("familySaved")
     .textContent =
@@ -3316,11 +3184,9 @@ function buildMyPlan(){
       "What project do you want to plan?"
     );
 
-
   if(!name){
     return;
   }
-
 
   const description =
     prompt(
@@ -3328,16 +3194,20 @@ function buildMyPlan(){
       ""
     ) || "";
 
-
   const isFence =
     /fence/i.test(name);
 
+  const inferredFenceType =
+    isFence
+    ? inferFenceTypeFromText(
+        `${name} ${description}`
+      )
+    : "";
 
   const questions =
     isFence
-    ? getFenceQuestions()
+    ? getFenceQuestions(inferredFenceType)
     : getGenericQuestions();
-
 
   showPlanQuestions(
     name,
@@ -3349,12 +3219,90 @@ function buildMyPlan(){
 
 
 /* =========================================================
-   FENCE QUESTIONS
+   FENCE TYPE HELPERS
    ========================================================= */
 
-function getFenceQuestions(){
+function inferFenceTypeFromText(text){
+
+  const value =
+    String(text || "").toLowerCase();
+
+  if(/chain[\s-]*link/.test(value)){
+    return "chainLink";
+  }
+
+  if(/vinyl/.test(value)){
+    return "vinylPrivacy";
+  }
+
+  if(/aluminum|aluminium/.test(value)){
+    return "aluminum";
+  }
+
+  if(/picket/.test(value)){
+    return "woodPicket";
+  }
+
+  if(/privacy|wood/.test(value)){
+    return "woodPrivacy";
+  }
+
+  return "woodPrivacy";
+
+}
+
+function getFenceTypeLabel(type){
+
+  const labels = {
+
+    chainLink:"Chain Link",
+    woodPrivacy:"Wood Privacy",
+    woodPicket:"Wood Picket",
+    vinylPrivacy:"Vinyl Privacy",
+    aluminum:"Aluminum",
+    other:"Other / Custom"
+
+  };
+
+  return labels[type] || "Fence";
+
+}
+
+
+/* =========================================================
+   DYNAMIC FENCE QUESTIONS
+   ========================================================= */
+
+function getFenceQuestions(defaultFenceType){
+
+  const type =
+    defaultFenceType || "woodPrivacy";
 
   return [
+
+    {
+      id:"fenceType",
+      question:
+        "What type of fence are you building?",
+      type:"select",
+      options:[
+        "Wood Privacy",
+        "Wood Picket",
+        "Chain Link",
+        "Vinyl Privacy",
+        "Aluminum",
+        "Other / Custom"
+      ],
+      values:[
+        "woodPrivacy",
+        "woodPicket",
+        "chainLink",
+        "vinylPrivacy",
+        "aluminum",
+        "other"
+      ],
+      defaultValue:getFenceTypeLabel(type)
+    },
 
     {
       id:"length",
@@ -3362,14 +3310,6 @@ function getFenceQuestions(){
         "How many linear feet of fence are needed?",
       placeholder:
         "Example: 180"
-    },
-
-    {
-      id:"style",
-      question:
-        "What fence style do you want?",
-      placeholder:
-        "Example: 6 ft privacy wood fence"
     },
 
     {
@@ -3381,40 +3321,11 @@ function getFenceQuestions(){
     },
 
     {
-      id:"construction",
+      id:"style",
       question:
-        "How will the fence be built?",
-      type:"select",
-      options:[
-        "Fence panels",
-        "Individual pickets"
-      ],
-      defaultValue:"Fence panels"
-    },
-
-    {
-      id:"panelWidth",
-      question:
-        "What is the panel width in feet?",
+        "Any specific style, color, finish or model details?",
       placeholder:
-        "Example: 8"
-    },
-
-    {
-      id:"picketWidth",
-      question:
-        "If using individual pickets, what is the picket width in inches?",
-      placeholder:
-        "Example: 5.5"
-    },
-
-    {
-      id:"picketSpacing",
-      question:
-        "If using individual pickets, what gap should be between pickets in inches?",
-      placeholder:
-        "Example: 0.5",
-      defaultValue:"0.5"
+        "Example: 6 ft black chain link"
     },
 
     {
@@ -3461,11 +3372,21 @@ function getFenceQuestions(){
     },
 
     {
-      id:"postSize",
+      id:"corners",
       question:
-        "What post size are you planning to use?",
+        "How many fence corners?",
       placeholder:
-        "Example: 4 × 4 pressure-treated"
+        "Example: 4",
+      defaultValue:"4"
+    },
+
+    {
+      id:"endPoints",
+      question:
+        "How many normal fence endpoints?",
+      placeholder:
+        "Example: 2",
+      defaultValue:"2"
     },
 
     {
@@ -3487,30 +3408,240 @@ function getFenceQuestions(){
     },
 
     {
+      id:"construction",
+      question:
+        "How will the wood fence be built?",
+      type:"select",
+      options:[
+        "Fence panels",
+        "Individual pickets"
+      ],
+      defaultValue:"Fence panels",
+      showWhen:{
+        id:"fenceType",
+        values:["Wood Privacy","Wood Picket"]
+      }
+    },
+
+    {
+      id:"panelWidth",
+      question:
+        "What is the panel width in feet?",
+      placeholder:
+        "Example: 8",
+      defaultValue:"8",
+      showWhen:{
+        id:"fenceType",
+        values:[
+          "Wood Privacy",
+          "Vinyl Privacy",
+          "Aluminum"
+        ]
+      }
+    },
+
+    {
+      id:"picketWidth",
+      question:
+        "What is the picket width in inches?",
+      placeholder:
+        "Example: 5.5",
+      defaultValue:"5.5",
+      showWhen:{
+        id:"fenceType",
+        values:["Wood Picket"]
+      }
+    },
+
+    {
+      id:"picketSpacing",
+      question:
+        "What gap should be between wood pickets in inches?",
+      placeholder:
+        "Example: 0.5",
+      defaultValue:"0.5",
+      showWhen:{
+        id:"fenceType",
+        values:["Wood Picket"]
+      }
+    },
+
+    {
       id:"rails",
       question:
-        "How many horizontal rails per fence section?",
+        "How many horizontal rails per wood fence section?",
       placeholder:
         "Example: 3",
-      defaultValue:"3"
+      defaultValue:"3",
+      showWhen:{
+        id:"fenceType",
+        values:[
+          "Wood Privacy",
+          "Wood Picket"
+        ]
+      }
     },
 
     {
-      id:"corners",
+      id:"postSize",
       question:
-        "How many fence corners?",
+        "What post size are you planning to use?",
       placeholder:
-        "Example: 4",
-      defaultValue:"4"
+        "Example: 4 × 4 pressure-treated",
+      defaultValue:"4 × 4 pressure-treated",
+      showWhen:{
+        id:"fenceType",
+        values:[
+          "Wood Privacy",
+          "Wood Picket"
+        ]
+      }
     },
 
     {
-      id:"endPoints",
+      id:"meshGauge",
       question:
-        "How many normal fence endpoints?",
+        "What chain-link mesh gauge are you planning to use?",
+      type:"select",
+      options:[
+        "11.5 gauge",
+        "11 gauge",
+        "9 gauge",
+        "Other"
+      ],
+      defaultValue:"11.5 gauge",
+      showWhen:{
+        id:"fenceType",
+        values:["Chain Link"]
+      }
+    },
+
+    {
+      id:"meshRollLength",
+      question:
+        "What length are your chain-link mesh rolls?",
       placeholder:
-        "Example: 2",
-      defaultValue:"2"
+        "Example: 50",
+      defaultValue:"50",
+      showWhen:{
+        id:"fenceType",
+        values:["Chain Link"]
+      }
+    },
+
+    {
+      id:"topRail",
+      question:
+        "Will the chain-link fence have a top rail?",
+      type:"select",
+      options:[
+        "Yes",
+        "No"
+      ],
+      defaultValue:"Yes",
+      showWhen:{
+        id:"fenceType",
+        values:["Chain Link"]
+      }
+    },
+
+    {
+      id:"topRailPieceLength",
+      question:
+        "What length are the top-rail pieces?",
+      placeholder:
+        "Example: 21",
+      defaultValue:"21",
+      showWhen:{
+        id:"fenceType",
+        values:["Chain Link"]
+      }
+    },
+
+    {
+      id:"tensionWire",
+      question:
+        "Will you use bottom tension wire?",
+      type:"select",
+      options:[
+        "Yes",
+        "No"
+      ],
+      defaultValue:"Yes",
+      showWhen:{
+        id:"fenceType",
+        values:["Chain Link"]
+      }
+    },
+
+    {
+      id:"fenceTieSpacing",
+      question:
+        "For planning, how far apart should chain-link fence ties be?",
+      placeholder:
+        "Example: 12 inches",
+      defaultValue:"12",
+      showWhen:{
+        id:"fenceType",
+        values:["Chain Link"]
+      }
+    },
+
+    {
+      id:"chainLinkPrivacySlats",
+      question:
+        "Will you install privacy slats?",
+      type:"select",
+      options:[
+        "No",
+        "Yes"
+      ],
+      defaultValue:"No",
+      showWhen:{
+        id:"fenceType",
+        values:["Chain Link"]
+      }
+    },
+
+    {
+      id:"vinylPostSystem",
+      question:
+        "What vinyl post system are you using?",
+      type:"select",
+      options:[
+        "Manufacturer-specific system",
+        "Other / Custom"
+      ],
+      defaultValue:"Manufacturer-specific system",
+      showWhen:{
+        id:"fenceType",
+        values:["Vinyl Privacy"]
+      }
+    },
+
+    {
+      id:"aluminumPanelWidth",
+      question:
+        "What aluminum panel width are you using?",
+      placeholder:
+        "Example: 6",
+      defaultValue:"6",
+      showWhen:{
+        id:"fenceType",
+        values:["Aluminum"]
+      }
+    },
+
+    {
+      id:"customCoveringWidth",
+      question:
+        "For your custom fence, what is the coverage width of one panel/section?",
+      placeholder:
+        "Example: 8",
+      showWhen:{
+        id:"fenceType",
+        values:["Other / Custom"]
+      }
     },
 
     {
@@ -3533,6 +3664,10 @@ function getFenceQuestions(){
 
 }
 
+
+/* =========================================================
+   GENERIC QUESTIONS
+   ========================================================= */
 
 function getGenericQuestions(){
 
@@ -3576,6 +3711,74 @@ function getGenericQuestions(){
 
 
 /* =========================================================
+   FENCE QUESTION HELPERS
+   ========================================================= */
+
+function getFenceTypeFromAnswer(value){
+
+  const map = {
+
+    "Wood Privacy":"woodPrivacy",
+    "Wood Picket":"woodPicket",
+    "Chain Link":"chainLink",
+    "Vinyl Privacy":"vinylPrivacy",
+    "Aluminum":"aluminum",
+    "Other / Custom":"other"
+
+  };
+
+  return map[value] || "woodPrivacy";
+
+}
+
+function questionIsVisible(q){
+
+  if(!q.showWhen){
+    return true;
+  }
+
+  const controllingAnswer =
+    getPlanAnswer(q.showWhen.id);
+
+  return q.showWhen.values.includes(
+    controllingAnswer
+  );
+
+}
+
+function updateConditionalPlanQuestions(){
+
+  document
+    .querySelectorAll(".planQuestion")
+    .forEach(wrapper => {
+
+      const questionId =
+        wrapper.dataset.questionId;
+
+      if(!questionId){
+        return;
+      }
+
+      const question =
+        editingPlan.questions.find(
+          q => q.id === questionId
+        );
+
+      if(!question){
+        return;
+      }
+
+      wrapper.classList.toggle(
+        "hidden",
+        !questionIsVisible(question)
+      );
+
+    });
+
+}
+
+
+/* =========================================================
    SHOW PLAN QUESTIONS
    ========================================================= */
 
@@ -3588,9 +3791,7 @@ function showPlanQuestions(
   const box =
     document.getElementById("projectDetail");
 
-
   showPage("projectDetailPage");
-
 
   box.innerHTML = `
 
@@ -3624,7 +3825,6 @@ function showPlanQuestions(
 
     </div>
 
-
     <div class="card">
 
       <h2>📐 Project Details</h2>
@@ -3632,7 +3832,6 @@ function showPlanQuestions(
       <div id="planQuestions"></div>
 
     </div>
-
 
     <div class="card">
 
@@ -3651,34 +3850,68 @@ function showPlanQuestions(
 
   `;
 
+  editingPlan = {
+
+    name:name,
+    description:description,
+    questions:questions
+
+  };
 
   const qbox =
     document.getElementById("planQuestions");
 
-
   qbox.innerHTML =
     questions.map((q,index) => {
 
+      const conditionAttributes =
+        q.showWhen
+        ? `
+          data-question-id="${escapeAttribute(q.id)}"
+          `
+        : `
+          data-question-id="${escapeAttribute(q.id)}"
+          `;
+
       if(q.type === "select"){
+
+        const optionsHTML =
+          q.options.map((option,optionIndex) => {
+
+            const value =
+              q.values
+              ? q.values[optionIndex]
+              : option;
+
+            const selected =
+              option === q.defaultValue
+              ? "selected"
+              : "";
+
+            return `
+              <option
+                value="${escapeAttribute(value)}"
+                ${selected}>
+                ${escapeHTML(option)}
+              </option>
+            `;
+
+          }).join("");
 
         return `
 
-          <div class="answerBox">
+          <div
+            class="answerBox planQuestion"
+            ${conditionAttributes}>
 
             <label>
               ${index + 1}. ${escapeHTML(q.question)}
             </label>
 
-            <select id="planAnswer_${escapeAttribute(q.id)}">
+            <select
+              id="planAnswer_${escapeAttribute(q.id)}">
 
-              ${q.options.map(option => `
-
-                <option
-                  ${option === q.defaultValue ? "selected" : ""}>
-                  ${escapeHTML(option)}
-                </option>
-
-              `).join("")}
+              ${optionsHTML}
 
             </select>
 
@@ -3688,10 +3921,11 @@ function showPlanQuestions(
 
       }
 
-
       return `
 
-        <div class="answerBox">
+        <div
+          class="answerBox planQuestion"
+          ${conditionAttributes}>
 
           <label>
             ${index + 1}. ${escapeHTML(q.question)}
@@ -3708,19 +3942,28 @@ function showPlanQuestions(
 
     }).join("");
 
+  const fenceSelect =
+    document.getElementById(
+      "planAnswer_fenceType"
+    );
 
-  editingPlan = {
+  if(fenceSelect){
 
-    name:name,
+    fenceSelect.addEventListener(
+      "change",
+      updateConditionalPlanQuestions
+    );
 
-    description:description,
+  }
 
-    questions:questions
-
-  };
+  updateConditionalPlanQuestions();
 
 }
 
+
+/* =========================================================
+   GET PLAN ANSWER
+   ========================================================= */
 
 function getPlanAnswer(id){
 
@@ -3729,8 +3972,9 @@ function getPlanAnswer(id){
       "planAnswer_" + id
     );
 
-
-  return el ? el.value.trim() : "";
+  return el
+    ? el.value.trim()
+    : "";
 
 }
 
@@ -3743,58 +3987,69 @@ function calculateFenceMaterials(answers){
 
   const warnings = [];
 
+  const fenceType =
+    getFenceTypeFromAnswer(
+      answers.fenceType
+    );
 
   const totalFeet =
     parsePositiveNumber(
       answers.length
     );
 
-
   const height =
     parsePositiveNumber(
       answers.height
     );
-
 
   const construction =
     String(
       answers.construction || "Fence panels"
     );
 
+  const isWoodPrivacy =
+    fenceType === "woodPrivacy";
+
+  const isWoodPicket =
+    fenceType === "woodPicket";
+
+  const isChainLink =
+    fenceType === "chainLink";
+
+  const isVinyl =
+    fenceType === "vinylPrivacy";
+
+  const isAluminum =
+    fenceType === "aluminum";
 
   const isPickets =
+    isWoodPicket ||
     /picket/i.test(construction);
-
 
   const postSpacing =
     parsePositiveNumber(
       answers.postSpacing
     ) || 8;
 
-
   const singleGateCount =
     parseCount(
       answers.singleGateCount
     );
-
 
   const doubleGateCount =
     parseCount(
       answers.doubleGateCount
     );
 
-
   const singleGateWidths =
     parseWidthList(
       answers.singleGateWidths
     );
 
-
   const doubleGateWidths =
     parseWidthList(
       answers.doubleGateWidths
     );
-
 
   const singleGateWidthTotal =
     singleGateWidths
@@ -3804,7 +4059,6 @@ function calculateFenceMaterials(answers){
         0
       );
 
-
   const doubleGateWidthTotal =
     doubleGateWidths
       .slice(0,doubleGateCount)
@@ -3812,7 +4066,6 @@ function calculateFenceMaterials(answers){
         (sum,n) => sum + n,
         0
       );
-
 
   if(
     singleGateCount > 0 &&
@@ -3825,7 +4078,6 @@ function calculateFenceMaterials(answers){
 
   }
 
-
   if(
     doubleGateCount > 0 &&
     doubleGateWidths.length === 0
@@ -3836,7 +4088,6 @@ function calculateFenceMaterials(answers){
     );
 
   }
-
 
   if(
     singleGateCount > 0 &&
@@ -3849,7 +4100,6 @@ function calculateFenceMaterials(answers){
 
   }
 
-
   if(
     doubleGateCount > 0 &&
     doubleGateWidths.length < doubleGateCount
@@ -3861,33 +4111,9 @@ function calculateFenceMaterials(answers){
 
   }
 
-
-  if(
-    singleGateWidths.length > singleGateCount
-  ){
-
-    warnings.push(
-      "More single-gate widths were entered than the number of single gates. Extra widths were ignored."
-    );
-
-  }
-
-
-  if(
-    doubleGateWidths.length > doubleGateCount
-  ){
-
-    warnings.push(
-      "More double-gate widths were entered than the number of double gates. Extra widths were ignored."
-    );
-
-  }
-
-
   const gateWidthTotal =
     singleGateWidthTotal +
     doubleGateWidthTotal;
-
 
   if(totalFeet <= 0){
 
@@ -3897,7 +4123,6 @@ function calculateFenceMaterials(answers){
 
   }
 
-
   if(postSpacing <= 0){
 
     warnings.push(
@@ -3905,7 +4130,6 @@ function calculateFenceMaterials(answers){
     );
 
   }
-
 
   if(
     gateWidthTotal >= totalFeet &&
@@ -3918,13 +4142,11 @@ function calculateFenceMaterials(answers){
 
   }
 
-
   const fenceRun =
     Math.max(
       0,
       totalFeet - gateWidthTotal
     );
-
 
   const sections =
     fenceRun > 0
@@ -3933,13 +4155,11 @@ function calculateFenceMaterials(answers){
       )
     : 0;
 
-
   const cornerPosts =
     Math.max(
       0,
       parseCount(answers.corners)
     );
-
 
   const endPosts =
     Math.max(
@@ -3947,22 +4167,18 @@ function calculateFenceMaterials(answers){
       parseCount(answers.endPoints)
     );
 
-
   const basePostPositions =
     sections > 0
     ? sections + 1
     : 0;
 
-
   const gatePosts =
     (singleGateCount * 2) +
     (doubleGateCount * 2);
 
-
   const specialNormalPosts =
     cornerPosts +
     endPosts;
-
 
   const linePosts =
     Math.max(
@@ -3971,13 +4187,16 @@ function calculateFenceMaterials(answers){
       specialNormalPosts
     );
 
-
   const totalPosts =
     linePosts +
     cornerPosts +
     endPosts +
     gatePosts;
 
+  const terminalPosts =
+    cornerPosts +
+    endPosts +
+    gatePosts;
 
   if(
     specialNormalPosts > basePostPositions &&
@@ -3989,7 +4208,6 @@ function calculateFenceMaterials(answers){
     );
 
   }
-
 
   if(
     gateWidthTotal > 0 &&
@@ -4003,45 +4221,195 @@ function calculateFenceMaterials(answers){
 
   }
 
+  /*
+    WOOD RAILS
+  */
 
-  let railsPerSection =
-    parsePositiveNumber(
-      answers.rails
+  let railsPerSection = 0;
+  let totalRails = 0;
+
+  if(isWoodPrivacy || isWoodPicket){
+
+    railsPerSection =
+      parsePositiveNumber(
+        answers.rails
+      );
+
+    if(!railsPerSection){
+
+      if(height <= 4){
+        railsPerSection = 2;
+      }else if(height <= 6){
+        railsPerSection = 3;
+      }else{
+        railsPerSection = 4;
+      }
+
+    }
+
+    railsPerSection =
+      Math.max(
+        1,
+        Math.ceil(railsPerSection)
+      );
+
+    totalRails =
+      sections * railsPerSection;
+
+  }
+
+  /*
+    COVERING
+  */
+
+  let coveringRequired = 0;
+  let coveringWithWaste = 0;
+  let coveringWidth = 0;
+  let picketCenterSpacing = 0;
+
+  /*
+    CHAIN LINK
+  */
+
+  let meshGauge = "";
+  let meshRollLength = 0;
+  let meshRequiredFeet = 0;
+  let meshPurchasedFeet = 0;
+  let meshRolls = 0;
+  let topRail = false;
+  let topRailPieceLength = 0;
+  let topRailPieces = 0;
+  let tensionWire = false;
+  let tensionWireFeet = 0;
+  let fenceTieSpacing = 0;
+  let fenceTieCount = 0;
+  let privacySlats = false;
+
+  if(isChainLink){
+
+    meshGauge =
+      answers.meshGauge ||
+      "11.5 gauge";
+
+    meshRollLength =
+      parsePositiveNumber(
+        answers.meshRollLength
+      ) || 50;
+
+    meshRequiredFeet =
+      fenceRun > 0
+      ? fenceRun * 1.10
+      : 0;
+
+    meshRolls =
+      meshRequiredFeet > 0
+      ? Math.ceil(
+          meshRequiredFeet /
+          meshRollLength
+        )
+      : 0;
+
+    meshPurchasedFeet =
+      meshRolls *
+      meshRollLength;
+
+    topRail =
+      /yes/i.test(
+        answers.topRail || ""
+      );
+
+    topRailPieceLength =
+      parsePositiveNumber(
+        answers.topRailPieceLength
+      ) || 21;
+
+    topRailPieces =
+      topRail && fenceRun > 0
+      ? Math.ceil(
+          fenceRun /
+          topRailPieceLength
+        )
+      : 0;
+
+    tensionWire =
+      /yes/i.test(
+        answers.tensionWire || ""
+      );
+
+    tensionWireFeet =
+      tensionWire
+      ? Math.ceil(
+          fenceRun * 1.05
+        )
+      : 0;
+
+    fenceTieSpacing =
+      parsePositiveNumber(
+        answers.fenceTieSpacing
+      ) || 12;
+
+    fenceTieCount =
+      fenceRun > 0
+      ? Math.ceil(
+          fenceRun * 12 /
+          fenceTieSpacing
+        )
+      : 0;
+
+    privacySlats =
+      /yes/i.test(
+        answers.chainLinkPrivacySlats || ""
+      );
+
+    coveringWidth =
+      height;
+
+    if(
+      !parsePositiveNumber(
+        answers.meshRollLength
+      )
+    ){
+
+      warnings.push(
+        "Mesh roll length was not entered. A planning default of 50 feet per roll was used."
+      );
+
+    }
+
+    if(
+      !parsePositiveNumber(
+        answers.topRailPieceLength
+      ) &&
+      topRail
+    ){
+
+      warnings.push(
+        "Top-rail piece length was not entered. A planning default of 21 feet was used."
+      );
+
+    }
+
+    warnings.push(
+      "Chain-link tension bands, brace bands, rail ends and other terminal hardware should be verified against the manufacturer's hardware package."
     );
 
+    warnings.push(
+      "Fence-tie quantity is a planning allowance based on the selected tie spacing. Verify the manufacturer's installation requirements."
+    );
 
-  if(!railsPerSection){
+    if(privacySlats){
 
-    if(height <= 4){
-      railsPerSection = 2;
-    }else if(height <= 6){
-      railsPerSection = 3;
-    }else{
-      railsPerSection = 4;
+      warnings.push(
+        "Privacy slat quantity depends on the specific slat system. Add the manufacturer's slat quantity after selecting the mesh system."
+      );
+
     }
 
   }
 
-
-  railsPerSection =
-    Math.max(
-      1,
-      Math.ceil(railsPerSection)
-    );
-
-
-  const totalRails =
-    sections * railsPerSection;
-
-
-  let coveringRequired = 0;
-
-  let coveringWithWaste = 0;
-
-  let coveringWidth = 0;
-
-  let picketCenterSpacing = 0;
-
+  /*
+    WOOD PICKETS
+  */
 
   if(isPickets){
 
@@ -4050,12 +4418,10 @@ function calculateFenceMaterials(answers){
         answers.picketWidth
       ) || 5.5;
 
-
     const picketSpacing =
       parseNonNegativeNumber(
         answers.picketSpacing
       );
-
 
     if(
       !parsePositiveNumber(
@@ -4069,26 +4435,12 @@ function calculateFenceMaterials(answers){
 
     }
 
-
-    if(
-      picketSpacing < 0
-    ){
-
-      warnings.push(
-        "Picket spacing cannot be negative."
-      );
-
-    }
-
-
     picketCenterSpacing =
       picketWidth +
       picketSpacing;
 
-
     coveringWidth =
       picketWidth;
-
 
     coveringRequired =
       fenceRun > 0
@@ -4101,19 +4453,39 @@ function calculateFenceMaterials(answers){
         )
       : 0;
 
-
     coveringWithWaste =
       Math.ceil(
         coveringRequired * 1.10
       );
 
-  }else{
+  }
+
+  /*
+    WOOD PRIVACY PANELS
+  */
+
+  else if(isWoodPrivacy){
 
     const panelWidth =
       parsePositiveNumber(
         answers.panelWidth
       ) || 8;
 
+    coveringWidth =
+      panelWidth;
+
+    coveringRequired =
+      fenceRun > 0
+      ? Math.ceil(
+          fenceRun /
+          panelWidth
+        )
+      : 0;
+
+    coveringWithWaste =
+      Math.ceil(
+        coveringRequired * 1.10
+      );
 
     if(
       !parsePositiveNumber(
@@ -4127,43 +4499,184 @@ function calculateFenceMaterials(answers){
 
     }
 
+  }
+
+  /*
+    VINYL
+  */
+
+  else if(isVinyl){
+
+    const panelWidth =
+      parsePositiveNumber(
+        answers.panelWidth
+      ) || 8;
 
     coveringWidth =
       panelWidth;
 
-
     coveringRequired =
       fenceRun > 0
       ? Math.ceil(
-          fenceRun / panelWidth
+          fenceRun /
+          panelWidth
         )
       : 0;
-
 
     coveringWithWaste =
       Math.ceil(
         coveringRequired * 1.10
       );
 
+    if(
+      !parsePositiveNumber(
+        answers.panelWidth
+      )
+    ){
+
+      warnings.push(
+        "Vinyl panel width was not entered. A planning default of 8 feet was used."
+      );
+
+    }
+
+    warnings.push(
+      "Vinyl fence posts, rails, brackets and gate hardware are manufacturer-specific. Verify the exact system before purchasing."
+    );
+
   }
 
+  /*
+    ALUMINUM
+  */
 
-  const postSize =
+  else if(isAluminum){
+
+    const panelWidth =
+      parsePositiveNumber(
+        answers.aluminumPanelWidth
+      ) ||
+      parsePositiveNumber(
+        answers.panelWidth
+      ) ||
+      6;
+
+    coveringWidth =
+      panelWidth;
+
+    coveringRequired =
+      fenceRun > 0
+      ? Math.ceil(
+          fenceRun /
+          panelWidth
+        )
+      : 0;
+
+    coveringWithWaste =
+      Math.ceil(
+        coveringRequired * 1.10
+      );
+
+    if(
+      !parsePositiveNumber(
+        answers.aluminumPanelWidth
+      )
+    ){
+
+      warnings.push(
+        "Aluminum panel width was not entered. A planning default of 6 feet was used."
+      );
+
+    }
+
+    warnings.push(
+      "Aluminum fence posts, brackets, fasteners and gate hardware are manufacturer-specific. Verify the exact system before purchasing."
+    );
+
+  }
+
+  /*
+    OTHER / CUSTOM
+  */
+
+  else{
+
+    const customWidth =
+      parsePositiveNumber(
+        answers.customCoveringWidth
+      ) || 8;
+
+    coveringWidth =
+      customWidth;
+
+    coveringRequired =
+      fenceRun > 0
+      ? Math.ceil(
+          fenceRun /
+          customWidth
+        )
+      : 0;
+
+    coveringWithWaste =
+      Math.ceil(
+        coveringRequired * 1.10
+      );
+
+    warnings.push(
+      "This is a custom fence calculation. Verify all components and quantities against the actual fence system."
+    );
+
+  }
+
+  /*
+    POST INFORMATION
+  */
+
+  let postSize =
     answers.postSize ||
-    "4 × 4 planning assumption";
+    "";
 
+  if(isChainLink){
+
+    postSize =
+      "Chain-link post system";
+
+  }
+
+  if(isVinyl){
+
+    postSize =
+      "Vinyl manufacturer post system";
+
+  }
+
+  if(isAluminum){
+
+    postSize =
+      "Aluminum manufacturer post system";
+
+  }
+
+  if(!postSize){
+
+    postSize =
+      "4 × 4 planning assumption";
+
+  }
+
+  /*
+    HOLES / CONCRETE
+  */
 
   const holeDiameter =
     parsePositiveNumber(
       answers.holeDiameter
     ) || 10;
 
-
   const holeDepth =
     parsePositiveNumber(
       answers.holeDepth
     ) || 30;
-
 
   if(
     !parsePositiveNumber(
@@ -4177,7 +4690,6 @@ function calculateFenceMaterials(answers){
 
   }
 
-
   if(
     !parsePositiveNumber(
       answers.holeDepth
@@ -4190,25 +4702,23 @@ function calculateFenceMaterials(answers){
 
   }
 
-
   const holeRadiusFeet =
     holeDiameter / 12 / 2;
-
 
   const holeDepthFeet =
     holeDepth / 12;
 
-
   const holeVolume =
     Math.PI *
-    Math.pow(holeRadiusFeet,2) *
+    Math.pow(
+      holeRadiusFeet,
+      2
+    ) *
     holeDepthFeet;
-
 
   const concreteVolume =
     holeVolume *
     totalPosts;
-
 
   const concreteBags =
     totalPosts > 0
@@ -4217,19 +4727,23 @@ function calculateFenceMaterials(answers){
       )
     : 0;
 
-
   const gravelBags =
     totalPosts > 0
     ? totalPosts
     : 0;
 
+  /*
+    POST CAPS
+  */
 
   const postCaps =
     totalPosts;
 
+  /*
+    WOOD FASTENERS ONLY
+  */
 
-  let fastenerBoxes;
-
+  let fastenerBoxes = 0;
 
   if(isPickets){
 
@@ -4243,7 +4757,7 @@ function calculateFenceMaterials(answers){
         )
       : 0;
 
-  }else{
+  }else if(isWoodPrivacy){
 
     fastenerBoxes =
       coveringWithWaste > 0
@@ -4257,43 +4771,37 @@ function calculateFenceMaterials(answers){
 
   }
 
+  /*
+    GATE HARDWARE
+  */
 
   const singleGateHinges =
     singleGateCount * 2;
 
-
   const doubleGateHinges =
     doubleGateCount * 4;
-
 
   const totalGates =
     singleGateCount +
     doubleGateCount;
 
-
   const gateLatches =
     totalGates;
-
 
   const dropRods =
     doubleGateCount * 2;
 
-
   if(
-    singleGateCount +
-    doubleGateCount > 0 &&
-    totalFeet > 0
+    totalGates > 0
   ){
 
     warnings.push(
-      "Gate posts and gate construction materials are planning quantities. Verify the actual gate manufacturer or gate-building design."
+      "Gate hardware quantities are planning allowances. Verify the actual gate design and manufacturer hardware."
     );
 
   }
 
-
   if(
-    height > 0 &&
     height > 8
   ){
 
@@ -4303,10 +4811,14 @@ function calculateFenceMaterials(answers){
 
   }
 
-
   return {
 
     calculatorType:"fence",
+
+    fenceType:fenceType,
+
+    fenceTypeLabel:
+      getFenceTypeLabel(fenceType),
 
     totalFeet,
 
@@ -4345,6 +4857,8 @@ function calculateFenceMaterials(answers){
 
     gatePosts,
 
+    terminalPosts,
+
     totalPosts,
 
     postSize,
@@ -4354,7 +4868,9 @@ function calculateFenceMaterials(answers){
     totalRails,
 
     coveringType:
-      isPickets
+      isChainLink
+      ? "mesh"
+      : isPickets
       ? "pickets"
       : "panels",
 
@@ -4365,6 +4881,32 @@ function calculateFenceMaterials(answers){
     coveringRequired,
 
     coveringWithWaste,
+
+    meshGauge,
+
+    meshRollLength,
+
+    meshRequiredFeet,
+
+    meshPurchasedFeet,
+
+    meshRolls,
+
+    topRail,
+
+    topRailPieceLength,
+
+    topRailPieces,
+
+    tensionWire,
+
+    tensionWireFeet,
+
+    fenceTieSpacing,
+
+    fenceTieCount,
+
+    privacySlats,
 
     holeDiameter,
 
@@ -4408,18 +4950,15 @@ function generateAIPlanFromAnswers(){
     return;
   }
 
-
   const name =
     document.getElementById(
       "planProjectName"
     ).value.trim();
 
-
   const description =
     document.getElementById(
       "planDescription"
     ).value.trim();
-
 
   if(!name){
 
@@ -4429,41 +4968,51 @@ function generateAIPlanFromAnswers(){
 
   }
 
-
   const answers = {};
-
 
   editingPlan.questions.forEach(q => {
 
+    /*
+      Hidden conditional questions are deliberately
+      stored as blank so an old value cannot accidentally
+      affect a different fence style.
+    */
+
     answers[q.id] =
-      getPlanAnswer(q.id);
+      questionIsVisible(q)
+      ? getPlanAnswer(q.id)
+      : "";
 
   });
 
-
   const answerRecords =
-    editingPlan.questions.map(q => ({
+    editingPlan.questions
+      .filter(q => {
 
-      question:q.question,
+        /*
+          Keep common questions and questions that were
+          actually visible for the selected fence style.
+        */
 
-      answer:
-        answers[q.id] || "Not provided."
+        return questionIsVisible(q);
 
-    }));
+      })
+      .map(q => ({
 
+        question:q.question,
+
+        answer:
+          answers[q.id] || "Not provided."
+
+      }));
 
   const isFence =
     /fence/i.test(name);
 
-
   let calculation = null;
-
   let tasks = [];
-
   let materials = [];
-
   let budget = 0;
-
 
   if(isFence){
 
@@ -4472,73 +5021,15 @@ function generateAIPlanFromAnswers(){
         answers
       );
 
-
     budget =
       extractNumber(
         answers.budget
       );
 
-
-    tasks = [
-
-      "Measure the entire fence line",
-
-      "Verify property boundaries",
-
-      "Check HOA and local requirements",
-
-      "Locate underground utilities",
-
-      "Confirm fence style and height",
-
-      "Confirm panel or picket construction",
-
-      "Confirm gate locations",
-
-      "Confirm single gate widths",
-
-      "Confirm double gate openings",
-
-      "Confirm post spacing",
-
-      "Confirm post size",
-
-      "Confirm post-hole diameter and depth",
-
-      "Confirm corners and endpoints",
-
-      "Review material takeoff",
-
-      "Price materials",
-
-      "Purchase materials",
-
-      "Mark post locations",
-
-      "Dig post holes",
-
-      "Set and align fence posts",
-
-      "Install horizontal rails",
-
-      "Install fence panels or pickets",
-
-      "Build or install gates",
-
-      "Install gate hinges and latches",
-
-      "Install drop rods on double gates",
-
-      "Install post caps",
-
-      "Inspect the completed fence",
-
-      "Clean up the work area",
-
-      "Save final measurements and receipts"
-
-    ];
-
+    tasks =
+      buildFenceTaskList(
+        calculation
+      );
 
     materials =
       buildFenceMaterialList(
@@ -4551,7 +5042,6 @@ function generateAIPlanFromAnswers(){
       extractNumber(
         answers.budget
       );
-
 
     tasks = [
 
@@ -4583,7 +5073,6 @@ function generateAIPlanFromAnswers(){
 
     ];
 
-
     materials = [
 
       {
@@ -4608,7 +5097,6 @@ function generateAIPlanFromAnswers(){
 
   }
 
-
   editingPlan = {
 
     name:name,
@@ -4616,6 +5104,8 @@ function generateAIPlanFromAnswers(){
     description:description,
 
     answers:answerRecords,
+
+    rawAnswers:answers,
 
     calculation:calculation,
 
@@ -4653,8 +5143,132 @@ function generateAIPlanFromAnswers(){
 
   };
 
-
   showPlanPreview();
+
+}
+
+
+/* =========================================================
+   FENCE TASK LIST
+   ========================================================= */
+
+function buildFenceTaskList(c){
+
+  const tasks = [
+
+    "Measure the entire fence line",
+
+    "Verify property boundaries",
+
+    "Check HOA and local requirements",
+
+    "Locate underground utilities",
+
+    "Confirm fence style and height",
+
+    "Confirm gate locations",
+
+    "Confirm single gate widths",
+
+    "Confirm double gate openings",
+
+    "Confirm post spacing",
+
+    "Confirm fence corners and endpoints",
+
+    "Review material takeoff",
+
+    "Price materials",
+
+    "Purchase materials",
+
+    "Mark post locations",
+
+    "Dig post holes",
+
+    "Set and align fence posts"
+
+  ];
+
+  if(c.fenceType === "chainLink"){
+
+    tasks.push(
+      "Confirm chain-link mesh gauge",
+      "Confirm mesh roll length",
+      "Confirm top-rail requirement",
+      "Confirm top-rail piece length",
+      "Confirm tension wire",
+      "Confirm fence-tie spacing",
+      "Install line posts",
+      "Install terminal and corner posts",
+      "Install chain-link mesh",
+      "Install top rail",
+      "Install tension wire",
+      "Install fence ties",
+      "Install terminal hardware",
+      "Build or install chain-link gates"
+    );
+
+  }else if(
+    c.fenceType === "woodPrivacy" ||
+    c.fenceType === "woodPicket"
+  ){
+
+    tasks.push(
+      "Confirm wood post size",
+      "Confirm rail count",
+      "Install horizontal rails",
+      "Install fence panels or pickets",
+      "Build or install wood gates"
+    );
+
+  }else if(c.fenceType === "vinylPrivacy"){
+
+    tasks.push(
+      "Confirm vinyl manufacturer system",
+      "Confirm panel and post configuration",
+      "Install vinyl posts",
+      "Install vinyl panels and rails",
+      "Build or install vinyl gates"
+    );
+
+  }else if(c.fenceType === "aluminum"){
+
+    tasks.push(
+      "Confirm aluminum manufacturer system",
+      "Confirm panel width",
+      "Install aluminum posts",
+      "Install aluminum fence panels",
+      "Build or install aluminum gates"
+    );
+
+  }else{
+
+    tasks.push(
+      "Confirm custom fence system",
+      "Confirm manufacturer installation requirements",
+      "Install custom fence components"
+    );
+
+  }
+
+  tasks.push(
+
+    "Install gate hinges and latches",
+
+    "Install drop rods on double gates",
+
+    "Install post caps",
+
+    "Inspect the completed fence",
+
+    "Clean up the work area",
+
+    "Save final measurements and receipts"
+
+  );
+
+  return tasks;
 
 }
 
@@ -4667,6 +5281,705 @@ function buildFenceMaterialList(c){
 
   const materials = [];
 
+  /*
+    CHAIN LINK
+  */
+
+  if(c.fenceType === "chainLink"){
+
+    materials.push({
+
+      name:
+        `Chain-link mesh — ${c.meshGauge}`,
+
+      quantity:
+        `${c.meshRolls} roll(s) × ${formatNumber(c.meshRollLength)} ft = ${formatNumber(c.meshPurchasedFeet)} ft purchased`
+
+    });
+
+    if(c.linePosts > 0){
+
+      materials.push({
+
+        name:
+          "Chain-link line posts",
+
+        quantity:
+          `${c.linePosts} posts`
+
+      });
+
+    }
+
+    if(c.cornerPosts > 0){
+
+      materials.push({
+
+        name:
+          "Chain-link corner posts",
+
+        quantity:
+          `${c.cornerPosts} posts`
+
+      });
+
+    }
+
+    if(c.endPosts > 0){
+
+      materials.push({
+
+        name:
+          "Chain-link end / terminal posts",
+
+        quantity:
+          `${c.endPosts} posts`
+
+      });
+
+    }
+
+    if(c.gatePosts > 0){
+
+      materials.push({
+
+        name:
+          "Chain-link gate posts",
+
+        quantity:
+          `${c.gatePosts} posts`
+
+      });
+
+    }
+
+    if(c.topRail){
+
+      materials.push({
+
+        name:
+          "Chain-link top rail",
+
+        quantity:
+          `${c.topRailPieces} pieces × ${formatNumber(c.topRailPieceLength)} ft`
+
+      });
+
+    }
+
+    if(c.tensionWire){
+
+      materials.push({
+
+        name:
+          "Bottom tension wire",
+
+        quantity:
+          `${formatNumber(c.tensionWireFeet)} ft`
+
+      });
+
+    }
+
+    materials.push({
+
+      name:
+        "Chain-link fence ties",
+
+      quantity:
+        `${c.fenceTieCount} planning allowance`
+
+    });
+
+    materials.push({
+
+      name:
+        "Terminal / corner brace and tension hardware",
+
+      quantity:
+        `${c.terminalPosts} post locations — verify manufacturer kit`
+
+    });
+
+    materials.push({
+
+      name:
+        "Line post caps",
+
+      quantity:
+        `${c.linePosts} caps`
+
+    });
+
+    materials.push({
+
+      name:
+        "Terminal / corner / gate post caps",
+
+      quantity:
+        `${c.terminalPosts} caps`
+
+    });
+
+    if(c.privacySlats){
+
+      materials.push({
+
+        name:
+          "Chain-link privacy slats",
+
+        quantity:
+          "Verify manufacturer package quantity"
+
+      });
+
+    }
+
+    materials.push({
+
+      name:
+        "Concrete — 80 lb bags",
+
+      quantity:
+        `${c.concreteBags} bags planning allowance`
+
+    });
+
+    materials.push({
+
+      name:
+        "Base gravel",
+
+      quantity:
+        `${c.gravelBags} bags planning allowance`
+
+    });
+
+    if(c.singleGateCount > 0){
+
+      materials.push({
+
+        name:
+          "Chain-link single gate frame / mesh kit",
+
+        quantity:
+          `${c.singleGateCount} gate(s)`
+
+      });
+
+      materials.push({
+
+        name:
+          "Single gate hinges",
+
+        quantity:
+          `${c.singleGateHinges}`
+
+      });
+
+    }
+
+    if(c.doubleGateCount > 0){
+
+      materials.push({
+
+        name:
+          "Chain-link double gate frame / mesh kit",
+
+        quantity:
+          `${c.doubleGateCount} gate(s)`
+
+      });
+
+      materials.push({
+
+        name:
+          "Double gate hinges",
+
+        quantity:
+          `${c.doubleGateHinges}`
+
+      });
+
+      materials.push({
+
+        name:
+          "Drop rods for double gates",
+
+        quantity:
+          `${c.dropRods}`
+
+      });
+
+    }
+
+    if(c.gateLatches > 0){
+
+      materials.push({
+
+        name:
+          "Chain-link gate latches",
+
+        quantity:
+          `${c.gateLatches}`
+
+      });
+
+    }
+
+    return materials;
+
+  }
+
+
+  /*
+    WOOD
+  */
+
+  if(
+    c.fenceType === "woodPrivacy" ||
+    c.fenceType === "woodPicket"
+  ){
+
+    materials.push({
+
+      name:
+        `Fence posts — ${c.postSize}`,
+
+      quantity:
+        `${c.totalPosts} posts`
+
+    });
+
+    if(c.cornerPosts > 0){
+
+      materials.push({
+
+        name:
+          `Corner posts — ${c.postSize}`,
+
+        quantity:
+          `${c.cornerPosts} posts`
+
+      });
+
+    }
+
+    if(c.endPosts > 0){
+
+      materials.push({
+
+        name:
+          `End posts — ${c.postSize}`,
+
+        quantity:
+          `${c.endPosts} posts`
+
+      });
+
+    }
+
+    if(c.gatePosts > 0){
+
+      materials.push({
+
+        name:
+          `Gate posts — ${c.postSize}`,
+
+        quantity:
+          `${c.gatePosts} posts`
+
+      });
+
+    }
+
+    if(c.linePosts > 0){
+
+      materials.push({
+
+        name:
+          `Line posts — ${c.postSize}`,
+
+        quantity:
+          `${c.linePosts} posts`
+
+      });
+
+    }
+
+    materials.push({
+
+      name:
+        c.coveringType === "pickets"
+        ? "Wood fence pickets"
+        : "Wood fence panels",
+
+      quantity:
+        `${c.coveringWithWaste} ${
+          c.coveringType
+        } including 10% waste`
+
+    });
+
+    materials.push({
+
+      name:"Horizontal fence rails",
+
+      quantity:
+        `${c.totalRails} rails`
+
+    });
+
+    materials.push({
+
+      name:"Concrete — 80 lb bags",
+
+      quantity:
+        `${c.concreteBags} bags planning allowance`
+
+    });
+
+    materials.push({
+
+      name:"Base gravel",
+
+      quantity:
+        `${c.gravelBags} bags planning allowance`
+
+    });
+
+    materials.push({
+
+      name:"Post caps",
+
+      quantity:
+        `${c.postCaps}`
+
+    });
+
+    materials.push({
+
+      name:"Exterior fence screws / fasteners",
+
+      quantity:
+        `${c.fastenerBoxes} box(es) planning allowance`
+
+    });
+
+    if(c.singleGateCount > 0){
+
+      materials.push({
+
+        name:"Single gate hinges",
+
+        quantity:
+          `${c.singleGateHinges}`
+
+      });
+
+    }
+
+    if(c.doubleGateCount > 0){
+
+      materials.push({
+
+        name:"Double gate hinges",
+
+        quantity:
+          `${c.doubleGateHinges}`
+
+      });
+
+    }
+
+    if(c.gateLatches > 0){
+
+      materials.push({
+
+        name:"Gate latches",
+
+        quantity:
+          `${c.gateLatches}`
+
+      });
+
+    }
+
+    if(c.dropRods > 0){
+
+      materials.push({
+
+        name:"Drop rods for double gates",
+
+        quantity:
+          `${c.dropRods}`
+
+      });
+
+    }
+
+    if(c.singleGateCount > 0){
+
+      materials.push({
+
+        name:"Single gate construction materials",
+
+        quantity:
+          `${c.singleGateCount} gate(s) — verify actual gate design`
+
+      });
+
+    }
+
+    if(c.doubleGateCount > 0){
+
+      materials.push({
+
+        name:"Double gate construction materials",
+
+        quantity:
+          `${c.doubleGateCount} gate(s) — verify actual gate design`
+
+      });
+
+    }
+
+    return materials;
+
+  }
+
+
+  /*
+    VINYL
+  */
+
+  if(c.fenceType === "vinylPrivacy"){
+
+    materials.push({
+
+      name:
+        "Vinyl fence panels",
+
+      quantity:
+        `${c.coveringWithWaste} panels including 10% waste`
+
+    });
+
+    materials.push({
+
+      name:
+        "Vinyl fence posts",
+
+      quantity:
+        `${c.totalPosts} posts`
+
+    });
+
+    materials.push({
+
+      name:
+        "Vinyl post caps",
+
+      quantity:
+        `${c.postCaps}`
+
+    });
+
+    materials.push({
+
+      name:
+        "Vinyl panel / post brackets and manufacturer hardware",
+
+      quantity:
+        "Verify manufacturer system"
+
+    });
+
+    materials.push({
+
+      name:
+        "Concrete — 80 lb bags",
+
+      quantity:
+        `${c.concreteBags} bags planning allowance`
+
+    });
+
+    materials.push({
+
+      name:
+        "Base gravel",
+
+      quantity:
+        `${c.gravelBags} bags planning allowance`
+
+    });
+
+    if(c.singleGateCount > 0){
+
+      materials.push({
+
+        name:
+          "Vinyl single gate",
+
+        quantity:
+          `${c.singleGateCount} gate(s)`
+
+      });
+
+    }
+
+    if(c.doubleGateCount > 0){
+
+      materials.push({
+
+        name:
+          "Vinyl double gate",
+
+        quantity:
+          `${c.doubleGateCount} gate(s)`
+
+      });
+
+    }
+
+    materials.push({
+
+      name:
+        "Gate hinges and latches",
+
+      quantity:
+        "Verify manufacturer system"
+
+    });
+
+    return materials;
+
+  }
+
+
+  /*
+    ALUMINUM
+  */
+
+  if(c.fenceType === "aluminum"){
+
+    materials.push({
+
+      name:
+        "Aluminum fence panels",
+
+      quantity:
+        `${c.coveringWithWaste} panels including 10% waste`
+
+    });
+
+    materials.push({
+
+      name:
+        "Aluminum fence posts",
+
+      quantity:
+        `${c.totalPosts} posts`
+
+    });
+
+    materials.push({
+
+      name:
+        "Aluminum post caps",
+
+      quantity:
+        `${c.postCaps}`
+
+    });
+
+    materials.push({
+
+      name:
+        "Aluminum panel brackets / fasteners",
+
+      quantity:
+        "Verify manufacturer system"
+
+    });
+
+    materials.push({
+
+      name:
+        "Concrete — 80 lb bags",
+
+      quantity:
+        `${c.concreteBags} bags planning allowance`
+
+    });
+
+    materials.push({
+
+      name:
+        "Base gravel",
+
+      quantity:
+        `${c.gravelBags} bags planning allowance`
+
+    });
+
+    if(c.singleGateCount > 0){
+
+      materials.push({
+
+        name:
+          "Aluminum single gate",
+
+        quantity:
+          `${c.singleGateCount} gate(s)`
+
+      });
+
+    }
+
+    if(c.doubleGateCount > 0){
+
+      materials.push({
+
+        name:
+          "Aluminum double gate",
+
+        quantity:
+          `${c.doubleGateCount} gate(s)`
+
+      });
+
+    }
+
+    materials.push({
+
+      name:
+        "Gate hinges and latches",
+
+      quantity:
+        "Verify manufacturer system"
+
+    });
+
+    return materials;
+
+  }
+
+
+  /*
+    OTHER / CUSTOM
+  */
+
+  materials.push({
+
+    name:
+      "Custom fence covering",
+
+    quantity:
+      `${c.coveringWithWaste} sections including 10% waste`
+
+  });
 
   materials.push({
 
@@ -4678,215 +5991,45 @@ function buildFenceMaterialList(c){
 
   });
 
-
-  if(c.cornerPosts > 0){
-
-    materials.push({
-
-      name:
-        `Corner posts — ${c.postSize}`,
-
-      quantity:
-        `${c.cornerPosts} posts`
-
-    });
-
-  }
-
-
-  if(c.endPosts > 0){
-
-    materials.push({
-
-      name:
-        `End posts — ${c.postSize}`,
-
-      quantity:
-        `${c.endPosts} posts`
-
-    });
-
-  }
-
-
-  if(c.gatePosts > 0){
-
-    materials.push({
-
-      name:
-        `Gate posts — ${c.postSize}`,
-
-      quantity:
-        `${c.gatePosts} posts`
-
-    });
-
-  }
-
-
-  if(c.linePosts > 0){
-
-    materials.push({
-
-      name:
-        `Line posts — ${c.postSize}`,
-
-      quantity:
-        `${c.linePosts} posts`
-
-    });
-
-  }
-
-
   materials.push({
 
     name:
-      c.coveringType === "pickets"
-      ? "Fence pickets"
-      : "Fence panels",
-
-    quantity:
-      `${c.coveringWithWaste} ${
-        c.coveringType
-      } including 10% waste`
-
-  });
-
-
-  materials.push({
-
-    name:"Horizontal fence rails",
-
-    quantity:
-      `${c.totalRails} rails`
-
-  });
-
-
-  materials.push({
-
-    name:"Concrete — 80 lb bags",
-
-    quantity:
-      `${c.concreteBags} bags planning allowance`
-
-  });
-
-
-  materials.push({
-
-    name:"Base gravel",
-
-    quantity:
-      `${c.gravelBags} bags planning allowance`
-
-  });
-
-
-  materials.push({
-
-    name:"Post caps",
+      "Post caps",
 
     quantity:
       `${c.postCaps}`
 
   });
 
-
   materials.push({
 
-    name:"Exterior fence screws / fasteners",
+    name:
+      "Concrete — 80 lb bags",
 
     quantity:
-      `${c.fastenerBoxes} box(es) planning allowance`
+      `${c.concreteBags} bags planning allowance`
 
   });
 
+  materials.push({
 
-  if(c.singleGateCount > 0){
+    name:
+      "Base gravel",
 
-    materials.push({
+    quantity:
+      `${c.gravelBags} bags planning allowance`
 
-      name:"Single gate hinges",
+  });
 
-      quantity:
-        `${c.singleGateHinges}`
+  materials.push({
 
-    });
+    name:
+      "Custom fence hardware",
 
-  }
+    quantity:
+      "Verify actual fence system"
 
-
-  if(c.doubleGateCount > 0){
-
-    materials.push({
-
-      name:"Double gate hinges",
-
-      quantity:
-        `${c.doubleGateHinges}`
-
-    });
-
-  }
-
-
-  if(c.gateLatches > 0){
-
-    materials.push({
-
-      name:"Gate latches",
-
-      quantity:
-        `${c.gateLatches}`
-
-    });
-
-  }
-
-
-  if(c.dropRods > 0){
-
-    materials.push({
-
-      name:"Drop rods for double gates",
-
-      quantity:
-        `${c.dropRods}`
-
-    });
-
-  }
-
-
-  if(c.singleGateCount > 0){
-
-    materials.push({
-
-      name:"Single gate construction materials",
-
-      quantity:
-        `${c.singleGateCount} gate(s) — verify actual gate design`
-
-    });
-
-  }
-
-
-  if(c.doubleGateCount > 0){
-
-    materials.push({
-
-      name:"Double gate construction materials",
-
-      quantity:
-        `${c.doubleGateCount} gate(s) — verify actual gate design`
-
-    });
-
-  }
-
+  });
 
   return materials;
 
@@ -4902,19 +6045,15 @@ function showPlanPreview(){
   const plan =
     editingPlan;
 
-
   const box =
     document.getElementById("projectDetail");
 
-
   let calculationHTML = "";
-
 
   if(plan.calculation){
 
     const c =
       plan.calculation;
-
 
     calculationHTML = `
 
@@ -4925,12 +6064,33 @@ function showPlanPreview(){
           <h2>📐 Material Takeoff</h2>
 
           <span class="badge">
-            Fence Calculator
+            ${escapeHTML(
+              c.fenceTypeLabel ||
+              "Fence Calculator"
+            )}
           </span>
 
         </div>
 
         <div class="calcBox">
+
+          ${
+            c.fenceType
+            ? calcLine(
+                "Fence type",
+                getFenceTypeLabel(c.fenceType)
+              )
+            : ""
+          }
+
+          ${
+            c.style
+            ? calcLine(
+                "Style details",
+                c.style
+              )
+            : ""
+          }
 
           ${calcLine(
             "Total fence length",
@@ -4942,10 +6102,14 @@ function showPlanPreview(){
             `${formatNumber(c.height)} ft`
           )}
 
-          ${calcLine(
-            "Construction",
+          ${
             c.construction
-          )}
+            ? calcLine(
+                "Construction",
+                c.construction
+              )
+            : ""
+          }
 
           ${calcLine(
             "Single gates",
@@ -5002,32 +6166,112 @@ function showPlanPreview(){
             c.totalPosts
           )}
 
-          ${calcLine(
-            "Rails per section",
-            c.railsPerSection
-          )}
+          ${
+            c.fenceType === "chainLink"
+            ? `
 
-          ${calcLine(
-            "Total rails",
-            c.totalRails
-          )}
+              ${calcLine(
+                "Mesh gauge",
+                c.meshGauge
+              )}
 
-          ${calcLine(
-            c.coveringType === "pickets"
-            ? "Pickets before waste"
-            : "Panels before waste",
-            formatNumber(c.coveringRequired)
-          )}
+              ${calcLine(
+                "Mesh required",
+                `${formatNumber(c.meshRequiredFeet)} ft`
+              )}
 
-          ${calcLine(
-            c.coveringType === "pickets"
-            ? "Pickets + 10% waste"
-            : "Panels + 10% waste",
-            c.coveringWithWaste
-          )}
+              ${calcLine(
+                "Mesh rolls",
+                `${c.meshRolls} × ${formatNumber(c.meshRollLength)} ft`
+              )}
+
+              ${calcLine(
+                "Mesh purchased",
+                `${formatNumber(c.meshPurchasedFeet)} ft`
+              )}
+
+              ${calcLine(
+                "Top rail",
+                c.topRail
+                ? `${c.topRailPieces} pieces`
+                : "No"
+              )}
+
+              ${
+                c.topRail
+                ? calcLine(
+                    "Top-rail piece length",
+                    `${formatNumber(c.topRailPieceLength)} ft`
+                  )
+                : ""
+              }
+
+              ${calcLine(
+                "Tension wire",
+                c.tensionWire
+                ? `${formatNumber(c.tensionWireFeet)} ft`
+                : "No"
+              )}
+
+              ${calcLine(
+                "Fence ties",
+                c.fenceTieCount
+              )}
+
+              ${calcLine(
+                "Terminal posts",
+                c.terminalPosts
+              )}
+
+            `
+            : ""
+          }
 
           ${
-            c.coveringType === "pickets"
+            c.fenceType === "woodPrivacy" ||
+            c.fenceType === "woodPicket"
+            ? `
+
+              ${calcLine(
+                "Rails per section",
+                c.railsPerSection
+              )}
+
+              ${calcLine(
+                "Total rails",
+                c.totalRails
+              )}
+
+            `
+            : ""
+          }
+
+          ${
+            c.coveringType === "mesh"
+            ? ""
+            : calcLine(
+                c.coveringType === "pickets"
+                ? "Pickets before waste"
+                : "Panels before waste",
+                formatNumber(c.coveringRequired)
+              )
+          }
+
+          ${
+            c.coveringType === "mesh"
+            ? ""
+            : calcLine(
+                c.coveringType === "pickets"
+                ? "Pickets + 10% waste"
+                : "Panels + 10% waste",
+                c.coveringWithWaste
+              )
+          }
+
+          ${
+            c.coveringType === "mesh"
+            ? ""
+            : c.coveringType === "pickets"
             ? calcLine(
                 "Picket width",
                 `${formatNumber(c.coveringWidth)} in`
@@ -5048,7 +6292,7 @@ function showPlanPreview(){
           }
 
           ${calcLine(
-            "Post size",
+            "Post system",
             c.postSize
           )}
 
@@ -5082,10 +6326,14 @@ function showPlanPreview(){
             c.postCaps
           )}
 
-          ${calcLine(
-            "Fastener boxes",
-            c.fastenerBoxes
-          )}
+          ${
+            c.fastenerBoxes > 0
+            ? calcLine(
+                "Fastener boxes",
+                c.fastenerBoxes
+              )
+            : ""
+          }
 
           ${calcLine(
             "Single gate hinges",
@@ -5108,7 +6356,6 @@ function showPlanPreview(){
           )}
 
         </div>
-
 
         ${
           c.warnings && c.warnings.length
@@ -5134,18 +6381,16 @@ function showPlanPreview(){
           `
         }
 
-
         <div class="warning">
 
           <strong>Planning estimate</strong>
 
-          Concrete, gravel, fasteners and gate hardware are
-          planning allowances. Actual quantities depend on
-          the fence manufacturer, post size, soil, gate
-          construction and installation method.
+          Quantities are planning allowances. Actual quantities
+          can change based on the fence manufacturer, exact
+          layout, soil, gate construction, post system and
+          installation method.
 
-          This calculator does not determine building-code,
-          permit or HOA compliance.
+          Verify manufacturer-specific hardware before purchasing.
 
         </div>
 
@@ -5154,7 +6399,6 @@ function showPlanPreview(){
     `;
 
   }
-
 
   box.innerHTML = `
 
@@ -5178,9 +6422,7 @@ function showPlanPreview(){
 
     </div>
 
-
     ${calculationHTML}
-
 
     <div class="card">
 
@@ -5192,12 +6434,10 @@ function showPlanPreview(){
         id="previewName"
         value="${escapeAttribute(plan.name)}">
 
-
       <label>Description</label>
 
       <textarea
         id="previewDescription">${escapeHTML(plan.description)}</textarea>
-
 
       <label>Budget</label>
 
@@ -5208,7 +6448,6 @@ function showPlanPreview(){
         value="${plan.budget || ""}">
 
     </div>
-
 
     <div class="card">
 
@@ -5240,7 +6479,6 @@ function showPlanPreview(){
 
       </div>
 
-
       <button
         class="secondary"
         onclick="addAIPlanTask()">
@@ -5248,7 +6486,6 @@ function showPlanPreview(){
       </button>
 
     </div>
-
 
     <div class="card">
 
@@ -5284,7 +6521,6 @@ function showPlanPreview(){
 
       </div>
 
-
       <button
         class="secondary"
         onclick="addAIPlanMaterial()">
@@ -5292,7 +6528,6 @@ function showPlanPreview(){
       </button>
 
     </div>
-
 
     <div class="card">
 
@@ -5304,7 +6539,6 @@ function showPlanPreview(){
       </p>
 
     </div>
-
 
     <div class="card">
 
@@ -5327,7 +6561,6 @@ function showPlanPreview(){
       `).join("")}
 
     </div>
-
 
     <div class="card">
 
@@ -5384,23 +6617,19 @@ function saveAIPlanEdits(){
     return;
   }
 
-
   editingPlan.name =
     document.getElementById("previewName")
       .value.trim();
 
-
   editingPlan.description =
     document.getElementById("previewDescription")
       .value.trim();
-
 
   editingPlan.budget =
     parseFloat(
       document.getElementById("previewBudget")
         .value
     ) || 0;
-
 
   editingPlan.tasks.forEach((task,index) => {
 
@@ -5415,7 +6644,6 @@ function saveAIPlanEdits(){
 
   });
 
-
   editingPlan.materials.forEach((material,index) => {
 
     const name =
@@ -5428,7 +6656,6 @@ function saveAIPlanEdits(){
         `planMaterialQty_${index}`
       );
 
-
     if(name){
       material.name = name.value.trim();
     }
@@ -5438,7 +6665,6 @@ function saveAIPlanEdits(){
     }
 
   });
-
 
   addAIPlanToProjects();
 
@@ -5455,7 +6681,6 @@ function addAIPlanTask(){
     return;
   }
 
-
   editingPlan.tasks.push({
 
     id:
@@ -5471,18 +6696,15 @@ function addAIPlanTask(){
 
   });
 
-
   showPlanPreview();
 
 }
-
 
 function removeAIPlanTask(index){
 
   if(!editingPlan){
     return;
   }
-
 
   editingPlan.tasks.splice(index,1);
 
@@ -5501,7 +6723,6 @@ function addAIPlanMaterial(){
     return;
   }
 
-
   editingPlan.materials.push({
 
     id:
@@ -5515,18 +6736,15 @@ function addAIPlanMaterial(){
 
   });
 
-
   showPlanPreview();
 
 }
-
 
 function removeAIPlanMaterial(index){
 
   if(!editingPlan){
     return;
   }
-
 
   editingPlan.materials.splice(index,1);
 
@@ -5544,7 +6762,6 @@ function addAIPlanToProjects(){
   if(!editingPlan){
     return;
   }
-
 
   const project = {
 
@@ -5591,19 +6808,15 @@ function addAIPlanToProjects(){
 
   };
 
-
   data.projects.push(project);
 
   saveData();
 
-
   editingPlan = null;
-
 
   alert(
     "✓ Project saved to The List."
   );
-
 
   openProject(project.id);
 
@@ -5621,13 +6834,11 @@ function extractNumber(text){
       .replace(/,/g,"")
       .match(/-?\d+(\.\d+)?/);
 
-
   return match
     ? parseFloat(match[0])
     : 0;
 
 }
-
 
 function extractAllNumbers(text){
 
@@ -5639,7 +6850,6 @@ function extractAllNumbers(text){
 
 }
 
-
 function parsePositiveNumber(text){
 
   const n =
@@ -5649,7 +6859,6 @@ function parsePositiveNumber(text){
 
 }
 
-
 function parseNonNegativeNumber(text){
 
   const n =
@@ -5658,7 +6867,6 @@ function parseNonNegativeNumber(text){
   return n >= 0 ? n : 0;
 
 }
-
 
 function parseCount(text){
 
@@ -5670,7 +6878,6 @@ function parseCount(text){
     : 0;
 
 }
-
 
 function parseWidthList(text){
 
@@ -5692,7 +6899,6 @@ function parseWidthList(text){
 
 }
 
-
 function formatNumber(number){
 
   return Number(number)
@@ -5701,7 +6907,6 @@ function formatNumber(number){
     .replace(/(\.\d)0$/,"$1");
 
 }
-
 
 function dateKey(date){
 
@@ -5716,11 +6921,9 @@ function dateKey(date){
     String(date.getDate())
       .padStart(2,"0");
 
-
   return `${y}-${m}-${d}`;
 
 }
-
 
 function formatDate(dateString){
 
@@ -5728,15 +6931,12 @@ function formatDate(dateString){
     return "";
   }
 
-
   const parts =
     dateString.split("-");
-
 
   if(parts.length !== 3){
     return dateString;
   }
-
 
   return new Date(
     Number(parts[0]),
@@ -5753,7 +6953,6 @@ function formatDate(dateString){
 
 }
 
-
 function escapeHTML(value){
 
   return String(value ?? "")
@@ -5764,7 +6963,6 @@ function escapeHTML(value){
     .replace(/'/g,"&#039;");
 
 }
-
 
 function escapeAttribute(value){
 
