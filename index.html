@@ -1284,7 +1284,6 @@ function renderHomeUpcoming(){
 
   data.projects.forEach(project => {
 
-    // Only show upcoming tasks for active projects
     if(project.status !== "active"){
       return;
     }
@@ -1399,73 +1398,6 @@ function renderHomeUpcoming(){
           <strong>
             ${escapeHTML(item.title)}
           </strong>
-
-          <div class="smallText">
-            ${escapeHTML(item.project)}
-            · ${formatDate(item.date)}
-          </div>
-
-        </div>
-
-      </div>
-
-    `)
-    .join("");
-
-}
-
-    project.tasks.forEach(task => {
-
-      if(task.dueDate && !task.done){
-
-        upcoming.push({
-          date:task.dueDate,
-          title:task.text,
-          project:project.name
-        });
-
-      }
-
-    });
-
-  });
-
-  data.calendar.forEach(item => {
-
-    if(item.date){
-
-      upcoming.push({
-        date:item.date,
-        title:item.title,
-        project:item.type || "Calendar"
-      });
-
-    }
-
-  });
-
-  upcoming.sort((a,b) =>
-    a.date.localeCompare(b.date)
-  );
-
-  if(!upcoming.length){
-
-    box.innerHTML =
-      `<div class="empty">Nothing scheduled yet.</div>`;
-
-    return;
-
-  }
-
-  box.innerHTML = upcoming
-    .slice(0,6)
-    .map(item => `
-
-      <div class="task">
-
-        <div class="taskText">
-
-          <strong>${escapeHTML(item.title)}</strong>
 
           <div class="smallText">
             ${escapeHTML(item.project)}
