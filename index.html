@@ -798,7 +798,27 @@ hr{
 <script>
 
 const STORAGE_KEY = "theListDataV2";
+function ensureProjectStatuses(){
 
+  data.projects.forEach(project => {
+
+    if(!project.status){
+      project.status = "planned";
+    }
+
+    if(!("startedAt" in project)){
+      project.startedAt = "";
+    }
+
+    if(!("completedAt" in project)){
+      project.completedAt = "";
+    }
+
+  });
+
+  saveData();
+
+}
 const defaultData = {
 
   home:{
