@@ -1513,20 +1513,18 @@ function newProject(){
       .toString(36)
       .substring(2,8);
 
-  data.projects.push({
+data.projects.push({
 
     id:id,
     name:name,
     category:category || "Home",
+    
+    status:"planned",
+    startedAt:"",
+    completedAt:"",
+
     description:"",
     tasks:[],
-    materials:[],
-    records:[],
-    notes:"",
-    budget:0,
-    answers:[],
-    takeoff:null,
-    calculation:null
 
   });
 
