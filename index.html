@@ -3161,7 +3161,235 @@ function renderSelectedDate(){
     return;
 
   }
+function showCalendarRange(range){
 
+  showPage("calendarPage");
+
+  const today = new Date();
+
+  today.setHours(0,0,0,0);
+
+  let startDate;
+  let endDate;
+  let title;
+
+  if(range === "thisWeek"){
+
+    startDate = new Date(today);
+
+    endDate = new Date(today);
+    endDate.setDate(
+      endDate.getDate() + 6
+    );
+
+    title = "THIS WEEK";
+
+  }
+
+  else if(range === "nextWeek"){
+
+    startDate = new Date(today);
+    startDate.setDate(
+      startDate.getDate() + 7
+    );
+
+    endDate = new Date(startDate);
+    endDate.setDate(
+      endDate.getDate() + 6
+    );
+
+    title = "NEXT WEEK";
+
+  }
+
+  else if(range === "thisMonth"){
+
+    startDate =
+      new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+
+    endDate =
+      new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0
+      );
+
+    title = "THIS MONTH";
+
+  }
+
+  else{
+
+    return;
+
+  }
+
+  renderCalendarRange(
+    title,
+    startDate,
+    endDate
+  );
+
+}
+
+
+function renderCalendarRange(
+  title,
+  startDate,
+  endDate
+){
+
+  const box =
+    document.getElementById(
+      "calendarRangeView"
+    );
+
+  if(!box) return;
+
+  const items = [];
+
+  let current =
+    new Date(startDate);
+
+  current.setHours(0,0,0,0);
+
+  const finalDate =
+    new Date(endDate);
+
+  finalDate.setHours(0,0,0,0);
+
+  while(current <= finalDate){
+
+    const key =
+      dateKey(current);
+
+    const tasks =
+      getTasksForDate(key);
+
+    const events =
+      getEventsForDate(key);
+
+    tasks.forEach(item => {
+
+      items.push({
+
+        date:key,
+        title:item.title,
+        project:item.project,
+        type:"Task"
+
+      });
+
+    });
+
+    events.forEach(item => {
+
+      items.push({
+
+        date:key,
+        title:item.title,
+        project:item.project,
+        type:item.type
+
+      });
+
+    });
+
+    current.setDate(
+      current.getDate() + 1
+    );
+
+  }
+
+  box.innerHTML = `
+
+    <div class="card">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        margin-bottom:12px;
+      ">
+
+        <div>
+
+          <h2 style="margin:0;">
+            📅 ${title}
+          </h2>
+
+          <div class="smallText">
+            ${formatDate(dateKey(startDate))}
+            –
+            ${formatDate(dateKey(endDate))}
+          </div>
+
+        </div>
+
+        <button
+          class="small secondary"
+          onclick="clearCalendarRange()">
+          Monthly
+        </button>
+
+      </div>
+
+      ${
+        items.length
+        ? items.map(item => `
+
+            <div class="task">
+
+              <div class="taskText">
+
+                <strong>
+                  ${escapeHTML(item.title)}
+                </strong>
+
+                <div class="smallText">
+                  ${formatDate(item.date)}
+                  ·
+                  ${escapeHTML(item.project)}
+                </div>
+
+              </div>
+
+            </div>
+
+          `).join("")
+        : `
+          <div class="empty">
+            Nothing scheduled for this period.
+          </div>
+        `
+      }
+
+    </div>
+
+  `;
+
+}
+
+
+function clearCalendarRange(){
+
+  const box =
+    document.getElementById(
+      "calendarRangeView"
+    );
+
+  if(box){
+
+    box.innerHTML = "";
+
+  }
+
+}
   const tasks =
     getTasksForDate(selectedCalendarDate);
 
