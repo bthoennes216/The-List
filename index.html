@@ -1125,7 +1125,12 @@ function showPage(pageId){
    ========================================================= */
 
 function renderHome(){
-if(!localStorage.getItem("theListProjectResetV1")){
+alert(
+  data.projects.map(
+    project => project.name + " = " + project.status
+  ).join("\n")
+);
+  if(!localStorage.getItem("theListProjectResetV1")){
 
   data.projects = [];
 
