@@ -1793,7 +1793,86 @@ function openProject(id){
   renderProjectMaterials(project);
 
 }
+function startProject(projectId){
 
+  const project =
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
+
+  if(!project) return;
+
+  project.status = "active";
+  project.startedAt = new Date().toISOString();
+  project.completedAt = "";
+
+  saveData();
+
+  renderProjects();
+  renderHome();
+
+  openProject(project.id);
+
+}
+
+
+function endProject(projectId){
+
+  const project =
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
+
+  if(!project) return;
+
+  const confirmed =
+    confirm(
+      `End "${project.name}"?`
+    );
+
+  if(!confirmed) return;
+
+  project.status = "completed";
+  project.completedAt =
+    new Date().toISOString();
+
+  saveData();
+
+  renderProjects();
+  renderHome();
+
+  openProject(project.id);
+
+}
+
+
+function reopenProject(projectId){
+
+  const project =
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
+
+  if(!project) return;
+
+  project.status = "active";
+  project.completedAt = "";
+
+  if(!project.startedAt){
+
+    project.startedAt =
+      new Date().toISOString();
+
+  }
+
+  saveData();
+
+  renderProjects();
+  renderHome();
+
+  openProject(project.id);
+
+}
 
 /* =========================================================
    SAVED TAKEOFF
