@@ -1221,13 +1221,8 @@ function showPage(pageId){
    ========================================================= */
 
 function renderHome(){
-alert(
-  data.projects.map(
-    project => project.name + " = " + project.status
-  ).join("\n")
-);
 
-const activeProjectCount =
+  const activeProjectCount =
   data.projects.filter(
     project => project.status === "active"
   ).length;
