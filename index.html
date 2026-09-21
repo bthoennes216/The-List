@@ -1109,19 +1109,24 @@ function renderHome(){
   document.getElementById("homeProjectCount")
     .textContent = data.projects.length;
 
-  let openTasks = 0;
+let openTasks = 0;
 
-  data.projects.forEach(project => {
+data.projects.forEach(project => {
 
-    project.tasks.forEach(task => {
+  // Only count tasks from projects that have been started
+  if(project.status !== "active"){
+    return;
+  }
 
-      if(!task.done){
-        openTasks++;
-      }
+  project.tasks.forEach(task => {
 
-    });
+    if(!task.done){
+      openTasks++;
+    }
 
   });
+
+});
 
   document.getElementById("homeOpenTasks")
     .textContent = openTasks;
