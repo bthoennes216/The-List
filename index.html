@@ -3304,20 +3304,19 @@ function renderCalendarRange(
 }
 
 
-function clearCalendarRange(){
+function renderSelectedDate(){
 
   const box =
-    document.getElementById(
-      "calendarRangeView"
-    );
+    document.getElementById("selectedDateCard");
 
-  if(box){
+  if(!selectedCalendarDate){
 
     box.innerHTML = "";
 
+    return;
+
   }
 
-}
   const tasks =
     getTasksForDate(selectedCalendarDate);
 
@@ -3367,6 +3366,21 @@ function clearCalendarRange(){
 
 }
 
+
+function clearCalendarRange(){
+
+  const box =
+    document.getElementById(
+      "calendarRangeView"
+    );
+
+  if(box){
+
+    box.innerHTML = "";
+
+  }
+
+}
 function changeMonth(amount){
 
   currentCalendarDate =
