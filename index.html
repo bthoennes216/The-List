@@ -710,6 +710,10 @@ hr{
 
 <section id="calendarPage" class="hidden">
 
+  <!-- Schedule Range -->
+  <div id="calendarRangeView"></div>
+
+  <!-- Monthly Calendar -->
   <div class="card">
 
     <div class="calendarHeader">
@@ -745,15 +749,19 @@ hr{
   <div id="selectedDateCard"></div>
 
   <div class="card">
+
     <h2>＋ Add Calendar Item</h2>
 
     <label>Date</label>
     <input type="date" id="calendarDate">
 
     <label>Title</label>
-    <input id="calendarTitle" placeholder="Example: Buy fence posts">
+    <input
+      id="calendarTitle"
+      placeholder="Example: Buy fence posts">
 
     <label>Type</label>
+
     <select id="calendarType">
       <option>Task</option>
       <option>Reminder</option>
@@ -764,11 +772,15 @@ hr{
     <button onclick="addCalendar()">
       Add to Calendar
     </button>
+
   </div>
 
   <div class="card">
+
     <h2>📋 Calendar List</h2>
+
     <div id="calendarList"></div>
+
   </div>
 
 </section>
