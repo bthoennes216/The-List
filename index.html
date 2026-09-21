@@ -1137,8 +1137,10 @@ if(!localStorage.getItem("theListProjectResetV1")){
   );
 
 }
-  document.getElementById("homeProjectCount")
-    .textContent = data.projects.length;
+ document.getElementById("homeProjectCount")
+  .textContent = data.projects.filter(
+    project => project.status === "active"
+  ).length;
 
 let openTasks = 0;
 
