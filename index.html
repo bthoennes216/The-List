@@ -1130,18 +1130,7 @@ alert(
     project => project.name + " = " + project.status
   ).join("\n")
 );
-  if(!localStorage.getItem("theListProjectResetV1")){
 
-  data.projects = [];
-
-  saveData();
-
-  localStorage.setItem(
-    "theListProjectResetV1",
-    "done"
-  );
-
-}
 const activeProjectCount =
   data.projects.filter(
     project => project.status === "active"
