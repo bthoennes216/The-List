@@ -1142,10 +1142,13 @@ alert(
   );
 
 }
- document.getElementById("homeProjectCount")
-  .textContent = data.projects.filter(
+const activeProjectCount =
+  data.projects.filter(
     project => project.status === "active"
   ).length;
+
+document.getElementById("homeProjectCount")
+  .textContent = activeProjectCount;
 
 let openTasks = 0;
 
