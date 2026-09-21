@@ -646,10 +646,58 @@ hr{
   </div>
 </div>
 
-  <div class="card">
-    <h2>📅 Upcoming</h2>
-    <div id="homeUpcoming"></div>
+<div class="card">
+
+  <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+  ">
+
+    <h2 style="margin:0;">
+      📅 Upcoming
+    </h2>
+
+    <button
+      class="small secondary"
+      onclick="showPage('calendarPage')">
+      View Calendar →
+    </button>
+
   </div>
+
+  <div style="
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+    margin-bottom:12px;
+  ">
+
+    <button
+      class="secondary"
+      onclick="showCalendarRange('thisWeek')">
+      This Week
+    </button>
+
+    <button
+      class="secondary"
+      onclick="showCalendarRange('nextWeek')">
+      Next Week
+    </button>
+
+    <button
+      class="secondary"
+      onclick="showCalendarRange('thisMonth')"
+      style="grid-column:1 / -1;">
+      This Month
+    </button>
+
+  </div>
+
+  <div id="homeUpcoming"></div>
+
+</div>
 
   <div class="card">
     <h2>🚀 Quick Actions</h2>
