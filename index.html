@@ -1322,72 +1322,16 @@ function renderHomeUpcoming(){
     a.date.localeCompare(b.date)
   );
 
-  box.innerHTML = `
-
-    <div style="
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:12px;
-    ">
-
-      <h3 style="margin:0;">
-        📅 Upcoming
-      </h3>
-
-      <button
-        class="small secondary"
-        onclick="showPage('calendarPage')">
-        View Calendar →
-      </button>
-
-    </div>
-
-    <div style="
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:8px;
-      margin-bottom:12px;
-    ">
-
-      <button
-        class="secondary"
-        onclick="showCalendarRange('thisWeek')">
-        This Week
-      </button>
-
-      <button
-        class="secondary"
-        onclick="showCalendarRange('nextWeek')">
-        Next Week
-      </button>
-
-      <button
-        class="secondary"
-        onclick="showCalendarRange('thisMonth')"
-        style="grid-column:1 / -1;">
-        This Month
-      </button>
-
-    </div>
-
-    <div id="homeUpcomingItems"></div>
-
-  `;
-
-  const itemsBox =
-    document.getElementById("homeUpcomingItems");
-
   if(!upcoming.length){
 
-    itemsBox.innerHTML =
+    box.innerHTML =
       `<div class="empty">Nothing scheduled yet.</div>`;
 
     return;
 
   }
 
-  itemsBox.innerHTML = upcoming
+  box.innerHTML = upcoming
     .slice(0,6)
     .map(item => `
 
