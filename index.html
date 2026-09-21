@@ -1149,7 +1149,12 @@ function renderHomeUpcoming(){
 
   const upcoming = [];
 
-  data.projects.forEach(project => {
+ data.projects.forEach(project => {
+
+    // Only show upcoming tasks for active projects
+    if(project.status !== "active"){
+      return;
+    }
 
     project.tasks.forEach(task => {
 
