@@ -1375,7 +1375,14 @@ function renderHomeUpcoming(){
   upcoming.sort((a,b) =>
     a.date.localeCompare(b.date)
   );
+const rangeBox =
+  document.getElementById("homeUpcomingRange");
 
+if(rangeBox){
+
+  rangeBox.innerHTML = "";
+
+}
   if(!upcoming.length){
 
     box.innerHTML =
