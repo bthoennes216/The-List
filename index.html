@@ -524,89 +524,113 @@ hr{
     </p>
   </div>
 
-  <div class="card">
-    <h2>📊 Home Overview</h2>
-<button
-  class="stat"
-  onclick="showPage('projectsPage')"
-  style="
-    cursor:pointer;
-    background:#556B2F;
-    color:white;
-    border:none;
+<div class="card" style="
+  background:#f7f5ee;
+  border:2px solid #d6d2c4;
+  border-radius:14px;
+  padding:18px;
+">
+  <h2>📊 Home Overview</h2>
+  <div style="
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:12px;
+    margin-top:15px;
   ">
-
-  <strong
-    id="homeProjectCount"
-    style="color:white;">
-    0
-  </strong>
-
-  <span style="color:white;">
-    Projects
-  </span>
-
-<button
-  class="stat"
-  onclick="showPage('projectsPage')"
-  style="
-    cursor:pointer;
-    background:#556B2F;
-    color:white;
-    border:none;
-  ">
-
-  <strong
-    id="homeOpenTasks"
-    style="color:white;">
-    0
-  </strong>
-
-  <span style="color:white;">
-    Open Tasks
-  </span>
-
-<button
-  class="stat"
-  onclick="showPage('shoppingPage')"
-  style="
-    cursor:pointer;
-    background:#556B2F;
-    color:white;
-    border:none;
-  ">
-
-  <strong
-    id="homeShoppingCount"
-    style="color:white;">
-    0
-  </strong>
-
-  <span style="color:white;">
-    Shopping Items
-  </span>
-
-<button
-  class="stat"
-  onclick="showPage('maintenancePage')"
-  style="
-    cursor:pointer;
-    background:#556B2F;
-    color:white;
-    border:none;
-  ">
-
-  <strong
-    id="homeMaintenanceCount"
-    style="color:white;">
-    0
-  </strong>
-
-  <span style="color:white;">
-    Maintenance
-  </span>
-
-</button>
+    <button
+      class="stat"
+      onclick="showPage('projectsPage')"
+      style="
+        cursor:pointer;
+        background:#556B2F;
+        color:white;
+        border:none;
+        border-radius:10px;
+        width:100%;
+        aspect-ratio:1 / 1;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+      ">
+      <strong id="homeProjectCount" style="color:white; font-size:28px;">
+        0
+      </strong>
+      <span style="color:white;">
+        Projects
+      </span>
+    </button>
+    <button
+      class="stat"
+      onclick="showPage('projectsPage')"
+      style="
+        cursor:pointer;
+        background:#556B2F;
+        color:white;
+        border:none;
+        border-radius:10px;
+        width:100%;
+        aspect-ratio:1 / 1;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+      ">
+      <strong id="homeOpenTasks" style="color:white; font-size:28px;">
+        0
+      </strong>
+      <span style="color:white;">
+        Open Tasks
+      </span>
+    </button>
+    <button
+      class="stat"
+      onclick="showPage('shoppingPage')"
+      style="
+        cursor:pointer;
+        background:#556B2F;
+        color:white;
+        border:none;
+        border-radius:10px;
+        width:100%;
+        aspect-ratio:1 / 1;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+      ">
+      <strong id="homeShoppingCount" style="color:white; font-size:28px;">
+        0
+      </strong>
+      <span style="color:white;">
+        Shopping Items
+      </span>
+    </button>
+    <button
+      class="stat"
+      onclick="showPage('maintenancePage')"
+      style="
+        cursor:pointer;
+        background:#556B2F;
+        color:white;
+        border:none;
+        border-radius:10px;
+        width:100%;
+        aspect-ratio:1 / 1;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+      ">
+      <strong id="homeMaintenanceCount" style="color:white; font-size:28px;">
+        0
+      </strong>
+      <span style="color:white;">
+        Maintenance
+      </span>
+    </button>
+  </div>
+</div>
 
   <div class="card">
     <h2>📅 Upcoming</h2>
