@@ -1125,7 +1125,18 @@ function showPage(pageId){
    ========================================================= */
 
 function renderHome(){
+if(!localStorage.getItem("theListProjectResetV1")){
 
+  data.projects = [];
+
+  saveData();
+
+  localStorage.setItem(
+    "theListProjectResetV1",
+    "done"
+  );
+
+}
   document.getElementById("homeProjectCount")
     .textContent = data.projects.length;
 
