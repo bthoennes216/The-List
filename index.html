@@ -530,12 +530,6 @@ hr{
   border-radius:14px;
   padding:18px;
 ">
-<div class="card" style="
-  background:#f7f5ee;
-  border:2px solid #d6d2c4;
-  border-radius:14px;
-  padding:18px;
-">
   <h2>📊 Home Overview</h2>
   <div style="
     display:grid;
@@ -568,6 +562,7 @@ hr{
         Projects
       </span>
     </button>
+
     <button
       class="stat"
       onclick="showPage('projectsPage')"
@@ -593,6 +588,7 @@ hr{
         Open Tasks
       </span>
     </button>
+
     <button
       class="stat"
       onclick="showPage('shoppingPage')"
@@ -618,6 +614,7 @@ hr{
         Shopping
       </span>
     </button>
+
     <button
       class="stat"
       onclick="showPage('maintenancePage')"
@@ -661,7 +658,7 @@ hr{
 
     <button
       class="small secondary"
-      onclick="showPage('calendarPage')">
+      onclick="showPage('calendarPage'); clearCalendarRange()">
       View Calendar →
     </button>
 
@@ -956,6 +953,7 @@ hr{
 <script>
 
 const STORAGE_KEY = "theListDataV2";
+
 function ensureProjectStatuses(){
 
   data.projects.forEach(project => {
@@ -977,6 +975,7 @@ function ensureProjectStatuses(){
   saveData();
 
 }
+
 const defaultData = {
 
   home:{
@@ -1004,1010 +1003,28 @@ const defaultData = {
 
   family:{
     note:""
-  }
-
-};
-
-let data = loadData();
-let currentCalendarDate = new Date();
-let selectedCalendarDate = null;
-let editingPlan = null;
-
-
-/* =========================================================
-   LOAD / SAVE
-   ========================================================= */
-
-function loadData(){
-
-  try{
-
-    const saved = localStorage.getItem(STORAGE_KEY);
-
-    if(!saved){
-      return structuredClone(defaultData);
-    }
-
-    const parsed = JSON.parse(saved);
-
-    parsed.home = {
-      ...defaultData.home,
-      ...(parsed.home || {})
-    };
-
-    parsed.projects = Array.isArray(parsed.projects)
-      ? parsed.projects
-      : [];
-
-    parsed.shopping = Array.isArray(parsed.shopping)
-      ? parsed.shopping
-      : [];
-
-    parsed.maintenance = Array.isArray(parsed.maintenance)
-      ? parsed.maintenance
-      : [];
-
-    parsed.calendar = Array.isArray(parsed.calendar)
-      ? parsed.calendar
-      : [];
-
-    parsed.family = {
-      ...defaultData.family,
-      ...(parsed.family || {})
-    };
-
-    let dataChanged = false;
-
-    parsed.projects.forEach((p,index) => {
-
-      if(!p.id){
-
-        p.id =
-          "project-" +
-          Date.now().toString() +
-          "-" +
-          index +
-          "-" +
-          Math.random()
-            .toString(36)
-            .substring(2,8);
-
-        dataChanged = true;
-      }
-
-      if(!p.name){
-        p.name = "Untitled Project";
-        dataChanged = true;
-      }
-
-      if(!Array.isArray(p.tasks)){
-        p.tasks = [];
-        dataChanged = true;
-      }
-
-      if(!Array.isArray(p.materials)){
-        p.materials = [];
-        dataChanged = true;
-      }
-
-      if(!Array.isArray(p.records)){
-        p.records = [];
-        dataChanged = true;
-      }
-
-      if(!Array.isArray(p.answers)){
-        p.answers = [];
-        dataChanged = true;
-      }
-
-      if(typeof p.notes !== "string"){
-        p.notes = "";
-        dataChanged = true;
-      }
-
-      if(typeof p.budget !== "number"){
-        p.budget = Number(p.budget) || 0;
-        dataChanged = true;
-      }
-
-      if(!p.takeoff){
-        p.takeoff = null;
-      }
-
-      if(!p.calculation){
-        p.calculation = p.takeoff || null;
-      }
-
-      p.tasks.forEach(t => {
-
-        if(!t.id){
-
-          t.id =
-            "task-" +
-            Date.now().toString() +
-            "-" +
-            Math.random()
-              .toString(36)
-              .substring(2,8);
-
-          dataChanged = true;
-        }
-
-        if(typeof t.done !== "boolean"){
-          t.done = false;
-          dataChanged = true;
-        }
-
-        if(typeof t.dueDate === "undefined"){
-          t.dueDate = "";
-          dataChanged = true;
-        }
-
-      });
-
-      p.materials.forEach(m => {
-
-        if(!m.id){
-
-          m.id =
-            "material-" +
-            Date.now().toString() +
-            "-" +
-            Math.random()
-              .toString(36)
-              .substring(2,8);
-
-          dataChanged = true;
-        }
-
-      });
-
-    });
-
-    if(dataChanged){
-
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(parsed)
-      );
-
-    }
-
-    return parsed;
-
-  }catch(error){
-
-    console.error(error);
-
-    return structuredClone(defaultData);
-
-  }
-
-}
-
-function saveData(){
-
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(data)
-  );
-
-}
-
-
-/* =========================================================
-   PAGE NAVIGATION
-   ========================================================= */
-
-const pageIds = [
-  "homePage",
-  "projectsPage",
-  "shoppingPage",
-  "calendarPage",
-  "maintenancePage",
-  "homeInfoPage",
-  "familyPage",
-  "projectDetailPage"
-];
-
-function showPage(pageId){
-
-  pageIds.forEach(id => {
-
-    const el = document.getElementById(id);
-
-    if(el){
-      el.classList.toggle(
-        "hidden",
-        id !== pageId
-      );
-    }
-
-  });
-
-  document.querySelectorAll("nav button")
-    .forEach(btn => btn.classList.remove("active"));
-
-  const map = {
-    homePage:"navHome",
-    projectsPage:"navProjects",
-    shoppingPage:"navShopping",
-    calendarPage:"navCalendar",
-    maintenancePage:"navMaintenance",
-    homeInfoPage:"navHomeInfo",
-    familyPage:"navFamily"
-  };
-
-  if(map[pageId]){
-
-    document
-      .getElementById(map[pageId])
-      .classList.add("active");
-
-  }
-
-  if(pageId === "homePage"){
-    renderHome();
-  }
-
-  if(pageId === "projectsPage"){
-    renderProjects();
-  }
-
-  if(pageId === "shoppingPage"){
-    renderShopping();
-  }
-
-  if(pageId === "calendarPage"){
-    renderCalendar();
-    renderCalendarList();
-  }
-
-  if(pageId === "maintenancePage"){
-    renderMaintenance();
-  }
-
-  if(pageId === "homeInfoPage"){
-    renderHomeInfo();
-  }
-
-  if(pageId === "familyPage"){
-    renderFamily();
-  }
-
-}
-
-
-/* =========================================================
-   HOME
-   ========================================================= */
-
-function renderHome(){
-
-  const activeProjectCount =
-  data.projects.filter(
-    project => project.status === "active"
-  ).length;
-
-document.getElementById("homeProjectCount")
-  .textContent = activeProjectCount;
-
-let openTasks = 0;
-
-data.projects.forEach(project => {
-
-  // Only count tasks from projects that have been started
-  if(project.status !== "active"){
-    return;
-  }
-
-  project.tasks.forEach(task => {
-
-    if(!task.done){
-      openTasks++;
-    }
-
-  });
-
-});
-
-  document.getElementById("homeOpenTasks")
-    .textContent = openTasks;
-
-  document.getElementById("homeShoppingCount")
-    .textContent = data.shopping
-      .filter(x => !x.done).length;
-
-  document.getElementById("homeMaintenanceCount")
-    .textContent = data.maintenance.length;
-
-  renderHomeUpcoming();
-
-}
-
-function renderHomeUpcoming(){
-
-  const box =
-    document.getElementById("homeUpcoming");
-
-  const upcoming = [];
-
-  data.projects.forEach(project => {
-
-    if(project.status !== "active"){
-      return;
-    }
-
-    project.tasks.forEach(task => {
-
-      if(task.dueDate && !task.done){
-
-        upcoming.push({
-          date:task.dueDate,
-          title:task.text,
-          project:project.name
-        });
-
-      }
-
-    });
-
-  });
-
-  data.calendar.forEach(item => {
-
-    if(item.date){
-
-      upcoming.push({
-        date:item.date,
-        title:item.title,
-        project:item.type || "Calendar"
-      });
-
-    }
-
-  });
-
-  upcoming.sort((a,b) =>
-    a.date.localeCompare(b.date)
-  );
-
-  if(!upcoming.length){
-
-    box.innerHTML =
-      `<div class="empty">Nothing scheduled yet.</div>`;
-
-    return;
-
-  }
-
-  box.innerHTML = upcoming
-    .slice(0,6)
-    .map(item => `
-
-      <div class="task">
-
-        <div class="taskText">
-
-          <strong>
-            ${escapeHTML(item.title)}
-          </strong>
-
-          <div class="smallText">
-            ${escapeHTML(item.project)}
-            · ${formatDate(item.date)}
-          </div>
-
-        </div>
-
-      </div>
-
-    `)
-    .join("");
-
-}
-
-/* =========================================================
-   PROJECTS
-   ========================================================= */
-
-function renderProjects(){
-
-  const box =
-    document.getElementById("projectsList");
-
-  if(!data.projects.length){
-
-    box.innerHTML = `
-      <div class="card empty">
-        No projects yet.<br><br>
-        Start one with <strong>＋ New Project</strong>
-        or use <strong>✨ Build My Plan</strong>.
-      </div>
-    `;
-
-    return;
-
-  }
-
-  box.innerHTML = data.projects.map(project => {
-
-    const total =
-      Array.isArray(project.tasks)
-      ? project.tasks.length
-      : 0;
-
-    const completed =
-      Array.isArray(project.tasks)
-      ? project.tasks.filter(t => t.done).length
-      : 0;
-
-    const percent =
-      total
-      ? Math.round(completed / total * 100)
-      : 0;
-
-    const projectId =
-      escapeAttribute(project.id);
-
-    return `
-
-      <div
-        class="projectSwipe"
-        data-project-id="${projectId}">
-
-        <button
-          class="projectDelete"
-          onclick="event.stopPropagation(); deleteProject('${projectId}')">
-
-          <span>🗑️</span>
-          Delete
-
-        </button>
-
-        <div
-          class="card projectCard"
-          data-project-id="${projectId}">
-
-          <h3>
-            ${escapeHTML(project.name)}
-          </h3>
-
-          <div class="projectMeta">
-
-            ${escapeHTML(project.category || "Home")}
-
-            ${
-              project.budget
-              ? ` · Budget $${Number(project.budget).toFixed(0)}`
-              : ""
-            }
-
-          </div>
-
-          <p>
-            ${escapeHTML(project.description || "No description yet.")}
-          </p>
-
-          ${
-            project.takeoff
-            ? `<span class="badge">📐 Material Takeoff</span>`
-            : ""
-          }
-
-          <div class="smallText">
-            ${completed} of ${total} tasks complete
-          </div>
-
-          <div class="progress">
-            <div style="width:${percent}%"></div>
-          </div>
-
-          <div class="projectSwipeHint">
-            ← Swipe left to delete
-          </div>
-
-        </div>
-
-      </div>
-
-    `;
-
-  }).join("");
-
-  document
-    .querySelectorAll(".projectCard")
-    .forEach(card => {
-
-      card.addEventListener(
-        "click",
-        function(event){
-
-          if(
-            event.target.closest(".projectDelete")
-          ){
-            return;
-          }
-
-          const id =
-            card.dataset.projectId;
-
-          openProject(id);
-
-        }
-      );
-
-    });
-
-  setupProjectSwipe();
-
-}
-
-
-/* =========================================================
-   PROJECT SWIPE
-   ========================================================= */
-
-function setupProjectSwipe(){
-
-  document
-    .querySelectorAll(".projectSwipe")
-    .forEach(wrapper => {
-
-      const card =
-        wrapper.querySelector(".projectCard");
-
-      let startX = 0;
-      let currentX = 0;
-      let dragging = false;
-      let moved = false;
-
-      card.addEventListener(
-        "touchstart",
-        function(event){
-
-          if(!event.touches.length){
-            return;
-          }
-
-          startX =
-            event.touches[0].clientX;
-
-          currentX = startX;
-          dragging = true;
-          moved = false;
-
-        },
-        {passive:true}
-      );
-
-      card.addEventListener(
-        "touchmove",
-        function(event){
-
-          if(!dragging || !event.touches.length){
-            return;
-          }
-
-          currentX =
-            event.touches[0].clientX;
-
-          const delta =
-            currentX - startX;
-
-          if(Math.abs(delta) > 8){
-            moved = true;
-          }
-
-          if(delta < 0){
-
-            const translate =
-              Math.max(
-                -88,
-                delta
-              );
-
-            card.style.transform =
-              `translateX(${translate}px)`;
-
-          }else{
-
-            card.style.transform =
-              "translateX(0)";
-
-          }
-
-        },
-        {passive:true}
-      );
-
-      card.addEventListener(
-        "touchend",
-        function(){
-
-          if(!dragging){
-            return;
-          }
-
-          dragging = false;
-
-          const delta =
-            currentX - startX;
-
-          if(delta <= -45){
-
-            card.style.transform =
-              "translateX(-88px)";
-
-            wrapper.dataset.open = "true";
-
-          }else{
-
-            card.style.transform =
-              "translateX(0)";
-
-            wrapper.dataset.open = "false";
-
-          }
-
-        }
-      );
-
-      card.addEventListener(
-        "click",
-        function(){
-
-          if(moved){
-
-            moved = false;
-
-            return;
-
-          }
-
-          if(wrapper.dataset.open === "true"){
-
-            card.style.transform =
-              "translateX(0)";
-
-            wrapper.dataset.open = "false";
-
-          }
-
-        }
-      );
-
-    });
-
-}
-
-
-/* =========================================================
-   NEW PROJECT
-   ========================================================= */
-
-function newProject(){
-
-  const name =
-    prompt("Project name:");
-
-  if(!name){
-    return;
-  }
-
-  const category =
-    prompt("Category:", "Home");
-
-  const id =
-    "project-" +
-    Date.now().toString() +
-    "-" +
-    Math.random()
-      .toString(36)
-      .substring(2,8);
-
-data.projects.push({
-
-    id:id,
-    name:name,
-    category:category || "Home",
-    
-    status:"planned",
-    startedAt:"",
-    completedAt:"",
-
-    description:"",
-    tasks:[],
-
-  });
-
-  saveData();
-
-  renderProjects();
-
-  openProject(id);
-
-}
-
-
-/* =========================================================
-   OPEN PROJECT
-   ========================================================= */
-
-function openProject(id){
-
-  const project =
-    data.projects.find(
-      p => String(p.id) === String(id)
-    );
-
-  if(!project){
-
-    alert(
-      "This project could not be opened. The project record may be damaged."
-    );
-
-    return;
-
-  }
-
-  showPage("projectDetailPage");
-
-  const box =
-    document.getElementById("projectDetail");
-
-  const total =
-    project.tasks.length;
-
-  const completed =
-    project.tasks.filter(t => t.done).length;
-
-  box.innerHTML = `
-
-    <div class="card">
-
-      <button
-        class="secondary"
-        onclick="showPage('projectsPage')">
-        ← Back to Projects
-      </button>
-
-      <h2 style="margin-top:15px;">
-        ${escapeHTML(project.name)}
-      </h2>
-
-      <div class="projectMeta">
-        ${escapeHTML(project.category || "Home")}
-      </div>
-
-      <p>
-        ${escapeHTML(project.description || "")}
-      </p>
-
-      <div style="
-        margin:16px 0;
-        padding:14px;
-        border-radius:14px;
-        background:#f5f7f5;
-        border:1px solid #dfe5df;
-      ">
-
-        ${
-          (!project.status || project.status === "planned")
-          ? `
-            <div style="
-              font-weight:700;
-              margin-bottom:10px;
-            ">
-              📋 PROJECT PLANNED
-            </div>
-
-            <button
-              class="success"
-              onclick="startProject('${escapeAttribute(project.id)}')">
-              ▶ Start Project
-            </button>
-          `
-          : project.status === "active"
-          ? `
-            <div style="
-              font-weight:700;
-              margin-bottom:10px;
-            ">
-              🟢 PROJECT IN PROGRESS
-            </div>
-
-            <button
-              class="secondary"
-              onclick="endProject('${escapeAttribute(project.id)}')">
-              ✓ End Project
-            </button>
-          `
-          : `
-            <div style="
-              font-weight:700;
-              margin-bottom:10px;
-            ">
-              ✓ PROJECT COMPLETED
-            </div>
-
-            <button
-              class="secondary"
-              onclick="reopenProject('${escapeAttribute(project.id)}')">
-              ↻ Reopen Project
-            </button>
-          `
-        }
-
-      </div>
-
-      <div class="smallText">
-        ${completed} of ${total} tasks complete
-      </div>
-
-    </div>
-
-    ${
-      project.takeoff
-      ? renderSavedTakeoffHTML(project)
-      : ""
-    }
-
-    <div class="card">
-
-      <h2>✅ Tasks</h2>
-
-      <div id="projectTasks"></div>
-
-      <hr>
-
-      <input
-        id="newTaskText"
-        placeholder="Add a task">
-
-      <input
-        id="newTaskDate"
-        type="date">
-
-      <button onclick="addTask('${escapeAttribute(project.id)}')">
-        ＋ Add Task
-      </button>
-
-    </div>
-
-    <div class="card">
-
-      <h2>🧰 Materials</h2>
-
-      ${
-        project.takeoff
-        ? `
-          <button
-            class="success"
-            onclick="addAllProjectMaterialsToShopping('${escapeAttribute(project.id)}')">
-            🛒 Add All Materials to Shopping List
-          </button>
-        `
-        : ""
-      }
-
-      <div id="projectMaterials"></div>
-
-      <hr>
-
-      <input
-        id="newMaterialName"
-        placeholder="Material">
-
-      <input
-        id="newMaterialQty"
-        placeholder="Quantity">
-
-      <button onclick="addMaterial('${escapeAttribute(project.id)}')">
-        ＋ Add Material
-      </button>
-
-    </div>
-
-    ${
-      project.budget
-      ? `
-        <div class="card">
-          <h2>💰 Budget</h2>
-          <strong>$${Number(project.budget).toFixed(2)}</strong>
-        </div>
-      `
-      : ""
-    }
-
-    ${
-      project.answers && project.answers.length
-      ? `
-
-        <div class="card">
-
-          <h2>❓ Project Details & Answers</h2>
-
-          ${project.answers.map(a => `
-
-            <div class="answerBox">
-
-              <strong>
-                ${escapeHTML(a.question)}
-              </strong>
-
-              <div style="margin-top:5px;">
-                ${escapeHTML(a.answer)}
-              </div>
-
-            </div>
-
-          `).join("")}
-
-        </div>
-
-      `
-      : ""
-    }
-
-    <div class="card">
-
-      <h2>📁 Permanent Home Records</h2>
-
-      <p class="muted">
-        Store important measurements, receipts, warranties,
-        paint colors, product information and other permanent
-        records for this project.
-      </p>
-
-      <textarea
-        id="projectNotes"
-        placeholder="Project records and notes">${escapeHTML(project.notes || "")}</textarea>
-
-      <button onclick="saveProjectNotes('${escapeAttribute(project.id)}')">
-        Save Records
-      </button>
-
-    </div>
-
-    <div class="card">
-
-      <button
-        class="danger"
-        onclick="deleteProject('${escapeAttribute(project.id)}')">
-        Delete Project
-      </button>
-
-    </div>
-
-  `;
-
-  renderProjectTasks(project);
-  renderProjectMaterials(project);
-
-}
-function startProject(projectId){
+    function startProject(projectId){
 
   const project =
     data.projects.find(
       p => String(p.id) === String(projectId)
     );
 
-  if(!project) return;
+  if(!project){
+    return;
+  }
 
   project.status = "active";
-  project.startedAt = new Date().toISOString();
-  project.completedAt = "";
+
+  if(!project.startedAt){
+    project.startedAt = dateKey(new Date());
+  }
 
   saveData();
 
-  renderProjects();
-  renderHome();
-
-  openProject(project.id);
+  openProject(projectId);
 
 }
-
 
 function endProject(projectId){
 
@@ -2016,28 +1033,35 @@ function endProject(projectId){
       p => String(p.id) === String(projectId)
     );
 
-  if(!project) return;
+  if(!project){
+    return;
+  }
 
-  const confirmed =
-    confirm(
-      `End "${project.name}"?`
-    );
+  const unfinished =
+    project.tasks.filter(
+      task => !task.done
+    ).length;
 
-  if(!confirmed) return;
+  if(
+    unfinished > 0 &&
+    !confirm(
+      `There are ${unfinished} unfinished task(s). End this project anyway?`
+    )
+  ){
+    return;
+  }
 
   project.status = "completed";
-  project.completedAt =
-    new Date().toISOString();
+
+  if(!project.completedAt){
+    project.completedAt = dateKey(new Date());
+  }
 
   saveData();
 
-  renderProjects();
-  renderHome();
-
-  openProject(project.id);
+  openProject(projectId);
 
 }
-
 
 function reopenProject(projectId){
 
@@ -2046,380 +1070,57 @@ function reopenProject(projectId){
       p => String(p.id) === String(projectId)
     );
 
-  if(!project) return;
+  if(!project){
+    return;
+  }
 
   project.status = "active";
   project.completedAt = "";
 
   if(!project.startedAt){
-
-    project.startedAt =
-      new Date().toISOString();
-
+    project.startedAt = dateKey(new Date());
   }
 
   saveData();
 
-  renderProjects();
-  renderHome();
-
-  openProject(project.id);
+  openProject(projectId);
 
 }
 
+
 /* =========================================================
-   SAVED TAKEOFF
+   DELETE PROJECT
    ========================================================= */
 
-function renderSavedTakeoffHTML(project){
+function deleteProject(projectId){
 
-  const c = project.takeoff;
+  const project =
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
-  if(!c){
-    return "";
+  if(!project){
+    return;
   }
 
-  return `
-
-    <div class="card">
-
-      <div class="takeoffHeader">
-
-        <h2>📐 Material Takeoff</h2>
-
-        <span class="badge">
-          ${escapeHTML(
-            c.fenceType
-            ? getFenceTypeLabel(c.fenceType)
-            : "Fence Calculator"
-          )}
-        </span>
-
-      </div>
-
-      <div class="calcBox">
-
-        ${
-          c.fenceType
-          ? calcLine(
-              "Fence type",
-              getFenceTypeLabel(c.fenceType)
-            )
-          : ""
-        }
-
-        ${c.style
-          ? calcLine("Style details", c.style)
-          : ""
-        }
-
-        ${calcLine(
-          "Total fence length",
-          `${formatNumber(c.totalFeet)} ft`
-        )}
-
-        ${calcLine(
-          "Fence height",
-          `${formatNumber(c.height)} ft`
-        )}
-
-        ${calcLine(
-          "Construction",
-          c.construction || "N/A"
-        )}
-
-        ${calcLine(
-          "Single gates",
-          `${c.singleGateCount} / ${formatNumber(c.singleGateWidthTotal)} ft`
-        )}
-
-        ${calcLine(
-          "Double gates",
-          `${c.doubleGateCount} / ${formatNumber(c.doubleGateWidthTotal)} ft`
-        )}
-
-        ${calcLine(
-          "Total gate opening",
-          `${formatNumber(c.gateWidthTotal)} ft`
-        )}
-
-        ${calcLine(
-          "Net fence run",
-          `${formatNumber(c.fenceRun)} ft`
-        )}
-
-        ${calcLine(
-          "Post spacing",
-          `${formatNumber(c.postSpacing)} ft`
-        )}
-
-        ${calcLine(
-          "Fence sections",
-          c.sections
-        )}
-
-        ${calcLine(
-          "Line posts",
-          c.linePosts
-        )}
-
-        ${calcLine(
-          "Corner posts",
-          c.cornerPosts
-        )}
-
-        ${calcLine(
-          "End posts",
-          c.endPosts
-        )}
-
-        ${calcLine(
-          "Gate posts",
-          c.gatePosts
-        )}
-
-        ${calcLine(
-          "Total posts",
-          c.totalPosts
-        )}
-
-        ${
-          c.fenceType === "chainLink"
-          ? `
-
-            ${calcLine(
-              "Mesh gauge",
-              `${c.meshGauge || "Planning default"}`
-            )}
-
-            ${calcLine(
-              "Mesh required",
-              `${formatNumber(c.meshRequiredFeet)} ft`
-            )}
-
-            ${calcLine(
-              "Mesh rolls",
-              `${c.meshRolls} × ${formatNumber(c.meshRollLength)} ft`
-            )}
-
-            ${calcLine(
-              "Top rail",
-              c.topRail
-              ? `${c.topRailPieces} pieces`
-              : "No"
-            )}
-
-            ${
-              c.topRail
-              ? calcLine(
-                  "Top rail length",
-                  `${formatNumber(c.topRailPieceLength)} ft each`
-                )
-              : ""
-            }
-
-            ${calcLine(
-              "Tension wire",
-              c.tensionWire
-              ? `${formatNumber(c.tensionWireFeet)} ft`
-              : "No"
-            )}
-
-            ${calcLine(
-              "Fence ties",
-              c.fenceTieCount
-            )}
-
-            ${calcLine(
-              "Terminal posts",
-              c.terminalPosts
-            )}
-
-          `
-          : ""
-        }
-
-        ${
-          c.fenceType === "woodPrivacy" ||
-          c.fenceType === "woodPicket"
-          ? `
-
-            ${calcLine(
-              "Rails per section",
-              c.railsPerSection
-            )}
-
-            ${calcLine(
-              "Total rails",
-              c.totalRails
-            )}
-
-          `
-          : ""
-        }
-
-        ${
-          c.coveringType
-          ? calcLine(
-              c.coveringType === "pickets"
-              ? "Pickets before waste"
-              : c.coveringType === "mesh"
-              ? "Mesh required"
-              : "Panels before waste",
-              c.coveringType === "mesh"
-              ? `${formatNumber(c.meshRequiredFeet)} ft`
-              : formatNumber(c.coveringRequired)
-            )
-          : ""
-        }
-
-        ${
-          c.coveringType !== "mesh"
-          ? calcLine(
-              c.coveringType === "pickets"
-              ? "Pickets + 10% waste"
-              : "Panels + 10% waste",
-              c.coveringWithWaste
-            )
-          : ""
-        }
-
-        ${
-          c.coveringType === "mesh"
-          ? calcLine(
-              "Mesh purchased",
-              `${c.meshRolls} rolls / ${formatNumber(c.meshPurchasedFeet)} ft`
-            )
-          : ""
-        }
-
-        ${
-          c.coveringType === "pickets"
-          ? calcLine(
-              "Picket width",
-              `${formatNumber(c.coveringWidth)} in`
-            )
-          : c.coveringType !== "mesh"
-          ? calcLine(
-              "Panel width",
-              `${formatNumber(c.coveringWidth)} ft`
-            )
-          : ""
-        }
-
-        ${
-          c.coveringType === "pickets"
-          ? calcLine(
-              "Picket center spacing",
-              `${formatNumber(c.picketCenterSpacing)} in`
-            )
-          : ""
-        }
-
-        ${calcLine(
-          "Post size",
-          c.postSize
-        )}
-
-        ${calcLine(
-          "Hole diameter",
-          `${formatNumber(c.holeDiameter)} in`
-        )}
-
-        ${calcLine(
-          "Hole depth",
-          `${formatNumber(c.holeDepth)} in`
-        )}
-
-        ${calcLine(
-          "Concrete volume",
-          `${formatNumber(c.concreteVolume)} cu ft`
-        )}
-
-        ${calcLine(
-          "80-lb concrete bags",
-          c.concreteBags
-        )}
-
-        ${calcLine(
-          "Gravel",
-          `${c.gravelBags} bag(s)`
-        )}
-
-        ${calcLine(
-          "Post caps",
-          c.postCaps
-        )}
-
-        ${
-          c.fastenerBoxes > 0
-          ? calcLine(
-              "Fastener boxes",
-              c.fastenerBoxes
-            )
-          : ""
-        }
-
-        ${calcLine(
-          "Single gate hinges",
-          c.singleGateHinges
-        )}
-
-        ${calcLine(
-          "Double gate hinges",
-          c.doubleGateHinges
-        )}
-
-        ${calcLine(
-          "Gate latches",
-          c.gateLatches
-        )}
-
-        ${calcLine(
-          "Drop rods",
-          c.dropRods
-        )}
-
-      </div>
-
-      ${
-        c.warnings && c.warnings.length
-        ? `
-          <div class="warning">
-
-            <strong>⚠️ Review before buying</strong>
-
-            ${c.warnings.map(w => `
-              <div>• ${escapeHTML(w)}</div>
-            `).join("")}
-
-          </div>
-        `
-        : `
-          <div class="successBox">
-            ✓ The measurements passed the basic planning checks.
-            Final field measurements and local requirements
-            should still be verified before construction.
-          </div>
-        `
-      }
-
-      <div class="warning">
-
-        <strong>Planning estimate</strong>
-
-        Quantities are planning allowances. Actual quantities
-        can change based on the fence manufacturer, exact
-        layout, soil, gate construction, post system and
-        installation method.
-
-        Verify manufacturer-specific hardware before purchasing.
-
-      </div>
-
-    </div>
-
-  `;
+  if(
+    !confirm(
+      `Delete "${project.name}"? This cannot be undone.`
+    )
+  ){
+    return;
+  }
+
+  data.projects =
+    data.projects.filter(
+      p => String(p.id) !== String(projectId)
+    );
+
+  saveData();
+
+  showPage("projectsPage");
+
+  renderProjects();
 
 }
 
@@ -2433,6 +1134,10 @@ function renderProjectTasks(project){
   const box =
     document.getElementById("projectTasks");
 
+  if(!box){
+    return;
+  }
+
   if(!project.tasks.length){
 
     box.innerHTML =
@@ -2443,26 +1148,35 @@ function renderProjectTasks(project){
   }
 
   box.innerHTML =
-    project.tasks.map((task,index) => `
+    project.tasks.map(task => `
 
       <div class="task">
 
         <input
           type="checkbox"
           ${task.done ? "checked" : ""}
-          onchange="toggleTask('${escapeAttribute(project.id)}',${index})">
+          onchange="
+            toggleTask(
+              '${escapeAttribute(project.id)}',
+              '${escapeAttribute(task.id)}'
+            )
+          ">
 
         <div class="taskText">
 
           <div class="${task.done ? "done" : ""}">
+
             ${escapeHTML(task.text)}
+
           </div>
 
           ${
             task.dueDate
-            ? `<div class="smallText">
-                 Due ${formatDate(task.dueDate)}
-               </div>`
+            ? `
+              <div class="smallText">
+                Due ${formatDate(task.dueDate)}
+              </div>
+            `
             : ""
           }
 
@@ -2470,31 +1184,18 @@ function renderProjectTasks(project){
 
         <button
           class="small secondary"
-          onclick="deleteTask('${escapeAttribute(project.id)}',${index})">
+          onclick="
+            deleteTask(
+              '${escapeAttribute(project.id)}',
+              '${escapeAttribute(task.id)}'
+            )
+          ">
           ×
         </button>
 
       </div>
 
     `).join("");
-
-}
-
-function toggleTask(projectId,index){
-
-  const project =
-    data.projects.find(
-      p => String(p.id) === String(projectId)
-    );
-
-  if(!project) return;
-
-  project.tasks[index].done =
-    !project.tasks[index].done;
-
-  saveData();
-
-  openProject(projectId);
 
 }
 
@@ -2505,23 +1206,30 @@ function addTask(projectId){
       p => String(p.id) === String(projectId)
     );
 
-  if(!project) return;
+  if(!project){
+    return;
+  }
 
   const text =
     document.getElementById("newTaskText").value.trim();
 
-  if(!text){
-    return;
-  }
-
   const dueDate =
     document.getElementById("newTaskDate").value;
+
+  if(!text){
+    alert("Enter a task first.");
+    return;
+  }
 
   project.tasks.push({
 
     id:
       "task-" +
-      Date.now().toString(),
+      Date.now().toString() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .substring(2,8),
 
     text:text,
     done:false,
@@ -2535,16 +1243,50 @@ function addTask(projectId){
 
 }
 
-function deleteTask(projectId,index){
+function toggleTask(projectId,taskId){
 
   const project =
     data.projects.find(
       p => String(p.id) === String(projectId)
     );
 
-  if(!project) return;
+  if(!project){
+    return;
+  }
 
-  project.tasks.splice(index,1);
+  const task =
+    project.tasks.find(
+      t => String(t.id) === String(taskId)
+    );
+
+  if(!task){
+    return;
+  }
+
+  task.done =
+    !task.done;
+
+  saveData();
+
+  openProject(projectId);
+
+}
+
+function deleteTask(projectId,taskId){
+
+  const project =
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
+
+  if(!project){
+    return;
+  }
+
+  project.tasks =
+    project.tasks.filter(
+      t => String(t.id) !== String(taskId)
+    );
 
   saveData();
 
@@ -2562,6 +1304,10 @@ function renderProjectMaterials(project){
   const box =
     document.getElementById("projectMaterials");
 
+  if(!box){
+    return;
+  }
+
   if(!project.materials.length){
 
     box.innerHTML =
@@ -2572,31 +1318,47 @@ function renderProjectMaterials(project){
   }
 
   box.innerHTML =
-    project.materials.map((m,index) => `
+    project.materials.map(material => `
 
       <div class="material">
 
         <div class="materialName">
 
           <strong>
-            ${escapeHTML(m.name)}
+            ${escapeHTML(material.name)}
           </strong>
 
-          <div class="smallText">
-            ${escapeHTML(m.quantity || "")}
-          </div>
+          ${
+            material.quantity
+            ? `
+              <div class="smallText">
+                ${escapeHTML(material.quantity)}
+              </div>
+            `
+            : ""
+          }
 
         </div>
 
         <button
           class="small secondary"
-          onclick="addMaterialToShopping('${escapeAttribute(project.id)}',${index})">
-          🛒 Add
+          onclick="
+            addMaterialToShopping(
+              '${escapeAttribute(project.id)}',
+              '${escapeAttribute(material.id)}'
+            )
+          ">
+          🛒
         </button>
 
         <button
           class="small secondary"
-          onclick="deleteMaterial('${escapeAttribute(project.id)}',${index})">
+          onclick="
+            deleteMaterial(
+              '${escapeAttribute(project.id)}',
+              '${escapeAttribute(material.id)}'
+            )
+          ">
           ×
         </button>
 
@@ -2613,28 +1375,39 @@ function addMaterial(projectId){
       p => String(p.id) === String(projectId)
     );
 
-  if(!project) return;
-
-  const name =
-    document.getElementById("newMaterialName")
-      .value.trim();
-
-  if(!name){
+  if(!project){
     return;
   }
 
+  const name =
+    document
+      .getElementById("newMaterialName")
+      .value
+      .trim();
+
   const quantity =
-    document.getElementById("newMaterialQty")
-      .value.trim();
+    document
+      .getElementById("newMaterialQty")
+      .value
+      .trim();
+
+  if(!name){
+    alert("Enter a material first.");
+    return;
+  }
 
   project.materials.push({
 
     id:
       "material-" +
-      Date.now().toString(),
+      Date.now().toString() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .substring(2,8),
 
     name:name,
-    quantity:quantity || ""
+    quantity:quantity
 
   });
 
@@ -2644,115 +1417,7 @@ function addMaterial(projectId){
 
 }
 
-function deleteMaterial(projectId,index){
-
-  const project =
-    data.projects.find(
-      p => String(p.id) === String(projectId)
-    );
-
-  if(!project) return;
-
-  project.materials.splice(index,1);
-
-  saveData();
-
-  openProject(projectId);
-
-}
-
-function addMaterialToShopping(projectId,index){
-
-  const project =
-    data.projects.find(
-      p => String(p.id) === String(projectId)
-    );
-
-  if(!project) return;
-
-  const material =
-    project.materials[index];
-
-  data.shopping.push({
-
-    id:
-      Date.now().toString(),
-
-    name:material.name,
-    quantity:material.quantity,
-    project:project.name,
-    done:false
-
-  });
-
-  saveData();
-
-  alert("Added to Shopping List.");
-
-}
-
-function addAllProjectMaterialsToShopping(projectId){
-
-  const project =
-    data.projects.find(
-      p => String(p.id) === String(projectId)
-    );
-
-  if(!project || !project.materials.length){
-    return;
-  }
-
-  project.materials.forEach(material => {
-
-    data.shopping.push({
-
-      id:
-        Date.now().toString() +
-        Math.random(),
-
-      name:material.name,
-      quantity:material.quantity,
-      project:project.name,
-      done:false
-
-    });
-
-  });
-
-  saveData();
-
-  alert(
-    `✓ Added ${project.materials.length} material items to the Shopping List.`
-  );
-
-  renderHome();
-
-}
-
-
-/* =========================================================
-   PROJECT RECORDS
-   ========================================================= */
-
-function saveProjectNotes(projectId){
-
-  const project =
-    data.projects.find(
-      p => String(p.id) === String(projectId)
-    );
-
-  if(!project) return;
-
-  project.notes =
-    document.getElementById("projectNotes").value;
-
-  saveData();
-
-  alert("Project records saved.");
-
-}
-
-function deleteProject(projectId){
+function deleteMaterial(projectId,materialId){
 
   const project =
     data.projects.find(
@@ -2763,20 +1428,14 @@ function deleteProject(projectId){
     return;
   }
 
-  if(!confirm(
-    `Delete "${project.name}"?\n\nThis will permanently remove the project, its tasks, materials and project records.`
-  )){
-    return;
-  }
-
-  data.projects =
-    data.projects.filter(
-      p => String(p.id) !== String(projectId)
+  project.materials =
+    project.materials.filter(
+      m => String(m.id) !== String(materialId)
     );
 
   saveData();
 
-  showPage("projectsPage");
+  openProject(projectId);
 
 }
 
@@ -2785,69 +1444,128 @@ function deleteProject(projectId){
    SHOPPING
    ========================================================= */
 
-function renderShopping(){
+function addMaterialToShopping(
+  projectId,
+  materialId
+){
 
-  const box =
-    document.getElementById("shoppingList");
+  const project =
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
 
-  if(!data.shopping.length){
+  if(!project){
+    return;
+  }
 
-    box.innerHTML =
-      `<div class="card empty">
-        Shopping list is empty.
-      </div>`;
+  const material =
+    project.materials.find(
+      m => String(m.id) === String(materialId)
+    );
+
+  if(!material){
+    return;
+  }
+
+  data.shopping.push({
+
+    id:
+      "shopping-" +
+      Date.now().toString() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .substring(2,8),
+
+    name:material.name,
+
+    quantity:
+      material.quantity || "",
+
+    project:project.name,
+
+    done:false
+
+  });
+
+  saveData();
+
+  alert(
+    `${material.name} was added to Shopping.`
+  );
+
+}
+
+function addAllProjectMaterialsToShopping(projectId){
+
+  const project =
+    data.projects.find(
+      p => String(p.id) === String(projectId)
+    );
+
+  if(!project){
+    return;
+  }
+
+  if(!project.materials.length){
+
+    alert(
+      "This project does not have any materials yet."
+    );
 
     return;
 
   }
 
-  box.innerHTML = data.shopping.map((item,index) => `
+  let added = 0;
 
-    <div class="card">
+  project.materials.forEach(material => {
 
-      <div class="row">
+    const exists =
+      data.shopping.some(item =>
 
-        <div style="flex:1;">
+        !item.done &&
+        item.project === project.name &&
+        item.name === material.name
 
-          <strong class="${item.done ? "done" : ""}">
-            ${escapeHTML(item.name)}
-          </strong>
+      );
 
-          ${
-            item.quantity
-            ? `<div class="smallText">
-                ${escapeHTML(item.quantity)}
-               </div>`
-            : ""
-          }
+    if(exists){
+      return;
+    }
 
-          ${
-            item.project
-            ? `<div class="smallText">
-                From: ${escapeHTML(item.project)}
-               </div>`
-            : ""
-          }
+    data.shopping.push({
 
-        </div>
+      id:
+        "shopping-" +
+        Date.now().toString() +
+        "-" +
+        Math.random()
+          .toString(36)
+          .substring(2,8),
 
-        <button
-          class="small secondary"
-          onclick="toggleShopping(${index})">
-          ${item.done ? "Undo" : "Done"}
-        </button>
+      name:material.name,
 
-        <button
-          class="small secondary"
-          onclick="deleteShopping(${index})">
-          ×
-        </button>
+      quantity:
+        material.quantity || "",
 
-      </div>
+      project:project.name,
 
-    </div>
+      done:false
 
-  `).join("");
+    });
+
+    added++;
+
+  });
+
+  saveData();
+
+  alert(
+    added
+      ? `${added} material(s) added to Shopping.`
+      : "Those materials are already on your Shopping List."
+  );
 
 }
 
@@ -2865,10 +1583,17 @@ function addShoppingItem(){
 
   data.shopping.push({
 
-    id:Date.now().toString(),
+    id:
+      "shopping-" +
+      Date.now().toString() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .substring(2,8),
+
     name:name,
     quantity:"",
-    project:"",
+    project:"General",
     done:false
 
   });
@@ -2879,46 +1604,811 @@ function addShoppingItem(){
 
   renderShopping();
 
+  renderHome();
+
 }
 
-function toggleShopping(index){
+function renderShopping(){
 
-  data.shopping[index].done =
-    !data.shopping[index].done;
+  const box =
+    document.getElementById("shoppingList");
+
+  if(!box){
+    return;
+  }
+
+  if(!data.shopping.length){
+
+    box.innerHTML = `
+      <div class="card empty">
+        No shopping items yet.
+      </div>
+    `;
+
+    return;
+
+  }
+
+  const grouped = {};
+
+  data.shopping.forEach(item => {
+
+    const group =
+      item.project || "General";
+
+    if(!grouped[group]){
+      grouped[group] = [];
+    }
+
+    grouped[group].push(item);
+
+  });
+
+  box.innerHTML =
+    Object.keys(grouped).map(group => `
+
+      <div class="card">
+
+        <h3>
+          ${escapeHTML(group)}
+        </h3>
+
+        ${grouped[group].map(item => `
+
+          <div class="material">
+
+            <input
+              type="checkbox"
+              ${item.done ? "checked" : ""}
+              onchange="
+                toggleShopping(
+                  '${escapeAttribute(item.id)}'
+                )
+              ">
+
+            <div class="materialName">
+
+              <div class="${item.done ? "done" : ""}">
+                ${escapeHTML(item.name)}
+              </div>
+
+              ${
+                item.quantity
+                ? `
+                  <div class="smallText">
+                    Qty: ${escapeHTML(item.quantity)}
+                  </div>
+                `
+                : ""
+              }
+
+            </div>
+
+            <button
+              class="small secondary"
+              onclick="
+                deleteShopping(
+                  '${escapeAttribute(item.id)}'
+                )
+              ">
+              ×
+            </button>
+
+          </div>
+
+        `).join("")}
+
+      </div>
+
+    `).join("");
+
+}
+
+function toggleShopping(id){
+
+  const item =
+    data.shopping.find(
+      x => String(x.id) === String(id)
+    );
+
+  if(!item){
+    return;
+  }
+
+  item.done =
+    !item.done;
 
   saveData();
 
   renderShopping();
+  renderHome();
 
 }
 
-function deleteShopping(index){
+function deleteShopping(id){
 
-  data.shopping.splice(index,1);
+  data.shopping =
+    data.shopping.filter(
+      x => String(x.id) !== String(id)
+    );
 
   saveData();
 
   renderShopping();
+  renderHome();
 
 }
 
 
 /* =========================================================
-   CALENDAR
+   MAINTENANCE
    ========================================================= */
 
-function getTasksForDate(dateString){
+function addMaintenance(){
 
-  const results = [];
+  const name =
+    document
+      .getElementById("maintenanceName")
+      .value
+      .trim();
+
+  const due =
+    document
+      .getElementById("maintenanceDue")
+      .value;
+
+  const notes =
+    document
+      .getElementById("maintenanceNotes")
+      .value
+      .trim();
+
+  if(!name){
+    alert("Enter a maintenance item.");
+    return;
+  }
+
+  data.maintenance.push({
+
+    id:
+      "maintenance-" +
+      Date.now().toString() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .substring(2,8),
+
+    name:name,
+    dueDate:due || "",
+    notes:notes,
+    done:false
+
+  });
+
+  document.getElementById(
+    "maintenanceName"
+  ).value = "";
+
+  document.getElementById(
+    "maintenanceDue"
+  ).value = "";
+
+  document.getElementById(
+    "maintenanceNotes"
+  ).value = "";
+
+  saveData();
+
+  renderMaintenance();
+  renderHome();
+
+}
+
+function renderMaintenance(){
+
+  const box =
+    document.getElementById(
+      "maintenanceList"
+    );
+
+  if(!box){
+    return;
+  }
+
+  if(!data.maintenance.length){
+
+    box.innerHTML = `
+      <div class="card empty">
+        No maintenance items yet.
+      </div>
+    `;
+
+    return;
+
+  }
+
+  box.innerHTML =
+    data.maintenance.map(item => `
+
+      <div class="card">
+
+        <div class="task">
+
+          <input
+            type="checkbox"
+            ${item.done ? "checked" : ""}
+            onchange="
+              toggleMaintenance(
+                '${escapeAttribute(item.id)}'
+              )
+            ">
+
+          <div class="taskText">
+
+            <strong class="${item.done ? "done" : ""}">
+              ${escapeHTML(item.name)}
+            </strong>
+
+            ${
+              item.dueDate
+              ? `
+                <div class="smallText">
+                  Due ${formatDate(item.dueDate)}
+                </div>
+              `
+              : ""
+            }
+
+            ${
+              item.notes
+              ? `
+                <div class="smallText">
+                  ${escapeHTML(item.notes)}
+                </div>
+              `
+              : ""
+            }
+
+          </div>
+
+          <button
+            class="small secondary"
+            onclick="
+              deleteMaintenance(
+                '${escapeAttribute(item.id)}'
+              )
+            ">
+            ×
+          </button>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+}
+
+function toggleMaintenance(id){
+
+  const item =
+    data.maintenance.find(
+      x => String(x.id) === String(id)
+    );
+
+  if(!item){
+    return;
+  }
+
+  item.done =
+    !item.done;
+
+  saveData();
+
+  renderMaintenance();
+  renderHome();
+
+}
+
+function deleteMaintenance(id){
+
+  data.maintenance =
+    data.maintenance.filter(
+      x => String(x.id) !== String(id)
+    );
+
+  saveData();
+
+  renderMaintenance();
+  renderHome();
+
+}
+      empty.className = "calendarDay";
+    empty.style.visibility = "hidden";
+    grid.appendChild(empty);
+
+  }
+
+  for(let day=1;day<=daysInMonth;day++){
+
+    const date =
+      new Date(year,month,day);
+
+    const key =
+      dateKey(date);
+
+    const dayEl =
+      document.createElement("div");
+
+    dayEl.className =
+      "calendarDay";
+
+    if(key === todayString){
+      dayEl.classList.add("today");
+    }
+
+    if(key === selectedCalendarDate){
+      dayEl.classList.add("selected");
+    }
+
+    const tasks =
+      getTasksForDate(key);
+
+    const events =
+      getEventsForDate(key);
+
+    const items =
+      [...tasks,...events];
+
+    let html = `
+      <div class="dayNumber">
+        ${day}
+      </div>
+    `;
+
+    items
+      .slice(0,3)
+      .forEach(item => {
+
+        html += `
+          <div class="calendarItem">
+            ${escapeHTML(item.title)}
+          </div>
+        `;
+
+      });
+
+    if(items.length > 3){
+
+      html += `
+        <div class="moreItems">
+          +${items.length - 3} more
+        </div>
+      `;
+
+    }
+
+    dayEl.innerHTML = html;
+
+    dayEl.onclick = function(){
+
+      selectedCalendarDate = key;
+
+      renderCalendar();
+
+      renderSelectedDate(key);
+
+    };
+
+    grid.appendChild(dayEl);
+
+  }
+
+  if(selectedCalendarDate){
+
+    renderSelectedDate(
+      selectedCalendarDate
+    );
+
+  }
+
+}
+
+function changeMonth(amount){
+
+  currentCalendarDate =
+    new Date(
+      currentCalendarDate.getFullYear(),
+      currentCalendarDate.getMonth() + amount,
+      1
+    );
+
+  renderCalendar();
+
+}
+
+function renderSelectedDate(dateString){
+
+  const box =
+    document.getElementById(
+      "selectedDateCard"
+    );
+
+  if(!box){
+    return;
+  }
+
+  const tasks =
+    getTasksForDate(dateString);
+
+  const events =
+    getEventsForDate(dateString);
+
+  const items =
+    [...tasks,...events];
+
+  if(!items.length){
+
+    box.innerHTML = `
+      <div class="card">
+
+        <h3>
+          📅 ${formatDate(dateString)}
+        </h3>
+
+        <div class="empty">
+          Nothing scheduled for this date.
+        </div>
+
+      </div>
+    `;
+
+    return;
+
+  }
+
+  box.innerHTML = `
+
+    <div class="card">
+
+      <h3>
+        📅 ${formatDate(dateString)}
+      </h3>
+
+      ${items.map(item => `
+
+        <div class="task">
+
+          <div class="taskText">
+
+            <strong>
+              ${escapeHTML(item.title)}
+            </strong>
+
+            <div class="smallText">
+              ${escapeHTML(item.type)}
+              ${item.project
+                ? ` · ${escapeHTML(item.project)}`
+                : ""}
+            </div>
+
+          </div>
+
+        </div>
+
+      `).join("")}
+
+    </div>
+
+  `;
+
+}
+
+function addCalendar(){
+
+  const date =
+    document
+      .getElementById("calendarDate")
+      .value;
+
+  const title =
+    document
+      .getElementById("calendarTitle")
+      .value
+      .trim();
+
+  const type =
+    document
+      .getElementById("calendarType")
+      .value;
+
+  if(!date || !title){
+
+    alert(
+      "Enter both a date and title."
+    );
+
+    return;
+
+  }
+
+  data.calendar.push({
+
+    id:
+      "calendar-" +
+      Date.now().toString(),
+
+    date:date,
+    title:title,
+    type:type
+
+  });
+
+  document.getElementById(
+    "calendarTitle"
+  ).value = "";
+
+  saveData();
+
+  renderCalendar();
+
+  renderCalendarList();
+
+  renderHome();
+
+}
+
+function renderCalendarList(){
+
+  const box =
+    document.getElementById(
+      "calendarList"
+    );
+
+  if(!box){
+    return;
+  }
+
+  if(!data.calendar.length){
+
+    box.innerHTML =
+      `<div class="empty">
+        No calendar items yet.
+      </div>`;
+
+    return;
+
+  }
+
+  const sorted =
+    [...data.calendar].sort(
+      (a,b) =>
+        a.date.localeCompare(b.date)
+    );
+
+  box.innerHTML =
+    sorted.map(item => {
+
+      const originalIndex =
+        data.calendar.indexOf(item);
+
+      return `
+
+        <div class="task">
+
+          <div class="taskText">
+
+            <strong>
+              ${escapeHTML(item.title)}
+            </strong>
+
+            <div class="smallText">
+              ${formatDate(item.date)}
+              · ${escapeHTML(item.type || "Calendar")}
+            </div>
+
+          </div>
+
+          <button
+            class="small secondary"
+            onclick="
+              deleteCalendar(${originalIndex})
+            ">
+            ×
+          </button>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+}
+
+function deleteCalendar(index){
+
+  data.calendar.splice(index,1);
+
+  saveData();
+
+  renderCalendar();
+
+  renderCalendarList();
+
+  renderHome();
+
+}
+
+
+/* =========================================================
+   HOME UPCOMING RANGE
+   ========================================================= */
+
+let homeUpcomingRange =
+  "thisWeek";
+
+function showCalendarRange(range){
+
+  homeUpcomingRange = range;
+
+  renderHomeUpcoming();
+
+}
+
+function clearCalendarRange(){
+
+  homeUpcomingRange = "";
+
+}
+
+function getRangeDates(range){
+
+  const today =
+    new Date();
+
+  today.setHours(
+    0,0,0,0
+  );
+
+  const start =
+    new Date(today);
+
+  const end =
+    new Date(today);
+
+  if(range === "thisWeek"){
+
+    const day =
+      today.getDay();
+
+    start.setDate(
+      today.getDate() - day
+    );
+
+    end.setDate(
+      start.getDate() + 6
+    );
+
+  }
+
+  if(range === "nextWeek"){
+
+    const day =
+      today.getDay();
+
+    start.setDate(
+      today.getDate() + (7 - day)
+    );
+
+    end.setDate(
+      start.getDate() + 6
+    );
+
+  }
+
+  if(range === "thisMonth"){
+
+    start.setDate(1);
+
+    end.setMonth(
+      today.getMonth() + 1,
+      0
+    );
+
+  }
+
+  return {
+    start:start,
+    end:end
+  };
+
+}
+
+function renderHomeUpcoming(){
+
+  const rangeBox =
+    document.getElementById(
+      "homeUpcomingRange"
+    );
+
+  const box =
+    document.getElementById(
+      "homeUpcomingItems"
+    );
+
+  if(!box){
+    return;
+  }
+
+  if(!homeUpcomingRange){
+
+    box.innerHTML = "";
+
+    if(rangeBox){
+      rangeBox.innerHTML = "";
+    }
+
+    return;
+
+  }
+
+  const range =
+    getRangeDates(
+      homeUpcomingRange
+    );
+
+  const startKey =
+    dateKey(range.start);
+
+  const endKey =
+    dateKey(range.end);
+
+  if(rangeBox){
+
+    let label =
+      "This Week";
+
+    if(homeUpcomingRange === "nextWeek"){
+      label = "Next Week";
+    }
+
+    if(homeUpcomingRange === "thisMonth"){
+      label = "This Month";
+    }
+
+    rangeBox.innerHTML = `
+      <div
+        class="smallText"
+        style="
+          font-weight:700;
+          margin-bottom:8px;
+        ">
+        Showing ${label}
+      </div>
+    `;
+
+  }
+
+  const upcoming = [];
 
   data.projects.forEach(project => {
 
+    if(project.status !== "active"){
+      return;
+    }
+
     project.tasks.forEach(task => {
 
-      if(task.dueDate === dateString){
+      if(
+        task.dueDate &&
+        !task.done &&
+        task.dueDate >= startKey &&
+        task.dueDate <= endKey
+      ){
 
-        results.push({
+        upcoming.push({
 
+          date:task.dueDate,
           title:task.text,
           project:project.name,
           type:"Task"
@@ -2931,65 +2421,728 @@ function getTasksForDate(dateString){
 
   });
 
-  return results;
+  data.calendar.forEach(item => {
+
+    if(
+      item.date &&
+      item.date >= startKey &&
+      item.date <= endKey
+    ){
+
+      upcoming.push({
+
+        date:item.date,
+        title:item.title,
+        project:item.type || "Calendar",
+        type:item.type || "Calendar"
+
+      });
+
+    }
+
+  });
+
+  upcoming.sort((a,b) =>
+    a.date.localeCompare(b.date)
+  );
+
+  if(!upcoming.length){
+
+    box.innerHTML = `
+      <div class="empty">
+        Nothing scheduled for this period.
+      </div>
+    `;
+
+    return;
+
+  }
+
+  box.innerHTML =
+    upcoming.map(item => `
+
+      <div
+        class="task"
+        style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+        ">
+
+        <div
+          style="
+            min-width:72px;
+            font-weight:700;
+            font-size:13px;
+          ">
+          ${formatDate(item.date)}
+        </div>
+
+        <div class="taskText">
+
+          <strong>
+            ${escapeHTML(item.title)}
+          </strong>
+
+          <div class="smallText">
+            ${escapeHTML(item.project)}
+          </div>
+
+        </div>
+
+      </div>
+
+    `).join("");
 
 }
 
-function getEventsForDate(dateString){
 
-  return data.calendar
-    .filter(item => item.date === dateString)
-    .map(item => ({
+/* =========================================================
+   HOME INFORMATION
+   ========================================================= */
 
-      title:item.title,
-      project:item.type || "Calendar",
-      type:item.type || "Calendar"
+function renderHomeInfo(){
 
-    }));
+  const h =
+    data.home;
+
+  document.getElementById(
+    "homeLocation"
+  ).value =
+    h.location || "";
+
+  document.getElementById(
+    "homeYearBuilt"
+  ).value =
+    h.yearBuilt || "";
+
+  document.getElementById(
+    "homeBuilder"
+  ).value =
+    h.builder || "";
+
+  document.getElementById(
+    "homeSquareFeet"
+  ).value =
+    h.squareFeet || "";
+
+  document.getElementById(
+    "homeExteriorColor"
+  ).value =
+    h.exteriorColor || "";
+
+  document.getElementById(
+    "homeTrimColor"
+  ).value =
+    h.trimColor || "";
+
+  document.getElementById(
+    "homeRoofColor"
+  ).value =
+    h.roofColor || "";
+
+  document.getElementById(
+    "homeLawnArea"
+  ).value =
+    h.lawnArea || "";
+
+  document.getElementById(
+    "homeLawnGrass"
+  ).value =
+    h.lawnGrass || "";
+
+  document.getElementById(
+    "homeLawnGoal"
+  ).value =
+    h.lawnGoal || "";
+
+  document.getElementById(
+    "homeGardenSize"
+  ).value =
+    h.gardenSize || "";
+
+  document.getElementById(
+    "homeGardenNotes"
+  ).value =
+    h.gardenNotes || "";
+
+  document.getElementById(
+    "homeIrrigationNotes"
+  ).value =
+    h.irrigationNotes || "";
+
+  document.getElementById(
+    "homeDrainageNotes"
+  ).value =
+    h.drainageNotes || "";
+
+  document.getElementById(
+    "homeNotes"
+  ).value =
+    h.notes || "";
 
 }
 
-function renderCalendar(){
+function saveHomeInfo(){
 
-  const year =
-    currentCalendarDate.getFullYear();
+  data.home.location =
+    document.getElementById(
+      "homeLocation"
+    ).value;
 
-  const month =
-    currentCalendarDate.getMonth();
+  data.home.yearBuilt =
+    Number(
+      document.getElementById(
+        "homeYearBuilt"
+      ).value
+    ) || "";
 
-  document.getElementById("calendarMonth")
-    .textContent =
-      currentCalendarDate.toLocaleDateString(
-        undefined,
-        {
-          month:"long",
-          year:"numeric"
-        }
-      );
+  data.home.builder =
+    document.getElementById(
+      "homeBuilder"
+    ).value;
 
-  const grid =
-    document.getElementById("calendarGrid");
+  data.home.squareFeet =
+    Number(
+      document.getElementById(
+        "homeSquareFeet"
+      ).value
+    ) || "";
 
-  grid.innerHTML = "";
+  data.home.exteriorColor =
+    document.getElementById(
+      "homeExteriorColor"
+    ).value;
 
-  const firstDay =
-    new Date(year,month,1).getDay();
+  data.home.trimColor =
+    document.getElementById(
+      "homeTrimColor"
+    ).value;
 
-  const daysInMonth =
-    new Date(year,month + 1,0).getDate();
+  data.home.roofColor =
+    document.getElementById(
+      "homeRoofColor"
+    ).value;
 
-  const today =
-    new Date();
+  data.home.lawnArea =
+    document.getElementById(
+      "homeLawnArea"
+    ).value;
 
-  const todayString =
-    dateKey(today);
+  data.home.lawnGrass =
+    document.getElementById(
+      "homeLawnGrass"
+    ).value;
 
-  for(let i=0;i<firstDay;i++){
+  data.home.lawnGoal =
+    document.getElementById(
+      "homeLawnGoal"
+    ).value;
 
-    const empty =
-      document.createElement("div");
+  data.home.gardenSize =
+    document.getElementById(
+      "homeGardenSize"
+    ).value;
 
-    grid.appendChild(empty);
+  data.home.gardenNotes =
+    document.getElementById(
+      "homeGardenNotes"
+    ).value;
+
+  data.home.irrigationNotes =
+    document.getElementById(
+      "homeIrrigationNotes"
+    ).value;
+
+  data.home.drainageNotes =
+    document.getElementById(
+      "homeDrainageNotes"
+    ).value;
+
+  data.home.notes =
+    document.getElementById(
+      "homeNotes"
+    ).value;
+
+  saveData();
+
+  document.getElementById(
+    "homeInfoSaved"
+  ).textContent =
+    "✓ Home information saved.";
+
+}
+
+
+/* =========================================================
+   FAMILY
+   ========================================================= */
+
+function renderFamily(){
+
+  document.getElementById(
+    "familyNote"
+  ).value =
+    data.family.note || "";
+
+}
+
+function saveFamilyNote(){
+
+  data.family.note =
+    document.getElementById(
+      "familyNote"
+    ).value;
+
+  saveData();
+
+  document.getElementById(
+    "familySaved"
+  ).textContent =
+    "✓ Family note saved.";
+
+}
+
+
+/* =========================================================
+   FENCE CALCULATOR
+   ========================================================= */
+
+const fenceTypeLabels = {
+
+  chainLink:
+    "Chain Link",
+
+  woodPrivacy:
+    "Wood Privacy",
+
+  woodPicket:
+    "Wood Picket",
+
+  vinylPrivacy:
+    "Vinyl Privacy",
+
+  aluminum:
+    "Aluminum",
+
+  custom:
+    "Custom / Other"
+
+};
+
+function getFenceTypeLabel(type){
+
+  return (
+    fenceTypeLabels[type] ||
+    type ||
+    "Fence"
+  );
+
+}
+
+function buildMyPlan(){
+
+  const modal = document.createElement("div");
+
+  modal.id =
+    "planModal";
+
+  modal.style.cssText = `
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    z-index:100;
+    overflow:auto;
+    padding:20px;
+  `;
+
+  modal.innerHTML = `
+
+    <div
+      class="card"
+      style="
+        max-width:700px;
+        margin:20px auto;
+      ">
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+        ">
+
+        <h2 style="margin:0;">
+          ✨ Build My Plan
+        </h2>
+
+        <button
+          class="secondary"
+          onclick="
+            document.getElementById('planModal').remove()
+          ">
+          Close
+        </button>
+
+      </div>
+
+      <p class="muted">
+        Describe what you want to accomplish and
+        The List will build a starting project plan.
+      </p>
+
+      <textarea
+        id="planDescription"
+        placeholder="Example: Build a 6-foot privacy fence around my backyard with a 4-foot walk gate and a 10-foot double gate."></textarea>
+
+      <label>Project Category</label>
+
+      <select id="planCategory">
+
+        <option>Home</option>
+        <option>Exterior</option>
+        <option>Lawn</option>
+        <option>Garden</option>
+        <option>Maintenance</option>
+        <option>Room</option>
+        <option>Custom</option>
+
+      </select>
+
+      <button
+        onclick="generatePlan()">
+        Create Project Plan
+      </button>
+
+      <div id="planResult"></div>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(modal);
+
+}
+
+function generatePlan(){
+
+  const description =
+    document
+      .getElementById("planDescription")
+      .value
+      .trim();
+
+  const category =
+    document
+      .getElementById("planCategory")
+      .value;
+
+  const result =
+    document.getElementById(
+      "planResult"
+    );
+
+  if(!description){
+
+    result.innerHTML =
+      `<div class="warning">
+        Describe what you want to accomplish first.
+      </div>`;
+
+    return;
+
+  }
+
+  let tasks = [];
+
+  let materials = [];
+
+  const lower =
+    description.toLowerCase();
+
+  if(
+    lower.includes("fence")
+  ){
+
+    tasks = [
+      "Confirm fence layout and property boundaries",
+      "Choose fence style, height and color",
+      "Measure total fence length",
+      "Confirm gate locations and widths",
+      "Check local requirements before construction",
+      "Mark post locations",
+      "Purchase fence materials and hardware",
+      "Prepare the fence line",
+      "Install posts",
+      "Install fence sections or panels",
+      "Install gates and hardware",
+      "Inspect the completed fence"
+    ];
+
+    materials = [
+      {
+        name:"Fence posts",
+        quantity:"As calculated"
+      },
+      {
+        name:"Fence panels / pickets / mesh",
+        quantity:"As calculated"
+      },
+      {
+        name:"Concrete",
+        quantity:"As calculated"
+      },
+      {
+        name:"Gate hardware",
+        quantity:"As needed"
+      }
+    ];
+
+  }else if(
+    lower.includes("paint")
+  ){
+
+    tasks = [
+      "Confirm final colors",
+      "Calculate paint quantity",
+      "Purchase paint and supplies",
+      "Clean and prepare surfaces",
+      "Scrape loose paint",
+      "Prime bare or repaired areas",
+      "Paint main surfaces",
+      "Paint trim",
+      "Inspect for missed areas",
+      "Complete touch-ups"
+    ];
+
+    materials = [
+      {
+        name:"Exterior paint",
+        quantity:"As calculated"
+      },
+      {
+        name:"Primer",
+        quantity:"As needed"
+      },
+      {
+        name:"Caulk",
+        quantity:"As needed"
+      },
+      {
+        name:"Painter's tape",
+        quantity:"As needed"
+      },
+      {
+        name:"Rollers / brushes",
+        quantity:"As needed"
+      }
+    ];
+
+  }else{
+
+    tasks = [
+      "Define the project scope",
+      "Measure the work area",
+      "Determine materials needed",
+      "Set a project budget",
+      "Purchase materials",
+      "Prepare the work area",
+      "Complete the project work",
+      "Inspect the finished project",
+      "Complete final cleanup"
+    ];
+
+    materials = [
+      {
+        name:"Project materials",
+        quantity:"Determine during planning"
+      },
+      {
+        name:"Fasteners / hardware",
+        quantity:"As needed"
+      }
+    ];
+
+  }
+
+  result.innerHTML = `
+
+    <div class="successBox">
+      ✓ Starting plan created.
+    </div>
+
+    <div class="card">
+
+      <h3>
+        ${escapeHTML(description)}
+      </h3>
+
+      <div class="smallText">
+        Category: ${escapeHTML(category)}
+      </div>
+
+      <h3>Tasks</h3>
+
+      ${tasks.map((task,index) => `
+
+        <div class="task">
+
+          <input
+            type="checkbox"
+            disabled>
+
+          <div class="taskText">
+            ${escapeHTML(task)}
+          </div>
+
+        </div>
+
+      `).join("")}
+
+      <h3>Starter Materials</h3>
+
+      ${materials.map(material => `
+
+        <div class="material">
+
+          <div class="materialName">
+
+            <strong>
+              ${escapeHTML(material.name)}
+            </strong>
+
+            <div class="smallText">
+              ${escapeHTML(material.quantity)}
+            </div>
+
+          </div>
+
+        </div>
+
+      `).join("")}
+
+      <button
+        onclick="
+          saveGeneratedPlan(
+            ${JSON.stringify(description)},
+            ${JSON.stringify(category)},
+            ${JSON.stringify(tasks)},
+            ${JSON.stringify(materials)}
+          )
+        ">
+        ✓ Add This Project
+      </button>
+
+    </div>
+
+  `;
+
+}
+
+function saveGeneratedPlan(
+  description,
+  category,
+  tasks,
+  materials
+){
+
+  const projectId =
+    "project-" +
+    Date.now().toString() +
+    "-" +
+    Math.random()
+      .toString(36)
+      .substring(2,8);
+
+  const project = {
+
+    id:projectId,
+
+    name:
+      description.length > 45
+      ? description.substring(0,45) + "…"
+      : description,
+
+    category:category,
+
+    status:"planned",
+
+    startedAt:"",
+
+    completedAt:"",
+
+    description:description,
+
+    tasks:
+      tasks.map((text,index) => ({
+
+        id:
+          "task-" +
+          Date.now().toString() +
+          "-" +
+          index,
+
+        text:text,
+
+        done:false,
+
+        dueDate:""
+
+      })),
+
+    materials:
+      materials.map((material,index) => ({
+
+        id:
+          "material-" +
+          Date.now().toString() +
+          "-" +
+          index,
+
+        name:material.name,
+
+        quantity:material.quantity
+
+      })),
+
+    records:[],
+
+    answers:[],
+
+    notes:"",
+
+    budget:0,
+
+    takeoff:null,
+
+    calculation:null
+
+  };
+
+  data.projects.push(project);
+
+  saveData();
+
+  const modal =
+    document.getElementById(
+      "planModal"
+    );
+
+  if(modal){
+    modal.remove();
+  }
+
+  renderProjects();
+
+  renderHome();
+
+  showPage("projectsPage");
+
+  openProject(projectId);
+
+}
+      grid.appendChild(empty);
 
   }
 
@@ -3086,6 +3239,57 @@ function renderSelectedDate(){
     return;
 
   }
+
+  const tasks =
+    getTasksForDate(selectedCalendarDate);
+
+  const events =
+    getEventsForDate(selectedCalendarDate);
+
+  const items =
+    [...tasks,...events];
+
+  box.innerHTML = `
+
+    <div class="card">
+
+      <h2>
+        📅 ${formatDate(selectedCalendarDate)}
+      </h2>
+
+      ${
+        items.length
+        ? items.map(item => `
+
+            <div class="task">
+
+              <div class="taskText">
+
+                <strong>
+                  ${escapeHTML(item.title)}
+                </strong>
+
+                <div class="smallText">
+                  ${escapeHTML(item.project)}
+                </div>
+
+              </div>
+
+            </div>
+
+          `).join("")
+        : `<div class="empty">
+             Nothing scheduled for this day.
+           </div>`
+      }
+
+    </div>
+
+  `;
+
+}
+
+
 function showCalendarRange(range){
 
   showPage("calendarPage");
@@ -3301,69 +3505,6 @@ function renderCalendarRange(
 }
 
 
-function renderSelectedDate(){
-
-  const box =
-    document.getElementById("selectedDateCard");
-
-  if(!selectedCalendarDate){
-
-    box.innerHTML = "";
-
-    return;
-
-  }
-
-  const tasks =
-    getTasksForDate(selectedCalendarDate);
-
-  const events =
-    getEventsForDate(selectedCalendarDate);
-
-  const items =
-    [...tasks,...events];
-
-  box.innerHTML = `
-
-    <div class="card">
-
-      <h2>
-        📅 ${formatDate(selectedCalendarDate)}
-      </h2>
-
-      ${
-        items.length
-        ? items.map(item => `
-
-            <div class="task">
-
-              <div class="taskText">
-
-                <strong>
-                  ${escapeHTML(item.title)}
-                </strong>
-
-                <div class="smallText">
-                  ${escapeHTML(item.project)}
-                </div>
-
-              </div>
-
-            </div>
-
-          `).join("")
-        : `<div class="empty">
-             Nothing scheduled for this day.
-           </div>`
-      }
-
-    </div>
-
-  `;
-
-}
-
-
 function clearCalendarRange(){
 
   const box =
@@ -3378,6 +3519,8 @@ function clearCalendarRange(){
   }
 
 }
+
+
 function changeMonth(amount){
 
   currentCalendarDate =
@@ -3699,720 +3842,15 @@ function saveHomeInfo(){
       document.getElementById("homeGardenNotes").value,
 
     irrigationNotes:
-      document.getElementById("homeIrrigationNotes").value,
-
-    drainageNotes:
-      document.getElementById("homeDrainageNotes").value,
-
-    notes:
-      document.getElementById("homeNotes").value
-
-  };
-
-  saveData();
-
-  document.getElementById("homeInfoSaved")
-    .textContent = "✓ Home information saved.";
-
-}
-
-
-/* =========================================================
-   FAMILY
-   ========================================================= */
-
-function renderFamily(){
-
-  document.getElementById("familyNote").value =
-    data.family.note || "";
-
-}
-
-function saveFamilyNote(){
-
-  data.family.note =
-    document.getElementById("familyNote").value;
-
-  saveData();
-
-  document.getElementById("familySaved")
-    .textContent =
-      "✓ Family note saved.";
-
-}
-
-
-/* =========================================================
-   BUILD MY PLAN
-   ========================================================= */
-
-function buildMyPlan(){
-
-  const name =
-    prompt(
-      "What project do you want to plan?"
-    );
-
-  if(!name){
-    return;
-  }
-
-  const description =
-    prompt(
-      "Briefly describe what you want to accomplish:",
-      ""
-    ) || "";
-
-  const isFence =
-    /fence/i.test(name);
-
-  const inferredFenceType =
-    isFence
-    ? inferFenceTypeFromText(
-        `${name} ${description}`
-      )
-    : "";
-
-  const questions =
-    isFence
-    ? getFenceQuestions(inferredFenceType)
-    : getGenericQuestions();
-
-  showPlanQuestions(
-    name,
-    description,
-    questions
-  );
-
-}
-
-
-/* =========================================================
-   FENCE TYPE HELPERS
-   ========================================================= */
-
-function inferFenceTypeFromText(text){
-
-  const value =
-    String(text || "").toLowerCase();
-
-  if(/chain[\s-]*link/.test(value)){
-    return "chainLink";
-  }
-
-  if(/vinyl/.test(value)){
-    return "vinylPrivacy";
-  }
-
-  if(/aluminum|aluminium/.test(value)){
-    return "aluminum";
-  }
-
-  if(/picket/.test(value)){
-    return "woodPicket";
-  }
-
-  if(/privacy|wood/.test(value)){
-    return "woodPrivacy";
-  }
-
-  return "woodPrivacy";
-
-}
-
-function getFenceTypeLabel(type){
-
-  const labels = {
-
-    chainLink:"Chain Link",
-    woodPrivacy:"Wood Privacy",
-    woodPicket:"Wood Picket",
-    vinylPrivacy:"Vinyl Privacy",
-    aluminum:"Aluminum",
-    other:"Other / Custom"
-
-  };
-
-  return labels[type] || "Fence";
-
-}
-
-
-/* =========================================================
-   DYNAMIC FENCE QUESTIONS
-   ========================================================= */
-
-function getFenceQuestions(defaultFenceType){
-
-  const type =
-    defaultFenceType || "woodPrivacy";
-
-  return [
-
-    {
-      id:"fenceType",
-      question:
-        "What type of fence are you building?",
-      type:"select",
-      options:[
-        "Wood Privacy",
-        "Wood Picket",
-        "Chain Link",
-        "Vinyl Privacy",
-        "Aluminum",
-        "Other / Custom"
-      ],
-      values:[
-        "woodPrivacy",
-        "woodPicket",
-        "chainLink",
-        "vinylPrivacy",
-        "aluminum",
-        "other"
-      ],
-      defaultValue:getFenceTypeLabel(type)
-    },
-
-    {
-      id:"length",
-      question:
-        "How many linear feet of fence are needed?",
-      placeholder:
-        "Example: 180"
-    },
-
-    {
-      id:"height",
-      question:
-        "What height should the fence be?",
-      placeholder:
-        "Example: 6"
-    },
-
-    {
-      id:"style",
-      question:
-        "Any specific style, color, finish or model details?",
-      placeholder:
-        "Example: 6 ft black chain link"
-    },
-
-    {
-      id:"singleGateCount",
-      question:
-        "How many SINGLE gates?",
-      placeholder:
-        "Example: 2",
-      defaultValue:"0"
-    },
-
-    {
-      id:"singleGateWidths",
-      question:
-        "What is the width of each SINGLE gate in feet? Enter one width per gate, separated by commas.",
-      placeholder:
-        "Example: 4, 4"
-    },
-
-    {
-      id:"doubleGateCount",
-      question:
-        "How many DOUBLE gates?",
-      placeholder:
-        "Example: 1",
-      defaultValue:"0"
-    },
-
-    {
-      id:"doubleGateWidths",
-      question:
-        "What is the opening width of each DOUBLE gate in feet? Enter one width per gate, separated by commas.",
-      placeholder:
-        "Example: 10"
-    },
-
-    {
-      id:"postSpacing",
-      question:
-        "What post spacing do you want?",
-      placeholder:
-        "Example: 8",
-      defaultValue:"8"
-    },
-
-    {
-      id:"corners",
-      question:
-        "How many fence corners?",
-      placeholder:
-        "Example: 4",
-      defaultValue:"4"
-    },
-
-    {
-      id:"endPoints",
-      question:
-        "How many normal fence endpoints?",
-      placeholder:
-        "Example: 2",
-      defaultValue:"2"
-    },
-
-    {
-      id:"holeDiameter",
-      question:
-        "What post-hole diameter should be used for the planning calculation?",
-      placeholder:
-        "Example: 10",
-      defaultValue:"10"
-    },
-
-    {
-      id:"holeDepth",
-      question:
-        "What post-hole depth should be used for the planning calculation?",
-      placeholder:
-        "Example: 30",
-      defaultValue:"30"
-    },
-
-    {
-      id:"construction",
-      question:
-        "How will the wood fence be built?",
-      type:"select",
-      options:[
-        "Fence panels",
-        "Individual pickets"
-      ],
-      defaultValue:"Fence panels",
-      showWhen:{
-        id:"fenceType",
-        values:["Wood Privacy","Wood Picket"]
-      }
-    },
-
-    {
-      id:"panelWidth",
-      question:
-        "What is the panel width in feet?",
-      placeholder:
-        "Example: 8",
-      defaultValue:"8",
-      showWhen:{
-        id:"fenceType",
-        values:[
-          "Wood Privacy",
-          "Vinyl Privacy",
-          "Aluminum"
-        ]
-      }
-    },
-
-    {
-      id:"picketWidth",
-      question:
-        "What is the picket width in inches?",
-      placeholder:
-        "Example: 5.5",
-      defaultValue:"5.5",
-      showWhen:{
-        id:"fenceType",
-        values:["Wood Picket"]
-      }
-    },
-
-    {
-      id:"picketSpacing",
-      question:
-        "What gap should be between wood pickets in inches?",
-      placeholder:
-        "Example: 0.5",
-      defaultValue:"0.5",
-      showWhen:{
-        id:"fenceType",
-        values:["Wood Picket"]
-      }
-    },
-
-    {
-      id:"rails",
-      question:
-        "How many horizontal rails per wood fence section?",
-      placeholder:
-        "Example: 3",
-      defaultValue:"3",
-      showWhen:{
-        id:"fenceType",
-        values:[
-          "Wood Privacy",
-          "Wood Picket"
-        ]
-      }
-    },
-
-    {
-      id:"postSize",
-      question:
-        "What post size are you planning to use?",
-      placeholder:
-        "Example: 4 × 4 pressure-treated",
-      defaultValue:"4 × 4 pressure-treated",
-      showWhen:{
-        id:"fenceType",
-        values:[
-          "Wood Privacy",
-          "Wood Picket"
-        ]
-      }
-    },
-
-    {
-      id:"meshGauge",
-      question:
-        "What chain-link mesh gauge are you planning to use?",
-      type:"select",
-      options:[
-        "11.5 gauge",
-        "11 gauge",
-        "9 gauge",
-        "Other"
-      ],
-      defaultValue:"11.5 gauge",
-      showWhen:{
-        id:"fenceType",
-        values:["Chain Link"]
-      }
-    },
-
-    {
-      id:"meshRollLength",
-      question:
-        "What length are your chain-link mesh rolls?",
-      placeholder:
-        "Example: 50",
-      defaultValue:"50",
-      showWhen:{
-        id:"fenceType",
-        values:["Chain Link"]
-      }
-    },
-
-    {
-      id:"topRail",
-      question:
-        "Will the chain-link fence have a top rail?",
-      type:"select",
-      options:[
-        "Yes",
-        "No"
-      ],
-      defaultValue:"Yes",
-      showWhen:{
-        id:"fenceType",
-        values:["Chain Link"]
-      }
-    },
-
-    {
-      id:"topRailPieceLength",
-      question:
-        "What length are the top-rail pieces?",
-      placeholder:
-        "Example: 21",
-      defaultValue:"21",
-      showWhen:{
-        id:"fenceType",
-        values:["Chain Link"]
-      }
-    },
-
-    {
-      id:"tensionWire",
-      question:
-        "Will you use bottom tension wire?",
-      type:"select",
-      options:[
-        "Yes",
-        "No"
-      ],
-      defaultValue:"Yes",
-      showWhen:{
-        id:"fenceType",
-        values:["Chain Link"]
-      }
-    },
-
-    {
-      id:"fenceTieSpacing",
-      question:
-        "For planning, how far apart should chain-link fence ties be?",
-      placeholder:
-        "Example: 12 inches",
-      defaultValue:"12",
-      showWhen:{
-        id:"fenceType",
-        values:["Chain Link"]
-      }
-    },
-
-    {
-      id:"chainLinkPrivacySlats",
-      question:
-        "Will you install privacy slats?",
-      type:"select",
-      options:[
-        "No",
-        "Yes"
-      ],
-      defaultValue:"No",
-      showWhen:{
-        id:"fenceType",
-        values:["Chain Link"]
-      }
-    },
-
-    {
-      id:"vinylPostSystem",
-      question:
-        "What vinyl post system are you using?",
-      type:"select",
-      options:[
-        "Manufacturer-specific system",
-        "Other / Custom"
-      ],
-      defaultValue:"Manufacturer-specific system",
-      showWhen:{
-        id:"fenceType",
-        values:["Vinyl Privacy"]
-      }
-    },
-
-    {
-      id:"aluminumPanelWidth",
-      question:
-        "What aluminum panel width are you using?",
-      placeholder:
-        "Example: 6",
-      defaultValue:"6",
-      showWhen:{
-        id:"fenceType",
-        values:["Aluminum"]
-      }
-    },
-
-    {
-      id:"customCoveringWidth",
-      question:
-        "For your custom fence, what is the coverage width of one panel/section?",
-      placeholder:
-        "Example: 8",
-      showWhen:{
-        id:"fenceType",
-        values:["Other / Custom"]
-      }
-    },
-
-    {
-      id:"budget",
-      question:
-        "What is your target budget?",
-      placeholder:
-        "Example: 3000"
-    },
-
-    {
-      id:"requirements",
-      question:
-        "Are there any HOA, property-line, utility or other requirements?",
-      placeholder:
-        "Describe anything that applies."
-    }
-
-  ];
-
-}
-
-
-/* =========================================================
-   GENERIC QUESTIONS
-   ========================================================= */
-
-function getGenericQuestions(){
-
-  return [
-
-    {
-      id:"size",
-      question:
-        "What are the project dimensions?",
-      placeholder:
-        "Example: 20 ft × 12 ft"
-    },
-
-    {
-      id:"materials",
-      question:
-        "What materials or products are you considering?",
-      placeholder:
-        "List anything you already know."
-    },
-
-    {
-      id:"finish",
-      question:
-        "What finished result do you want?",
-      placeholder:
-        "Describe the look/function."
-    },
-
-    {
-      id:"budget",
-      question:
-        "What is your target budget?",
-      placeholder:
-        "Example: 2000"
-    }
-
-  ];
-
-}
-
-
-/* =========================================================
-   FENCE QUESTION HELPERS
-   ========================================================= */
-
-function getFenceTypeFromAnswer(value){
-
-  const map = {
-
-    "Wood Privacy":"woodPrivacy",
-    "Wood Picket":"woodPicket",
-    "Chain Link":"chainLink",
-    "Vinyl Privacy":"vinylPrivacy",
-    "Aluminum":"aluminum",
-    "Other / Custom":"other"
-
-  };
-
-  return map[value] || "woodPrivacy";
-
-}
-
-function questionIsVisible(q){
-
-  if(!q.showWhen){
-    return true;
-  }
-
-  const controllingAnswer =
-    getPlanAnswer(q.showWhen.id);
-
-  return q.showWhen.values.includes(
-    controllingAnswer
-  );
-
-}
-
-function updateConditionalPlanQuestions(){
-
-  document
-    .querySelectorAll(".planQuestion")
-    .forEach(wrapper => {
-
-      const questionId =
-        wrapper.dataset.questionId;
-
-      if(!questionId){
-        return;
-      }
-
-      const question =
-        editingPlan.questions.find(
-          q => q.id === questionId
-        );
-
-      if(!question){
-        return;
-      }
-
-      wrapper.classList.toggle(
-        "hidden",
-        !questionIsVisible(question)
-      );
-
-    });
-
-}
-
-
-/* =========================================================
-   SHOW PLAN QUESTIONS
-   ========================================================= */
-
-function showPlanQuestions(
-  name,
-  description,
-  questions
-){
-
-  const box =
-    document.getElementById("projectDetail");
-
-  showPage("projectDetailPage");
-
-  box.innerHTML = `
-
-    <div class="card">
-
-      <button
-        class="secondary"
-        onclick="showPage('projectsPage')">
-        ← Cancel
-      </button>
-
-      <h2 style="margin-top:15px;">
-        ✨ Build My Plan
-      </h2>
-
-      <p>
-        Answer the questions below and The List will
-        calculate a material takeoff where supported.
-      </p>
-
-      <label>Project Name</label>
-
-      <input
-        id="planProjectName"
-        value="${escapeAttribute(name)}">
-
-      <label>Description</label>
-
-      <textarea
-        id="planDescription">${escapeHTML(description)}</textarea>
+            <div id="planQuestions"></div>
 
     </div>
 
     <div class="card">
 
-      <h2>📐 Project Details</h2>
-
-      <div id="planQuestions"></div>
-
-    </div>
-
-    <div class="card">
-
-      <button onclick="generateAIPlanFromAnswers()">
-        ✨ Calculate & Build Plan
-      </button>
-
       <button
-        class="secondary"
-        style="margin-top:10px;"
-        onclick="showPage('projectsPage')">
-        Cancel
+        onclick="generatePlan()">
+        Generate Project Plan
       </button>
 
     </div>
@@ -4422,642 +3860,612 @@ function showPlanQuestions(
   editingPlan = {
 
     name:name,
+
     description:description,
-    questions:questions
+
+    questions:questions,
+
+    answers:{}
 
   };
 
-  const qbox =
+  renderPlanQuestions();
+
+}
+
+
+function renderPlanQuestions(){
+
+  const box =
     document.getElementById("planQuestions");
 
-  qbox.innerHTML =
-    questions.map((q,index) => {
+  if(!box){
+    return;
+  }
 
-      const conditionAttributes =
-        q.showWhen
-        ? `
-          data-question-id="${escapeAttribute(q.id)}"
-          `
-        : `
-          data-question-id="${escapeAttribute(q.id)}"
+  box.innerHTML =
+    editingPlan.questions
+      .map(q => {
+
+        const value =
+          editingPlan.answers[q.id] ??
+          q.defaultValue ??
+          "";
+
+        if(q.type === "select"){
+
+          return `
+
+            <div
+              class="planQuestion"
+              data-question-id="${escapeAttribute(q.id)}">
+
+              <label>
+                ${escapeHTML(q.question)}
+              </label>
+
+              <select
+                id="plan_${escapeAttribute(q.id)}"
+                onchange="
+                  savePlanAnswer('${escapeAttribute(q.id)}');
+                  updateConditionalPlanQuestions();
+                ">
+
+                ${q.options.map(option => `
+
+                  <option
+                    value="${escapeAttribute(option)}"
+                    ${option === value ? "selected" : ""}>
+
+                    ${escapeHTML(option)}
+
+                  </option>
+
+                `).join("")}
+
+              </select>
+
+            </div>
+
           `;
 
-      if(q.type === "select"){
-
-        const optionsHTML =
-          q.options.map((option,optionIndex) => {
-
-            const value =
-              q.values
-              ? q.values[optionIndex]
-              : option;
-
-            const selected =
-              option === q.defaultValue
-              ? "selected"
-              : "";
-
-            return `
-              <option
-                value="${escapeAttribute(value)}"
-                ${selected}>
-                ${escapeHTML(option)}
-              </option>
-            `;
-
-          }).join("");
+        }
 
         return `
 
           <div
-            class="answerBox planQuestion"
-            ${conditionAttributes}>
+            class="planQuestion"
+            data-question-id="${escapeAttribute(q.id)}">
 
             <label>
-              ${index + 1}. ${escapeHTML(q.question)}
+              ${escapeHTML(q.question)}
             </label>
 
-            <select
-              id="planAnswer_${escapeAttribute(q.id)}">
+            ${
+              q.id === "requirements" ||
+              q.id === "materials" ||
+              q.id === "finish"
+              ? `
 
-              ${optionsHTML}
+                <textarea
+                  id="plan_${escapeAttribute(q.id)}"
+                  placeholder="${escapeAttribute(q.placeholder || "")}"
+                  onchange="
+                    savePlanAnswer('${escapeAttribute(q.id)}')
+                  ">${escapeHTML(value)}</textarea>
 
-            </select>
+              `
+              :
+              `
+
+                <input
+                  id="plan_${escapeAttribute(q.id)}"
+                  value="${escapeAttribute(value)}"
+                  placeholder="${escapeAttribute(q.placeholder || "")}"
+                  onchange="
+                    savePlanAnswer('${escapeAttribute(q.id)}')
+                  ">
+
+              `
+            }
 
           </div>
 
         `;
 
-      }
-
-      return `
-
-        <div
-          class="answerBox planQuestion"
-          ${conditionAttributes}>
-
-          <label>
-            ${index + 1}. ${escapeHTML(q.question)}
-          </label>
-
-          <input
-            id="planAnswer_${escapeAttribute(q.id)}"
-            placeholder="${escapeAttribute(q.placeholder || "")}"
-            value="${escapeAttribute(q.defaultValue || "")}">
-
-        </div>
-
-      `;
-
-    }).join("");
-
-  const fenceSelect =
-    document.getElementById(
-      "planAnswer_fenceType"
-    );
-
-  if(fenceSelect){
-
-    fenceSelect.addEventListener(
-      "change",
-      updateConditionalPlanQuestions
-    );
-
-  }
+      })
+      .join("");
 
   updateConditionalPlanQuestions();
 
 }
 
 
-/* =========================================================
-   GET PLAN ANSWER
-   ========================================================= */
-
 function getPlanAnswer(id){
 
-  const el =
+  const element =
     document.getElementById(
-      "planAnswer_" + id
+      "plan_" + id
     );
 
-  return el
-    ? el.value.trim()
-    : "";
+  if(element){
+    return element.value;
+  }
+
+  return editingPlan.answers[id] || "";
+
+}
+
+
+function savePlanAnswer(id){
+
+  const element =
+    document.getElementById(
+      "plan_" + id
+    );
+
+  if(!element){
+    return;
+  }
+
+  editingPlan.answers[id] =
+    element.value;
+
+}
+
+
+function collectPlanAnswers(){
+
+  editingPlan.questions
+    .forEach(q => {
+
+      const element =
+        document.getElementById(
+          "plan_" + q.id
+        );
+
+      if(element){
+
+        editingPlan.answers[q.id] =
+          element.value;
+
+      }
+
+    });
+
+}
+
+
+function generatePlan(){
+
+  if(!editingPlan){
+    return;
+  }
+
+  collectPlanAnswers();
+
+  const name =
+    document.getElementById(
+      "planProjectName"
+    ).value.trim();
+
+  const description =
+    document.getElementById(
+      "planDescription"
+    ).value.trim();
+
+  if(!name){
+
+    alert(
+      "Please enter a project name."
+    );
+
+    return;
+
+  }
+
+  const answers =
+    editingPlan.answers;
+
+  const isFence =
+    /fence/i.test(name);
+
+  let fenceTakeoff = null;
+
+  if(isFence){
+
+    fenceTakeoff =
+      calculateFenceMaterials(
+        answers
+      );
+
+  }
+
+  const tasks =
+    isFence
+    ? buildFenceTaskList(
+        answers,
+        fenceTakeoff
+      )
+    : buildGenericTaskList(
+        name,
+        description,
+        answers
+      );
+
+  const materials =
+    isFence
+    ? buildFenceMaterialList(
+        answers,
+        fenceTakeoff
+      )
+    : buildGenericMaterialList(
+        name,
+        description,
+        answers
+      );
+
+  editingPlan.generated = {
+
+    name:name,
+
+    description:description,
+
+    answers:answers,
+
+    tasks:tasks,
+
+    materials:materials,
+
+    fenceTakeoff:fenceTakeoff
+
+  };
+
+  renderGeneratedPlan();
+
+}
+
+
+function buildGenericTaskList(
+  name,
+  description,
+  answers
+){
+
+  const tasks = [
+
+    {
+      title:"Confirm project scope",
+      completed:false
+    },
+
+    {
+      title:"Confirm dimensions and measurements",
+      completed:false
+    },
+
+    {
+      title:"Finalize materials and products",
+      completed:false
+    },
+
+    {
+      title:"Create project budget",
+      completed:false
+    },
+
+    {
+      title:"Purchase materials",
+      completed:false
+    },
+
+    {
+      title:"Prepare work area",
+      completed:false
+    },
+
+    {
+      title:"Complete project",
+      completed:false
+    },
+
+    {
+      title:"Inspect finished work",
+      completed:false
+    }
+
+  ];
+
+  if(description){
+
+    tasks.splice(
+      1,
+      0,
+      {
+        title:
+          "Review project description and desired finished result",
+        completed:false
+      }
+    );
+
+  }
+
+  return tasks;
+
+}
+
+
+function buildGenericMaterialList(
+  name,
+  description,
+  answers
+){
+
+  const materials = [];
+
+  const raw =
+    answers.materials || "";
+
+  if(raw){
+
+    raw.split(/[,\n]+/)
+      .map(item => item.trim())
+      .filter(Boolean)
+      .forEach(item => {
+
+        materials.push({
+
+          name:item,
+
+          quantity:1,
+
+          unit:"",
+
+          notes:"From project planning"
+
+        });
+
+      });
+
+  }
+
+  return materials;
 
 }
 
 
 /* =========================================================
-   FENCE CALCULATOR
+   RENDER GENERATED PLAN
    ========================================================= */
 
-function calculateFenceMaterials(answers){
+function renderGeneratedPlan(){
 
-  const warnings = [];
+  const generated =
+    editingPlan.generated;
 
-  const fenceType =
-    getFenceTypeFromAnswer(
-      answers.fenceType
+  const box =
+    document.getElementById(
+      "projectDetail"
     );
 
-  const totalFeet =
-    parsePositiveNumber(
-      answers.length
-    );
+  box.innerHTML = `
 
-  const height =
-    parsePositiveNumber(
-      answers.height
-    );
+    <div class="card">
 
-  const construction =
-    String(
-      answers.construction || "Fence panels"
-    );
+      <button
+        class="secondary"
+        onclick="showPage('projectsPage')">
 
-  const isWoodPrivacy =
-    fenceType === "woodPrivacy";
+        ← Back
 
-  const isWoodPicket =
-    fenceType === "woodPicket";
+      </button>
 
-  const isChainLink =
-    fenceType === "chainLink";
+      <h2 style="margin-top:15px;">
+        ✨ ${escapeHTML(generated.name)}
+      </h2>
 
-  const isVinyl =
-    fenceType === "vinylPrivacy";
-
-  const isAluminum =
-    fenceType === "aluminum";
-
-  const isPickets =
-    isWoodPicket ||
-    /picket/i.test(construction);
-
-  const postSpacing =
-    parsePositiveNumber(
-      answers.postSpacing
-    ) || 8;
-
-  const singleGateCount =
-    parseCount(
-      answers.singleGateCount
-    );
-
-  const doubleGateCount =
-    parseCount(
-      answers.doubleGateCount
-    );
-
-  const singleGateWidths =
-    parseWidthList(
-      answers.singleGateWidths
-    );
-
-  const doubleGateWidths =
-    parseWidthList(
-      answers.doubleGateWidths
-    );
-
-  const singleGateWidthTotal =
-    singleGateWidths
-      .slice(0,singleGateCount)
-      .reduce(
-        (sum,n) => sum + n,
-        0
-      );
-
-  const doubleGateWidthTotal =
-    doubleGateWidths
-      .slice(0,doubleGateCount)
-      .reduce(
-        (sum,n) => sum + n,
-        0
-      );
-
-  if(
-    singleGateCount > 0 &&
-    singleGateWidths.length === 0
-  ){
-
-    warnings.push(
-      "Single gates were specified, but no single-gate widths were entered."
-    );
-
-  }
-
-  if(
-    doubleGateCount > 0 &&
-    doubleGateWidths.length === 0
-  ){
-
-    warnings.push(
-      "Double gates were specified, but no double-gate widths were entered."
-    );
-
-  }
-
-  if(
-    singleGateCount > 0 &&
-    singleGateWidths.length < singleGateCount
-  ){
-
-    warnings.push(
-      "There are fewer single-gate widths than single gates. Missing gates were not included in the opening total."
-    );
-
-  }
-
-  if(
-    doubleGateCount > 0 &&
-    doubleGateWidths.length < doubleGateCount
-  ){
-
-    warnings.push(
-      "There are fewer double-gate widths than double gates. Missing gates were not included in the opening total."
-    );
-
-  }
-
-  const gateWidthTotal =
-    singleGateWidthTotal +
-    doubleGateWidthTotal;
-
-  if(totalFeet <= 0){
-
-    warnings.push(
-      "Total fence length must be greater than zero."
-    );
-
-  }
-
-  if(postSpacing <= 0){
-
-    warnings.push(
-      "Post spacing must be greater than zero."
-    );
-
-  }
-
-  if(
-    gateWidthTotal >= totalFeet &&
-    totalFeet > 0
-  ){
-
-    warnings.push(
-      "Gate openings are equal to or larger than the total fence length."
-    );
-
-  }
-
-  const fenceRun =
-    Math.max(
-      0,
-      totalFeet - gateWidthTotal
-    );
-
-  const sections =
-    fenceRun > 0
-    ? Math.ceil(
-        fenceRun / postSpacing
-      )
-    : 0;
-
-  const cornerPosts =
-    Math.max(
-      0,
-      parseCount(answers.corners)
-    );
-
-  const endPosts =
-    Math.max(
-      0,
-      parseCount(answers.endPoints)
-    );
-
-  const basePostPositions =
-    sections > 0
-    ? sections + 1
-    : 0;
-
-  const gatePosts =
-    (singleGateCount * 2) +
-    (doubleGateCount * 2);
-
-  const specialNormalPosts =
-    cornerPosts +
-    endPosts;
-
-  const linePosts =
-    Math.max(
-      0,
-      basePostPositions -
-      specialNormalPosts
-    );
-
-  const totalPosts =
-    linePosts +
-    cornerPosts +
-    endPosts +
-    gatePosts;
-
-  const terminalPosts =
-    cornerPosts +
-    endPosts +
-    gatePosts;
-
-  if(
-    specialNormalPosts > basePostPositions &&
-    basePostPositions > 0
-  ){
-
-    warnings.push(
-      "Corners plus endpoints exceed the number of normal fence post positions. Review the layout."
-    );
-
-  }
-
-  if(
-    gateWidthTotal > 0 &&
-    gateWidthTotal < totalFeet &&
-    gateWidthTotal > totalFeet * .5
-  ){
-
-    warnings.push(
-      "Gate openings consume more than half of the total fence length. Verify the measurements."
-    );
-
-  }
-
-  /*
-    WOOD RAILS
-  */
-
-  let railsPerSection = 0;
-  let totalRails = 0;
-
-  if(isWoodPrivacy || isWoodPicket){
-
-    railsPerSection =
-      parsePositiveNumber(
-        answers.rails
-      );
-
-    if(!railsPerSection){
-
-      if(height <= 4){
-        railsPerSection = 2;
-      }else if(height <= 6){
-        railsPerSection = 3;
-      }else{
-        railsPerSection = 4;
+      ${
+        generated.description
+        ? `<p>
+            ${escapeHTML(generated.description)}
+           </p>`
+        : ""
       }
 
+    </div>
+
+
+    ${
+      generated.fenceTakeoff
+      ? renderSavedTakeoffHTML({
+          fenceTakeoff:
+            generated.fenceTakeoff
+        })
+      : ""
     }
 
-    railsPerSection =
-      Math.max(
-        1,
-        Math.ceil(railsPerSection)
-      );
 
-    totalRails =
-      sections * railsPerSection;
+    <div class="card">
+
+      <h2>✅ Project Tasks</h2>
+
+      ${
+        generated.tasks.length
+        ? generated.tasks.map((task,index) => `
+
+            <div class="task">
+
+              <div class="taskText">
+
+                <strong>
+                  ${index + 1}.
+                  ${escapeHTML(task.title)}
+                </strong>
+
+              </div>
+
+            </div>
+
+          `).join("")
+        : `<div class="empty">
+             No tasks generated.
+           </div>`
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>🛒 Materials</h2>
+
+      ${
+        generated.materials.length
+        ? generated.materials.map(material => `
+
+            <div class="task">
+
+              <div class="taskText">
+
+                <strong>
+                  ${escapeHTML(material.name)}
+                </strong>
+
+                <div class="smallText">
+
+                  ${
+                    material.quantity
+                    ? `${escapeHTML(String(material.quantity))} ${escapeHTML(material.unit || "")}`
+                    : ""
+                  }
+
+                  ${
+                    material.notes
+                    ? ` · ${escapeHTML(material.notes)}`
+                    : ""
+                  }
+
+                </div>
+
+              </div>
+
+            </div>
+
+          `).join("")
+        : `<div class="empty">
+             No materials generated.
+           </div>`
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <button
+        onclick="saveGeneratedPlan()">
+
+        Save Project
+
+      </button>
+
+    </div>
+
+  `;
+
+}
+
+
+function saveGeneratedPlan(){
+
+  if(!editingPlan ||
+     !editingPlan.generated){
+
+    return;
 
   }
 
-  /*
-    COVERING
-  */
+  const generated =
+    editingPlan.generated;
 
-  let coveringRequired = 0;
-  let coveringWithWaste = 0;
-  let coveringWidth = 0;
-  let picketCenterSpacing = 0;
+  const project = {
 
-  /*
-    CHAIN LINK
-  */
+    id:Date.now().toString(),
 
-  let meshGauge = "";
-  let meshRollLength = 0;
-  let meshRequiredFeet = 0;
-  let meshPurchasedFeet = 0;
-  let meshRolls = 0;
-  let topRail = false;
-  let topRailPieceLength = 0;
-  let topRailPieces = 0;
-  let tensionWire = false;
-  let tensionWireFeet = 0;
-  let fenceTieSpacing = 0;
-  let fenceTieCount = 0;
-  let privacySlats = false;
+    name:generated.name,
 
-  if(isChainLink){
+    category:"Custom",
 
-    meshGauge =
-      answers.meshGauge ||
-      "11.5 gauge";
+    description:
+      generated.description || "",
 
-    meshRollLength =
-      parsePositiveNumber(
-        answers.meshRollLength
-      ) || 50;
+    status:"planned",
 
-    meshRequiredFeet =
-      fenceRun > 0
-      ? fenceRun * 1.10
-      : 0;
+    createdAt:
+      new Date().toISOString(),
 
-    meshRolls =
-      meshRequiredFeet > 0
-      ? Math.ceil(
-          meshRequiredFeet /
-          meshRollLength
-        )
-      : 0;
+    startedAt:"",
 
-    meshPurchasedFeet =
-      meshRolls *
-      meshRollLength;
+    completedAt:"",
 
-    topRail =
-      /yes/i.test(
-        answers.topRail || ""
-      );
+    tasks:
+      generated.tasks.map(
+        task => ({
 
-    topRailPieceLength =
-      parsePositiveNumber(
-        answers.topRailPieceLength
-      ) || 21;
+          id:Date.now().toString()
+            + Math.random()
+              .toString(36)
+              .slice(2),
 
-    topRailPieces =
-      topRail && fenceRun > 0
-      ? Math.ceil(
-          fenceRun /
-          topRailPieceLength
-        )
-      : 0;
+          title:task.title,
 
-    tensionWire =
-      /yes/i.test(
-        answers.tensionWire || ""
-      );
+          completed:false
 
-    tensionWireFeet =
-      tensionWire
-      ? Math.ceil(
-          fenceRun * 1.05
-        )
-      : 0;
+        })
+      ),
 
-    fenceTieSpacing =
-      parsePositiveNumber(
-        answers.fenceTieSpacing
-      ) || 12;
+    materials:
+      generated.materials.map(
+        material => ({
 
-    fenceTieCount =
-      fenceRun > 0
-      ? Math.ceil(
-          fenceRun * 12 /
-          fenceTieSpacing
-        )
-      : 0;
+          id:Date.now().toString()
+            + Math.random()
+              .toString(36)
+              .slice(2),
 
-    privacySlats =
-      /yes/i.test(
-        answers.chainLinkPrivacySlats || ""
-      );
+          name:material.name,
 
-    coveringWidth =
-      height;
+          quantity:material.quantity || 1,
 
-    if(
-      !parsePositiveNumber(
-        answers.meshRollLength
-      )
-    ){
+          unit:material.unit || "",
 
-      warnings.push(
-        "Mesh roll length was not entered. A planning default of 50 feet per roll was used."
-      );
+          notes:material.notes || "",
 
-    }
+          purchased:false
 
-    if(
-      !parsePositiveNumber(
-        answers.topRailPieceLength
-      ) &&
-      topRail
-    ){
+        })
+      ),
 
-      warnings.push(
-        "Top-rail piece length was not entered. A planning default of 21 feet was used."
-      );
+    notes:"",
 
-    }
+    fenceTakeoff:
+      generated.fenceTakeoff || null
 
-    warnings.push(
-      "Chain-link tension bands, brace bands, rail ends and other terminal hardware should be verified against the manufacturer's hardware package."
-    );
+  };
 
-    warnings.push(
-      "Fence-tie quantity is a planning allowance based on the selected tie spacing. Verify the manufacturer's installation requirements."
-    );
+  data.projects.push(project);
 
-    if(privacySlats){
+  saveData();
 
-      warnings.push(
-        "Privacy slat quantity depends on the specific slat system. Add the manufacturer's slat quantity after selecting the mesh system."
-      );
+  editingPlan = null;
 
-    }
+  renderProjects();
 
-  }
+  renderHome();
 
-  /*
-    WOOD PICKETS
-  */
+  openProject(project.id);
 
-  if(isPickets){
-
-    const picketWidth =
-      parsePositiveNumber(
-        answers.picketWidth
-      ) || 5.5;
-
-    const picketSpacing =
-      parseNonNegativeNumber(
-        answers.picketSpacing
-      );
-
-    if(
-      !parsePositiveNumber(
-        answers.picketWidth
-      )
-    ){
-
-      warnings.push(
-        "Picket width was not entered. A planning default of 5.5 inches was used."
-      );
-
-    }
-
-    picketCenterSpacing =
-      picketWidth +
-      picketSpacing;
-
-    coveringWidth =
-      picketWidth;
-
-    coveringRequired =
-      fenceRun > 0
-      ? Math.ceil(
-          fenceRun * 12 /
-          Math.max(
-            .01,
-            picketCenterSpacing
-          )
-        )
-      : 0;
-
-    coveringWithWaste =
-      Math.ceil(
-        coveringRequired * 1.10
-      );
-
-  }
-
-  /*
-    WOOD PRIVACY PANELS
-  */
-
-  else if(isWoodPrivacy){
-
-    const panelWidth =
-      parsePositiveNumber(
-        answers.panelWidth
-      ) || 8;
-
-    coveringWidth =
-      panelWidth;
-
-    coveringRequired =
-      fenceRun > 0
-      ? Math.ceil(
-          fenceRun /
-          panelWidth
-        )
-      : 0;
-
-    coveringWithWaste =
-      Math.ceil(
-        coveringRequired * 1.10
-      );
-
-    if(
-      !parsePositiveNumber(
+}
         answers.panelWidth
       )
     ){
@@ -5070,52 +4478,7 @@ function calculateFenceMaterials(answers){
 
   }
 
-  /*
-    VINYL
-  */
-
-  else if(isVinyl){
-
-    const panelWidth =
-      parsePositiveNumber(
-        answers.panelWidth
-      ) || 8;
-
-    coveringWidth =
-      panelWidth;
-
-    coveringRequired =
-      fenceRun > 0
-      ? Math.ceil(
-          fenceRun /
-          panelWidth
-        )
-      : 0;
-
-    coveringWithWaste =
-      Math.ceil(
-        coveringRequired * 1.10
-      );
-
-    if(
-      !parsePositiveNumber(
-        answers.panelWidth
-      )
-    ){
-
-      warnings.push(
-        "Vinyl panel width was not entered. A planning default of 8 feet was used."
-      );
-
-    }
-
-    warnings.push(
-      "Vinyl fence posts, rails, brackets and gate hardware are manufacturer-specific. Verify the exact system before purchasing."
-    );
-
-  }
-
-  /*
+  /* 
     ALUMINUM
   */
 
@@ -5158,14 +4521,10 @@ function calculateFenceMaterials(answers){
 
     }
 
-    warnings.push(
-      "Aluminum fence posts, brackets, fasteners and gate hardware are manufacturer-specific. Verify the exact system before purchasing."
-    );
-
   }
 
   /*
-    OTHER / CUSTOM
+    CUSTOM / OTHER
   */
 
   else{
@@ -5173,68 +4532,41 @@ function calculateFenceMaterials(answers){
     const customWidth =
       parsePositiveNumber(
         answers.customCoveringWidth
-      ) || 8;
-
-    coveringWidth =
-      customWidth;
-
-    coveringRequired =
-      fenceRun > 0
-      ? Math.ceil(
-          fenceRun /
-          customWidth
-        )
-      : 0;
-
-    coveringWithWaste =
-      Math.ceil(
-        coveringRequired * 1.10
       );
 
-    warnings.push(
-      "This is a custom fence calculation. Verify all components and quantities against the actual fence system."
-    );
+    if(customWidth){
+
+      coveringWidth =
+        customWidth;
+
+      coveringRequired =
+        fenceRun > 0
+        ? Math.ceil(
+            fenceRun /
+            customWidth
+          )
+        : 0;
+
+      coveringWithWaste =
+        Math.ceil(
+          coveringRequired * 1.10
+        );
+
+    }
+
+    else{
+
+      warnings.push(
+        "Custom fence coverage width was not entered, so covering quantity could not be calculated."
+      );
+
+    }
 
   }
+
 
   /*
-    POST INFORMATION
-  */
-
-  let postSize =
-    answers.postSize ||
-    "";
-
-  if(isChainLink){
-
-    postSize =
-      "Chain-link post system";
-
-  }
-
-  if(isVinyl){
-
-    postSize =
-      "Vinyl manufacturer post system";
-
-  }
-
-  if(isAluminum){
-
-    postSize =
-      "Aluminum manufacturer post system";
-
-  }
-
-  if(!postSize){
-
-    postSize =
-      "4 × 4 planning assumption";
-
-  }
-
-  /*
-    HOLES / CONCRETE
+    POST HOLES / CONCRETE
   */
 
   const holeDiameter =
@@ -5247,59 +4579,60 @@ function calculateFenceMaterials(answers){
       answers.holeDepth
     ) || 30;
 
-  if(
-    !parsePositiveNumber(
-      answers.holeDiameter
-    )
-  ){
+  const holeRadius =
+    holeDiameter / 2;
 
-    warnings.push(
-      "Hole diameter was not entered. A planning default of 10 inches was used."
-    );
-
-  }
-
-  if(
-    !parsePositiveNumber(
-      answers.holeDepth
-    )
-  ){
-
-    warnings.push(
-      "Hole depth was not entered. A planning default of 30 inches was used."
-    );
-
-  }
-
-  const holeRadiusFeet =
-    holeDiameter / 12 / 2;
-
-  const holeDepthFeet =
-    holeDepth / 12;
-
-  const holeVolume =
+  const holeVolumeCubicInches =
     Math.PI *
     Math.pow(
-      holeRadiusFeet,
+      holeRadius,
       2
     ) *
-    holeDepthFeet;
+    holeDepth;
 
-  const concreteVolume =
-    holeVolume *
-    totalPosts;
+  const holeVolumeCubicFeet =
+    holeVolumeCubicInches /
+    1728;
+
+  const totalHoleVolumeCubicFeet =
+    totalPosts *
+    holeVolumeCubicFeet;
+
+  /*
+    Concrete allowance:
+    approximately 80% of cylindrical
+    hole volume for planning.
+  */
+
+  const concreteCubicFeet =
+    totalHoleVolumeCubicFeet *
+    0.80;
+
+  const concreteCubicYards =
+    concreteCubicFeet /
+    27;
+
+  const concreteBags80 =
+    concreteCubicFeet /
+    0.60;
+
+  const concreteBags60 =
+    concreteCubicFeet /
+    0.45;
 
   const concreteBags =
-    totalPosts > 0
-    ? Math.ceil(
-        concreteVolume / .60 * 1.10
-      )
-    : 0;
+    Math.ceil(
+      concreteBags80
+    );
 
-  const gravelBags =
-    totalPosts > 0
-    ? totalPosts
-    : 0;
+  const gravelCubicFeet =
+    totalPosts *
+    0.08;
+
+  const gravelCubicYards =
+    gravelCubicFeet /
+    27;
+
 
   /*
     POST CAPS
@@ -5308,111 +4641,79 @@ function calculateFenceMaterials(answers){
   const postCaps =
     totalPosts;
 
+
   /*
-    WOOD FASTENERS ONLY
+    FASTENERS
   */
 
   let fastenerBoxes = 0;
 
-  if(isPickets){
+  if(isWoodPrivacy || isWoodPicket){
 
     fastenerBoxes =
-      coveringWithWaste > 0
-      ? Math.max(
-          1,
-          Math.ceil(
-            coveringWithWaste / 150
-          )
+      Math.max(
+        1,
+        Math.ceil(
+          (
+            coveringWithWaste +
+            totalRails
+          ) / 100
         )
-      : 0;
-
-  }else if(isWoodPrivacy){
-
-    fastenerBoxes =
-      coveringWithWaste > 0
-      ? Math.max(
-          1,
-          Math.ceil(
-            coveringWithWaste / 4
-          )
-        )
-      : 0;
+      );
 
   }
+
 
   /*
     GATE HARDWARE
   */
 
-  const singleGateHinges =
-    singleGateCount * 2;
-
-  const doubleGateHinges =
-    doubleGateCount * 4;
-
-  const totalGates =
+  const hingeSets =
     singleGateCount +
     doubleGateCount;
 
-  const gateLatches =
-    totalGates;
+  const latchSets =
+    singleGateCount +
+    doubleGateCount;
 
   const dropRods =
-    doubleGateCount * 2;
+    doubleGateCount;
 
-  if(
-    totalGates > 0
-  ){
 
-    warnings.push(
-      "Gate hardware quantities are planning allowances. Verify the actual gate design and manufacturer hardware."
-    );
+  /*
+    CHAIN LINK HARDWARE
+  */
 
-  }
+  const terminalHardwareSets =
+    terminalPosts;
 
-  if(
-    height > 8
-  ){
+  const braceBandAllowance =
+    terminalPosts;
 
-    warnings.push(
-      "Fence height exceeds 8 feet. Verify engineering, permitting and local requirements."
-    );
+  const railEnds =
+    topRail
+    ? terminalPosts
+    : 0;
 
-  }
 
-  return {
+  /*
+    MATERIAL SUMMARY
+  */
 
-    calculatorType:"fence",
+  const summary = {
 
-    fenceType:fenceType,
+    fenceType,
 
     fenceTypeLabel:
-      getFenceTypeLabel(fenceType),
+      getFenceTypeLabel(
+        fenceType
+      ),
 
     totalFeet,
 
-    height,
-
-    style:
-      answers.style || "",
-
-    construction,
-
-    singleGateCount,
-
-    singleGateWidths,
-
-    singleGateWidthTotal,
-
-    doubleGateCount,
-
-    doubleGateWidths,
-
-    doubleGateWidthTotal,
-
-    gateWidthTotal,
-
     fenceRun,
+
+    height,
 
     postSpacing,
 
@@ -5426,30 +4727,63 @@ function calculateFenceMaterials(answers){
 
     gatePosts,
 
-    terminalPosts,
-
     totalPosts,
 
-    postSize,
+    terminalPosts,
+
+    singleGateCount,
+
+    doubleGateCount,
+
+    singleGateWidthTotal,
+
+    doubleGateWidthTotal,
+
+    gateWidthTotal,
 
     railsPerSection,
 
     totalRails,
 
-    coveringType:
-      isChainLink
-      ? "mesh"
-      : isPickets
-      ? "pickets"
-      : "panels",
+    coveringRequired,
+
+    coveringWithWaste,
 
     coveringWidth,
 
     picketCenterSpacing,
 
-    coveringRequired,
+    holeDiameter,
 
-    coveringWithWaste,
+    holeDepth,
+
+    totalHoleVolumeCubicFeet,
+
+    concreteCubicFeet,
+
+    concreteCubicYards,
+
+    concreteBags,
+
+    concreteBags60:
+
+      Math.ceil(
+        concreteBags60
+      ),
+
+    gravelCubicFeet,
+
+    gravelCubicYards,
+
+    postCaps,
+
+    fastenerBoxes,
+
+    hingeSets,
+
+    latchSets,
+
+    dropRods,
 
     meshGauge,
 
@@ -5477,242 +4811,17 @@ function calculateFenceMaterials(answers){
 
     privacySlats,
 
-    holeDiameter,
+    terminalHardwareSets,
 
-    holeDepth,
+    braceBandAllowance,
 
-    concreteVolume,
+    railEnds,
 
-    concreteBags,
-
-    gravelBags,
-
-    postCaps,
-
-    fastenerBoxes,
-
-    singleGateHinges,
-
-    doubleGateHinges,
-
-    gateLatches,
-
-    dropRods,
-
-    warnings,
-
-    requirements:
-      answers.requirements || ""
+    warnings
 
   };
 
-}
-
-
-/* =========================================================
-   PLAN GENERATION
-   ========================================================= */
-
-function generateAIPlanFromAnswers(){
-
-  if(!editingPlan){
-    return;
-  }
-
-  const name =
-    document.getElementById(
-      "planProjectName"
-    ).value.trim();
-
-  const description =
-    document.getElementById(
-      "planDescription"
-    ).value.trim();
-
-  if(!name){
-
-    alert("Please enter a project name.");
-
-    return;
-
-  }
-
-  const answers = {};
-
-  editingPlan.questions.forEach(q => {
-
-    /*
-      Hidden conditional questions are deliberately
-      stored as blank so an old value cannot accidentally
-      affect a different fence style.
-    */
-
-    answers[q.id] =
-      questionIsVisible(q)
-      ? getPlanAnswer(q.id)
-      : "";
-
-  });
-
-  const answerRecords =
-    editingPlan.questions
-      .filter(q => {
-
-        /*
-          Keep common questions and questions that were
-          actually visible for the selected fence style.
-        */
-
-        return questionIsVisible(q);
-
-      })
-      .map(q => ({
-
-        question:q.question,
-
-        answer:
-          answers[q.id] || "Not provided."
-
-      }));
-
-  const isFence =
-    /fence/i.test(name);
-
-  let calculation = null;
-  let tasks = [];
-  let materials = [];
-  let budget = 0;
-
-  if(isFence){
-
-    calculation =
-      calculateFenceMaterials(
-        answers
-      );
-
-    budget =
-      extractNumber(
-        answers.budget
-      );
-
-    tasks =
-      buildFenceTaskList(
-        calculation
-      );
-
-    materials =
-      buildFenceMaterialList(
-        calculation
-      );
-
-  }else{
-
-    budget =
-      extractNumber(
-        answers.budget
-      );
-
-    tasks = [
-
-      "Confirm project dimensions",
-
-      "Confirm desired finished result",
-
-      "Research and confirm materials",
-
-      "Measure the project area",
-
-      "Calculate material quantities",
-
-      "Add reasonable waste allowance",
-
-      "Price materials",
-
-      "Purchase materials",
-
-      "Prepare the work area",
-
-      "Complete the project",
-
-      "Inspect finished work",
-
-      "Clean up",
-
-      "Save measurements and product information"
-
-    ];
-
-    materials = [
-
-      {
-        name:"Primary project materials",
-        quantity:
-          "Calculate after confirming dimensions"
-      },
-
-      {
-        name:"Fasteners / installation supplies",
-        quantity:
-          "Determine after material selection"
-      },
-
-      {
-        name:"Finishing materials",
-        quantity:
-          "Determine from selected finish"
-      }
-
-    ];
-
-  }
-
-  editingPlan = {
-
-    name:name,
-
-    description:description,
-
-    answers:answerRecords,
-
-    rawAnswers:answers,
-
-    calculation:calculation,
-
-    tasks:tasks.map((text,index) => ({
-
-      id:
-        Date.now().toString() +
-        "-" +
-        index,
-
-      text:text,
-
-      done:false,
-
-      dueDate:""
-
-    })),
-
-    materials:materials.map((m,index) => ({
-
-      id:
-        Date.now().toString() +
-        "-" +
-        index,
-
-      name:m.name,
-
-      quantity:m.quantity
-
-    })),
-
-    budget:budget,
-
-    isFence:isFence
-
-  };
-
-  showPlanPreview();
+  return summary;
 
 }
 
@@ -5721,93 +4830,417 @@ function generateAIPlanFromAnswers(){
    FENCE TASK LIST
    ========================================================= */
 
-function buildFenceTaskList(c){
+function buildFenceTaskList(
+  answers,
+  takeoff
+){
 
-  const tasks = [
+  const tasks = [];
 
-    "Measure the entire fence line",
+  const label =
+    takeoff
+      ? takeoff.fenceTypeLabel
+      : getFenceTypeLabel(
+          getFenceTypeFromAnswer(
+            answers.fenceType
+          )
+        );
 
-    "Verify property boundaries",
+  tasks.push({
 
-    "Check HOA and local requirements",
+    title:
+      `Confirm ${label} fence system and layout`,
 
-    "Locate underground utilities",
+    completed:false
 
-    "Confirm fence style and height",
+  });
 
-    "Confirm gate locations",
+  tasks.push({
 
-    "Confirm single gate widths",
+    title:
+      "Confirm property line, setbacks, utilities and any HOA requirements",
 
-    "Confirm double gate openings",
+    completed:false
 
-    "Confirm post spacing",
+  });
 
-    "Confirm fence corners and endpoints",
+  tasks.push({
 
-    "Review material takeoff",
+    title:
+      "Verify total fence length, fence height and gate openings",
 
-    "Price materials",
+    completed:false
 
-    "Purchase materials",
+  });
 
-    "Mark post locations",
+  tasks.push({
 
-    "Dig post holes",
+    title:
+      "Mark fence line and all post locations",
 
-    "Set and align fence posts"
+    completed:false
 
-  ];
+  });
 
-  if(c.fenceType === "chainLink"){
 
-    tasks.push(
-      "Confirm chain-link mesh gauge",
-      "Confirm mesh roll length",
-      "Confirm top-rail requirement",
-      "Confirm top-rail piece length",
-      "Confirm tension wire",
-      "Confirm fence-tie spacing",
-      "Install line posts",
-      "Install terminal and corner posts",
-      "Install chain-link mesh",
-      "Install top rail",
-      "Install tension wire",
-      "Install fence ties",
-      "Install terminal hardware",
-      "Build or install chain-link gates"
-    );
+  if(takeoff){
 
-  }else if(
-    c.fenceType === "woodPrivacy" ||
-    c.fenceType === "woodPicket"
+    tasks.push({
+
+      title:
+        `Plan for approximately ${takeoff.totalPosts} total posts`,
+
+      completed:false
+
+    });
+
+  }
+
+
+  /*
+    CHAIN LINK TASKS
+  */
+
+  if(
+    takeoff &&
+    takeoff.fenceType === "chainLink"
   ){
 
-    tasks.push(
-      "Confirm wood post size",
-      "Confirm rail count",
-      "Install horizontal rails",
-      "Install fence panels or pickets",
-      "Build or install wood gates"
-    );
+    tasks.push({
 
-  }else if(c.fenceType === "vinylPrivacy"){
+      title:
+        `Confirm ${takeoff.meshGauge} chain-link mesh`,
 
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        `Plan approximately ${takeoff.meshPurchasedFeet} ft of mesh (${takeoff.meshRolls} roll${takeoff.meshRolls === 1 ? "" : "s"})`,
+
+      completed:false
+
+    });
+
+    if(takeoff.topRail){
+
+      tasks.push({
+
+        title:
+          `Install approximately ${takeoff.topRailPieces} top-rail pieces`,
+
+        completed:false
+
+      });
+
+    }
+
+    if(takeoff.tensionWire){
+
+      tasks.push({
+
+        title:
+          `Install approximately ${takeoff.tensionWireFeet} ft of bottom tension wire`,
+
+        completed:false
+
+      });
+
+    }
+
+    tasks.push({
+
+      title:
+        `Install approximately ${takeoff.fenceTieCount} fence ties`,
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        "Install terminal, corner and gate posts with required brace/terminal hardware",
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        "Install line posts and line-post caps",
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        "Install top rail and rail-end hardware",
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        "Attach chain-link mesh and stretch it tight",
+
+      completed:false
+
+    });
+
+    if(takeoff.privacySlats){
+
+      tasks.push({
+
+        title:
+          "Install chain-link privacy slats according to the selected manufacturer's system",
+
+        completed:false
+
+      });
+
+    }
+
+    tasks.push({
+
+      title:
+        "Install gate frames, hinges, latches and alignment hardware",
+
+      completed:false
+
+    });
+
+  }
+
+
+  /*
+    WOOD TASKS
+  */
+
+  if(
+    takeoff &&
+    (
+      takeoff.fenceType === "woodPrivacy" ||
+      takeoff.fenceType === "woodPicket"
+    )
+  ){
+
+    tasks.push({
+
+      title:
+        "Set wood posts plumb and brace while concrete cures",
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        `Install approximately ${takeoff.totalRails} horizontal rails`,
+
+      completed:false
+
+    });
+
+    if(
+      takeoff.fenceType === "woodPrivacy"
+    ){
+
+      tasks.push({
+
+        title:
+          `Install approximately ${takeoff.coveringWithWaste} fence panels including planning waste allowance`,
+
+        completed:false
+
+      });
+
+    }
+
+    else{
+
+      tasks.push({
+
+        title:
+          `Install approximately ${takeoff.coveringWithWaste} individual pickets including planning waste allowance`,
+
+        completed:false
+
+      });
+
+    }
+
+    tasks.push({
+
+      title:
+        "Install gate frames, hinges and latches",
+
+      completed:false
+
+    });
+
+  }
+
+
+  /*
+    VINYL TASKS
+  */
+
+  if(
+    takeoff &&
+    takeoff.fenceType === "vinylPrivacy"
+  ){
+
+    tasks.push({
+
+      title:
+        "Install vinyl posts according to the manufacturer's system",
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        `Install approximately ${takeoff.coveringWithWaste} vinyl fence panels including planning waste allowance`,
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        "Install manufacturer-specific brackets, rails, caps and hardware",
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        "Install vinyl gate hardware and adjust gates",
+
+      completed:false
+
+    });
+
+  }
+
+
+  /*
+    ALUMINUM TASKS
+  */
+
+  if(
+    takeoff &&
+    takeoff.fenceType === "aluminum"
+  ){
+
+    tasks.push({
+
+      title:
+        "Install aluminum posts according to the manufacturer's system",
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        `Install approximately ${takeoff.coveringWithWaste} aluminum panels including planning waste allowance`,
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        "Install aluminum brackets, rails, caps and fasteners",
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        "Install gate hardware and adjust gate alignment",
+
+      completed:false
+
+    });
+
+  }
+
+
+  /*
+    CUSTOM TASKS
+  */
+
+  if(
+    takeoff &&
+    takeoff.fenceType === "other"
+  ){
+
+    tasks.push({
+
+      title:
+        "Confirm custom fence manufacturer's installation requirements",
+
+      completed:false
+
+    });
+
+    tasks.push({
+
+      title:
+        "Confirm custom panel/section dimensions and hardware",
+
+      completed:false
+
+    });
+
+  }
+
+
+  tasks.push({
+
+    title:
+      "Complete final fence inspection and verify gates operate correctly",
+
+    completed:false
+
+  });
+
+  return tasks;
+
+}
     tasks.push(
-      "Confirm vinyl manufacturer system",
-      "Confirm panel and post configuration",
-      "Install vinyl posts",
-      "Install vinyl panels and rails",
-      "Build or install vinyl gates"
+      "Install vinyl gates",
+      "Install manufacturer-specific hardware"
     );
 
   }else if(c.fenceType === "aluminum"){
 
     tasks.push(
-      "Confirm aluminum manufacturer system",
-      "Confirm panel width",
+      "Confirm aluminum panel width",
+      "Confirm aluminum post system",
       "Install aluminum posts",
-      "Install aluminum fence panels",
+      "Install aluminum panels",
+      "Install aluminum hardware",
       "Build or install aluminum gates"
     );
 
@@ -5815,25 +5248,31 @@ function buildFenceTaskList(c){
 
     tasks.push(
       "Confirm custom fence system",
-      "Confirm manufacturer installation requirements",
-      "Install custom fence components"
+      "Confirm custom panel or section dimensions",
+      "Confirm custom hardware",
+      "Install custom fence components",
+      "Build or install custom gates"
     );
 
   }
 
   tasks.push(
 
-    "Install gate hinges and latches",
+    "Set posts with concrete",
 
-    "Install drop rods on double gates",
+    "Allow concrete to cure",
+
+    "Check fence alignment",
 
     "Install post caps",
 
-    "Inspect the completed fence",
+    "Install gate hinges and latches",
 
-    "Clean up the work area",
+    "Adjust gates for proper operation",
 
-    "Save final measurements and receipts"
+    "Complete final inspection",
+
+    "Clean up work area"
 
   );
 
@@ -5851,78 +5290,114 @@ function buildFenceMaterialList(c){
   const materials = [];
 
   /*
+    COMMON
+  */
+
+  if(c.totalPosts > 0){
+
+    materials.push({
+
+      name:
+        `${c.fenceTypeLabel} posts`,
+
+      quantity:
+        c.totalPosts,
+
+      unit:
+        "posts",
+
+      notes:
+        `${c.linePosts} line, ${c.cornerPosts} corner, ${c.endPosts} end, ${c.gatePosts} gate`
+
+    });
+
+  }
+
+  if(c.concreteBags > 0){
+
+    materials.push({
+
+      name:
+        "Concrete mix",
+
+      quantity:
+        c.concreteBags,
+
+      unit:
+        "bags",
+
+      notes:
+        "Planning allowance based on selected hole size/depth"
+
+    });
+
+  }
+
+  if(c.gravelBags > 0){
+
+    materials.push({
+
+      name:
+        "Drainage gravel",
+
+      quantity:
+        c.gravelBags,
+
+      unit:
+        "bags",
+
+      notes:
+        "Planning allowance for post holes"
+
+    });
+
+  }
+
+  if(c.postCaps > 0){
+
+    materials.push({
+
+      name:
+        "Post caps",
+
+      quantity:
+        c.postCaps,
+
+      unit:
+        "caps"
+
+    });
+
+  }
+
+
+  /*
     CHAIN LINK
   */
 
   if(c.fenceType === "chainLink"){
 
-    materials.push({
-
-      name:
-        `Chain-link mesh — ${c.meshGauge}`,
-
-      quantity:
-        `${c.meshRolls} roll(s) × ${formatNumber(c.meshRollLength)} ft = ${formatNumber(c.meshPurchasedFeet)} ft purchased`
-
-    });
-
-    if(c.linePosts > 0){
+    if(c.meshRolls > 0){
 
       materials.push({
 
         name:
-          "Chain-link line posts",
+          `${c.meshGauge} chain-link mesh`,
 
         quantity:
-          `${c.linePosts} posts`
+          c.meshRolls,
+
+        unit:
+          "rolls",
+
+        notes:
+          `${c.meshPurchasedFeet} ft purchased for approximately ${Math.round(c.meshRequiredFeet)} ft required`
 
       });
 
     }
 
-    if(c.cornerPosts > 0){
-
-      materials.push({
-
-        name:
-          "Chain-link corner posts",
-
-        quantity:
-          `${c.cornerPosts} posts`
-
-      });
-
-    }
-
-    if(c.endPosts > 0){
-
-      materials.push({
-
-        name:
-          "Chain-link end / terminal posts",
-
-        quantity:
-          `${c.endPosts} posts`
-
-      });
-
-    }
-
-    if(c.gatePosts > 0){
-
-      materials.push({
-
-        name:
-          "Chain-link gate posts",
-
-        quantity:
-          `${c.gatePosts} posts`
-
-      });
-
-    }
-
-    if(c.topRail){
+    if(c.topRail && c.topRailPieces > 0){
 
       materials.push({
 
@@ -5930,7 +5405,13 @@ function buildFenceMaterialList(c){
           "Chain-link top rail",
 
         quantity:
-          `${c.topRailPieces} pieces × ${formatNumber(c.topRailPieceLength)} ft`
+          c.topRailPieces,
+
+        unit:
+          "pieces",
+
+        notes:
+          `${c.topRailPieceLength} ft pieces`
 
       });
 
@@ -5944,51 +5425,97 @@ function buildFenceMaterialList(c){
           "Bottom tension wire",
 
         quantity:
-          `${formatNumber(c.tensionWireFeet)} ft`
+          c.tensionWireFeet,
+
+        unit:
+          "linear ft",
+
+        notes:
+          "Planning allowance"
 
       });
 
     }
 
-    materials.push({
+    if(c.fenceTieCount > 0){
 
-      name:
-        "Chain-link fence ties",
+      materials.push({
 
-      quantity:
-        `${c.fenceTieCount} planning allowance`
+        name:
+          "Chain-link fence ties",
 
-    });
+        quantity:
+          c.fenceTieCount,
 
-    materials.push({
+        unit:
+          "ties",
 
-      name:
-        "Terminal / corner brace and tension hardware",
+        notes:
+          `Based on approximately ${c.fenceTieSpacing} inch spacing`
 
-      quantity:
-        `${c.terminalPosts} post locations — verify manufacturer kit`
+      });
 
-    });
+    }
 
-    materials.push({
+    if(c.terminalHardwareSets > 0){
 
-      name:
-        "Line post caps",
+      materials.push({
 
-      quantity:
-        `${c.linePosts} caps`
+        name:
+          "Terminal / corner / gate hardware sets",
 
-    });
+        quantity:
+          c.terminalHardwareSets,
 
-    materials.push({
+        unit:
+          "sets",
 
-      name:
-        "Terminal / corner / gate post caps",
+        notes:
+          "Verify exact manufacturer hardware"
 
-      quantity:
-        `${c.terminalPosts} caps`
+      });
 
-    });
+    }
+
+    if(c.braceBandAllowance > 0){
+
+      materials.push({
+
+        name:
+          "Brace / tension bands",
+
+        quantity:
+          c.braceBandAllowance,
+
+        unit:
+          "allowance",
+
+        notes:
+          "Verify exact quantity for selected system"
+
+      });
+
+    }
+
+    if(c.railEnds > 0){
+
+      materials.push({
+
+        name:
+          "Top-rail ends / fittings",
+
+        quantity:
+          c.railEnds,
+
+        unit:
+          "allowance",
+
+        notes:
+          "Verify exact manufacturer hardware"
+
+      });
+
+    }
 
     if(c.privacySlats){
 
@@ -5998,415 +5525,180 @@ function buildFenceMaterialList(c){
           "Chain-link privacy slats",
 
         quantity:
-          "Verify manufacturer package quantity"
+          "System dependent",
+
+        unit:
+          "",
+
+        notes:
+          "Verify manufacturer's quantity for selected mesh and slat system"
 
       });
 
     }
-
-    materials.push({
-
-      name:
-        "Concrete — 80 lb bags",
-
-      quantity:
-        `${c.concreteBags} bags planning allowance`
-
-    });
-
-    materials.push({
-
-      name:
-        "Base gravel",
-
-      quantity:
-        `${c.gravelBags} bags planning allowance`
-
-    });
-
-    if(c.singleGateCount > 0){
-
-      materials.push({
-
-        name:
-          "Chain-link single gate frame / mesh kit",
-
-        quantity:
-          `${c.singleGateCount} gate(s)`
-
-      });
-
-      materials.push({
-
-        name:
-          "Single gate hinges",
-
-        quantity:
-          `${c.singleGateHinges}`
-
-      });
-
-    }
-
-    if(c.doubleGateCount > 0){
-
-      materials.push({
-
-        name:
-          "Chain-link double gate frame / mesh kit",
-
-        quantity:
-          `${c.doubleGateCount} gate(s)`
-
-      });
-
-      materials.push({
-
-        name:
-          "Double gate hinges",
-
-        quantity:
-          `${c.doubleGateHinges}`
-
-      });
-
-      materials.push({
-
-        name:
-          "Drop rods for double gates",
-
-        quantity:
-          `${c.dropRods}`
-
-      });
-
-    }
-
-    if(c.gateLatches > 0){
-
-      materials.push({
-
-        name:
-          "Chain-link gate latches",
-
-        quantity:
-          `${c.gateLatches}`
-
-      });
-
-    }
-
-    return materials;
 
   }
 
 
   /*
-    WOOD
+    WOOD PRIVACY
   */
 
-  if(
-    c.fenceType === "woodPrivacy" ||
-    c.fenceType === "woodPicket"
-  ){
+  if(c.fenceType === "woodPrivacy"){
 
-    materials.push({
-
-      name:
-        `Fence posts — ${c.postSize}`,
-
-      quantity:
-        `${c.totalPosts} posts`
-
-    });
-
-    if(c.cornerPosts > 0){
+    if(c.totalRails > 0){
 
       materials.push({
 
         name:
-          `Corner posts — ${c.postSize}`,
+          "Horizontal fence rails",
 
         quantity:
-          `${c.cornerPosts} posts`
+          c.totalRails,
+
+        unit:
+          "rails",
+
+        notes:
+          `${c.railsPerSection} rails per section`
 
       });
 
     }
 
-    if(c.endPosts > 0){
+    if(c.coveringWithWaste > 0){
 
       materials.push({
 
         name:
-          `End posts — ${c.postSize}`,
+          "Wood fence panels",
 
         quantity:
-          `${c.endPosts} posts`
+          c.coveringWithWaste,
+
+        unit:
+          "panels",
+
+        notes:
+          `Includes approximately 10% planning waste`
 
       });
 
     }
 
-    if(c.gatePosts > 0){
+    if(c.fastenerBoxes > 0){
 
       materials.push({
 
         name:
-          `Gate posts — ${c.postSize}`,
+          "Exterior fence screws / fasteners",
 
         quantity:
-          `${c.gatePosts} posts`
+          c.fastenerBoxes,
+
+        unit:
+          "boxes",
+
+        notes:
+          "Planning allowance"
 
       });
 
     }
-
-    if(c.linePosts > 0){
-
-      materials.push({
-
-        name:
-          `Line posts — ${c.postSize}`,
-
-        quantity:
-          `${c.linePosts} posts`
-
-      });
-
-    }
-
-    materials.push({
-
-      name:
-        c.coveringType === "pickets"
-        ? "Wood fence pickets"
-        : "Wood fence panels",
-
-      quantity:
-        `${c.coveringWithWaste} ${
-          c.coveringType
-        } including 10% waste`
-
-    });
-
-    materials.push({
-
-      name:"Horizontal fence rails",
-
-      quantity:
-        `${c.totalRails} rails`
-
-    });
-
-    materials.push({
-
-      name:"Concrete — 80 lb bags",
-
-      quantity:
-        `${c.concreteBags} bags planning allowance`
-
-    });
-
-    materials.push({
-
-      name:"Base gravel",
-
-      quantity:
-        `${c.gravelBags} bags planning allowance`
-
-    });
-
-    materials.push({
-
-      name:"Post caps",
-
-      quantity:
-        `${c.postCaps}`
-
-    });
-
-    materials.push({
-
-      name:"Exterior fence screws / fasteners",
-
-      quantity:
-        `${c.fastenerBoxes} box(es) planning allowance`
-
-    });
-
-    if(c.singleGateCount > 0){
-
-      materials.push({
-
-        name:"Single gate hinges",
-
-        quantity:
-          `${c.singleGateHinges}`
-
-      });
-
-    }
-
-    if(c.doubleGateCount > 0){
-
-      materials.push({
-
-        name:"Double gate hinges",
-
-        quantity:
-          `${c.doubleGateHinges}`
-
-      });
-
-    }
-
-    if(c.gateLatches > 0){
-
-      materials.push({
-
-        name:"Gate latches",
-
-        quantity:
-          `${c.gateLatches}`
-
-      });
-
-    }
-
-    if(c.dropRods > 0){
-
-      materials.push({
-
-        name:"Drop rods for double gates",
-
-        quantity:
-          `${c.dropRods}`
-
-      });
-
-    }
-
-    if(c.singleGateCount > 0){
-
-      materials.push({
-
-        name:"Single gate construction materials",
-
-        quantity:
-          `${c.singleGateCount} gate(s) — verify actual gate design`
-
-      });
-
-    }
-
-    if(c.doubleGateCount > 0){
-
-      materials.push({
-
-        name:"Double gate construction materials",
-
-        quantity:
-          `${c.doubleGateCount} gate(s) — verify actual gate design`
-
-      });
-
-    }
-
-    return materials;
 
   }
 
 
   /*
-    VINYL
+    WOOD PICKET
+  */
+
+  if(c.fenceType === "woodPicket"){
+
+    if(c.totalRails > 0){
+
+      materials.push({
+
+        name:
+          "Horizontal fence rails",
+
+        quantity:
+          c.totalRails,
+
+        unit:
+          "rails",
+
+        notes:
+          `${c.railsPerSection} rails per section`
+
+      });
+
+    }
+
+    if(c.coveringWithWaste > 0){
+
+      materials.push({
+
+        name:
+          "Wood fence pickets",
+
+        quantity:
+          c.coveringWithWaste,
+
+        unit:
+          "pickets",
+
+        notes:
+          `Based on ${c.coveringWidth} inch picket width plus spacing; includes planning waste`
+
+      });
+
+    }
+
+    if(c.fastenerBoxes > 0){
+
+      materials.push({
+
+        name:
+          "Exterior fence screws / fasteners",
+
+        quantity:
+          c.fastenerBoxes,
+
+        unit:
+          "boxes",
+
+        notes:
+          "Planning allowance"
+
+      });
+
+    }
+
+  }
+
+
+  /*
+    VINYL PRIVACY
   */
 
   if(c.fenceType === "vinylPrivacy"){
 
-    materials.push({
-
-      name:
-        "Vinyl fence panels",
-
-      quantity:
-        `${c.coveringWithWaste} panels including 10% waste`
-
-    });
-
-    materials.push({
-
-      name:
-        "Vinyl fence posts",
-
-      quantity:
-        `${c.totalPosts} posts`
-
-    });
-
-    materials.push({
-
-      name:
-        "Vinyl post caps",
-
-      quantity:
-        `${c.postCaps}`
-
-    });
-
-    materials.push({
-
-      name:
-        "Vinyl panel / post brackets and manufacturer hardware",
-
-      quantity:
-        "Verify manufacturer system"
-
-    });
-
-    materials.push({
-
-      name:
-        "Concrete — 80 lb bags",
-
-      quantity:
-        `${c.concreteBags} bags planning allowance`
-
-    });
-
-    materials.push({
-
-      name:
-        "Base gravel",
-
-      quantity:
-        `${c.gravelBags} bags planning allowance`
-
-    });
-
-    if(c.singleGateCount > 0){
+    if(c.coveringWithWaste > 0){
 
       materials.push({
 
         name:
-          "Vinyl single gate",
+          "Vinyl privacy fence panels",
 
         quantity:
-          `${c.singleGateCount} gate(s)`
+          c.coveringWithWaste,
 
-      });
+        unit:
+          "panels",
 
-    }
-
-    if(c.doubleGateCount > 0){
-
-      materials.push({
-
-        name:
-          "Vinyl double gate",
-
-        quantity:
-          `${c.doubleGateCount} gate(s)`
+        notes:
+          `Based on ${c.coveringWidth} ft panel width; includes planning waste`
 
       });
 
@@ -6415,14 +5707,18 @@ function buildFenceMaterialList(c){
     materials.push({
 
       name:
-        "Gate hinges and latches",
+        "Vinyl manufacturer-specific brackets / rails / hardware",
 
       quantity:
-        "Verify manufacturer system"
+        "System dependent",
+
+      unit:
+        "",
+
+      notes:
+        "Verify exact kit contents before purchasing"
 
     });
-
-    return materials;
 
   }
 
@@ -6433,74 +5729,1242 @@ function buildFenceMaterialList(c){
 
   if(c.fenceType === "aluminum"){
 
-    materials.push({
-
-      name:
-        "Aluminum fence panels",
-
-      quantity:
-        `${c.coveringWithWaste} panels including 10% waste`
-
-    });
-
-    materials.push({
-
-      name:
-        "Aluminum fence posts",
-
-      quantity:
-        `${c.totalPosts} posts`
-
-    });
-
-    materials.push({
-
-      name:
-        "Aluminum post caps",
-
-      quantity:
-        `${c.postCaps}`
-
-    });
-
-    materials.push({
-
-      name:
-        "Aluminum panel brackets / fasteners",
-
-      quantity:
-        "Verify manufacturer system"
-
-    });
-
-    materials.push({
-
-      name:
-        "Concrete — 80 lb bags",
-
-      quantity:
-        `${c.concreteBags} bags planning allowance`
-
-    });
-
-    materials.push({
-
-      name:
-        "Base gravel",
-
-      quantity:
-        `${c.gravelBags} bags planning allowance`
-
-    });
-
-    if(c.singleGateCount > 0){
+    if(c.coveringWithWaste > 0){
 
       materials.push({
 
         name:
-          "Aluminum single gate",
+          "Aluminum fence panels",
 
         quantity:
+          c.coveringWithWaste,
+
+        unit:
+          "panels",
+
+        notes:
+          `Based on ${c.coveringWidth} ft panel width; includes planning waste`
+
+      });
+
+    }
+
+    materials.push({
+
+      name:
+        "Aluminum manufacturer-specific brackets / hardware",
+
+      quantity:
+        "System dependent",
+
+      unit:
+        "",
+
+      notes:
+        "Verify exact kit contents before purchasing"
+
+    });
+
+  }
+
+
+  /*
+    CUSTOM / OTHER
+  */
+
+  if(c.fenceType === "other"){
+
+    if(c.coveringWithWaste > 0){
+
+      materials.push({
+
+        name:
+          "Custom fence panels / sections",
+
+        quantity:
+          c.coveringWithWaste,
+
+        unit:
+          "sections",
+
+        notes:
+          `Based on ${c.coveringWidth} ft coverage width`
+
+      });
+
+    }
+
+    materials.push({
+
+      name:
+        "Custom fence system hardware",
+
+      quantity:
+        "System dependent",
+
+      unit:
+        "",
+
+      notes:
+        "Verify exact manufacturer or fabricator requirements"
+
+    });
+
+  }
+
+
+  /*
+    GATES
+  */
+
+  if(c.singleGateCount > 0){
+
+    materials.push({
+
+      name:
+        "Single gate assemblies",
+
+      quantity:
+        c.singleGateCount,
+
+      unit:
+        "gates",
+
+      notes:
+        `Total opening width: ${c.singleGateWidthTotal} ft`
+
+    });
+
+  }
+
+  if(c.doubleGateCount > 0){
+
+    materials.push({
+
+      name:
+        "Double gate assemblies",
+
+      quantity:
+        c.doubleGateCount,
+
+      unit:
+        "gates",
+
+      notes:
+        `Total opening width: ${c.doubleGateWidthTotal} ft`
+
+    });
+
+  }
+
+  if(c.singleGateHinges > 0){
+
+    materials.push({
+
+      name:
+        "Single-gate hinges",
+
+      quantity:
+        c.singleGateHinges,
+
+      unit:
+        "hinges"
+
+    });
+
+  }
+
+  if(c.doubleGateHinges > 0){
+
+    materials.push({
+
+      name:
+        "Double-gate hinges",
+
+      quantity:
+        c.doubleGateHinges,
+
+      unit:
+        "hinges"
+
+    });
+
+  }
+
+  if(c.gateLatches > 0){
+
+    materials.push({
+
+      name:
+        "Gate latches",
+
+      quantity:
+        c.gateLatches,
+
+      unit:
+        "latches"
+
+    });
+
+  }
+
+  if(c.dropRods > 0){
+
+    materials.push({
+
+      name:
+        "Drop rods",
+
+      quantity:
+        c.dropRods,
+
+      unit:
+        "rods",
+
+      notes:
+        "Planning allowance for double gates"
+
+    });
+
+  }
+
+  return materials;
+
+}
+
+
+/* =========================================================
+   FENCE TAKEOFF DISPLAY
+   ========================================================= */
+
+function renderFenceTakeoff(c){
+
+  if(!c){
+    return "";
+  }
+
+  const warningHTML =
+    c.warnings &&
+    c.warnings.length
+    ? `
+
+      <div class="warningBox">
+
+        <strong>⚠️ Planning Notes</strong>
+
+        <ul>
+
+          ${c.warnings.map(w => `
+
+            <li>
+              ${escapeHTML(w)}
+            </li>
+
+          `).join("")}
+
+        </ul>
+
+      </div>
+
+    `
+    : "";
+
+
+  return `
+
+    <div class="card">
+
+      <h2>
+        📐 Fence Material Takeoff
+      </h2>
+
+      <div class="takeoffGrid">
+
+        <div>
+          <strong>Fence Type</strong>
+          <span>
+            ${escapeHTML(c.fenceTypeLabel)}
+          </span>
+        </div>
+
+        <div>
+          <strong>Total Fence</strong>
+          <span>
+            ${escapeHTML(String(c.totalFeet))} ft
+          </span>
+        </div>
+
+        <div>
+          <strong>Fence Run</strong>
+          <span>
+            ${escapeHTML(String(c.fenceRun))} ft
+          </span>
+        </div>
+
+        <div>
+          <strong>Height</strong>
+          <span>
+            ${escapeHTML(String(c.height))} ft
+          </span>
+        </div>
+
+        <div>
+          <strong>Post Spacing</strong>
+          <span>
+            ${escapeHTML(String(c.postSpacing))} ft
+          </span>
+        </div>
+
+        <div>
+          <strong>Total Posts</strong>
+          <span>
+            ${escapeHTML(String(c.totalPosts))}
+          </span>
+        </div>
+
+        <div>
+          <strong>Line Posts</strong>
+          <span>
+            ${escapeHTML(String(c.linePosts))}
+          </span>
+        </div>
+
+        <div>
+          <strong>Corner Posts</strong>
+          <span>
+            ${escapeHTML(String(c.cornerPosts))}
+          </span>
+        </div>
+
+        <div>
+          <strong>End Posts</strong>
+          <span>
+            ${escapeHTML(String(c.endPosts))}
+          </span>
+        </div>
+
+        <div>
+          <strong>Gate Posts</strong>
+          <span>
+            ${escapeHTML(String(c.gatePosts))}
+          </span>
+        </div>
+
+        <div>
+          <strong>Sections</strong>
+          <span>
+            ${escapeHTML(String(c.sections))}
+          </span>
+        </div>
+
+        <div>
+          <strong>Concrete</strong>
+          <span>
+            ${escapeHTML(String(c.concreteBags))} bags
+          </span>
+        </div>
+
+        <div>
+          <strong>Post-Hole Size</strong>
+          <span>
+            ${escapeHTML(String(c.holeDiameter))}" ×
+            ${escapeHTML(String(c.holeDepth))}"
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
+    ${
+      c.fenceType === "chainLink"
+      ? `
+
+        <div class="card">
+
+          <h2>
+            ⛓️ Chain-Link Details
+          </h2>
+
+          <div class="takeoffGrid">
+
+            <div>
+              <strong>Mesh Gauge</strong>
+              <span>
+                ${escapeHTML(c.meshGauge)}
+              </span>
+            </div>
+
+            <div>
+              <strong>Mesh Required</strong>
+              <span>
+                ${Math.ceil(c.meshRequiredFeet)} ft
+              </span>
+            </div>
+
+            <div>
+              <strong>Mesh Purchased</strong>
+              <span>
+                ${c.meshPurchasedFeet} ft
+              </span>
+            </div>
+
+            <div>
+              <strong>Mesh Rolls</strong>
+              <span>
+                ${c.meshRolls}
+              </span>
+            </div>
+
+            <div>
+              <strong>Top Rail</strong>
+              <span>
+                ${c.topRail ? "Yes" : "No"}
+              </span>
+            </div>
+
+            <div>
+              <strong>Top-Rail Pieces</strong>
+              <span>
+                ${c.topRailPieces}
+              </span>
+            </div>
+
+            <div>
+              <strong>Tension Wire</strong>
+              <span>
+                ${c.tensionWire ? "Yes" : "No"}
+              </span>
+            </div>
+
+            <div>
+              <strong>Tension Wire</strong>
+              <span>
+                ${c.tensionWireFeet} ft
+              </span>
+            </div>
+
+            <div>
+              <strong>Fence Ties</strong>
+              <span>
+                ${c.fenceTieCount}
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+      `
+      : ""
+    }
+
+    ${
+      c.fenceType === "woodPrivacy" ||
+      c.fenceType === "woodPicket"
+      ? `
+
+        <div class="card">
+
+          <h2>
+            🪵 Wood Fence Details
+          </h2>
+
+          <div class="takeoffGrid">
+
+            <div>
+              <strong>Rails / Section</strong>
+              <span>
+                ${c.railsPerSection}
+              </span>
+            </div>
+
+            <div>
+              <strong>Total Rails</strong>
+              <span>
+                ${c.totalRails}
+              </span>
+            </div>
+
+            <div>
+              <strong>Covering Required</strong>
+              <span>
+                ${c.coveringRequired}
+              </span>
+            </div>
+
+            <div>
+              <strong>With Waste</strong>
+              <span>
+                ${c.coveringWithWaste}
+              </span>
+            </div>
+
+            ${
+              c.fenceType === "woodPicket"
+              ? `
+
+                <div>
+                  <strong>Picket Width</strong>
+                  <span>
+                    ${c.coveringWidth}"
+                  </span>
+                </div>
+
+                <div>
+                  <strong>Picket Center Spacing</strong>
+                  <span>
+                    ${c.picketCenterSpacing}"
+                  </span>
+                </div>
+
+              `
+              : ""
+            }
+
+          </div>
+
+        </div>
+
+      `
+      : ""
+    }
+
+    ${
+      c.singleGateCount ||
+      c.doubleGateCount
+      ? `
+
+        <div class="card">
+
+          <h2>
+            🚪 Gate Details
+          </h2>
+
+          <div class="takeoffGrid">
+
+            <div>
+              <strong>Single Gates</strong>
+              <span>
+                ${c.singleGateCount}
+              </span>
+            </div>
+
+            <div>
+              <strong>Single Gate Width</strong>
+              <span>
+                ${c.singleGateWidthTotal} ft total
+              </span>
+            </div>
+
+            <div>
+              <strong>Double Gates</strong>
+              <span>
+                ${c.doubleGateCount}
+              </span>
+            </div>
+
+            <div>
+              <strong>Double Gate Width</strong>
+              <span>
+                ${c.doubleGateWidthTotal} ft total
+              </span>
+            </div>
+
+            <div>
+              <strong>Gate Latches</strong>
+              <span>
+                ${c.gateLatches}
+              </span>
+            </div>
+
+            <div>
+              <strong>Drop Rods</strong>
+              <span>
+                ${c.dropRods}
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+      `
+      : ""
+    }
+
+    ${warningHTML}
+
+    <div class="smallText">
+
+      Material quantities are planning estimates.
+      Verify measurements, local requirements,
+      manufacturer instructions and actual package
+      quantities before purchasing.
+
+    </div>
+
+  `;
+
+}
+    /* =========================================================
+       FENCE MATERIAL LIST
+       ========================================================= */
+
+    function buildFenceMaterialList(c){
+
+      const materials = [];
+
+      /*
+        CHAIN LINK
+      */
+
+      if(c.fenceType === "chainLink"){
+
+        materials.push({
+
+          name:
+            `Chain-link mesh — ${c.meshGauge}`,
+
+          quantity:
+            `${c.meshRolls} roll(s) × ${formatNumber(c.meshRollLength)} ft = ${formatNumber(c.meshPurchasedFeet)} ft purchased`
+
+        });
+
+        if(c.linePosts > 0){
+
+          materials.push({
+
+            name:
+              "Chain-link line posts",
+
+            quantity:
+              `${c.linePosts} posts`
+
+          });
+
+        }
+
+        if(c.cornerPosts > 0){
+
+          materials.push({
+
+            name:
+              "Chain-link corner posts",
+
+            quantity:
+              `${c.cornerPosts} posts`
+
+          });
+
+        }
+
+        if(c.endPosts > 0){
+
+          materials.push({
+
+            name:
+              "Chain-link end / terminal posts",
+
+            quantity:
+              `${c.endPosts} posts`
+
+          });
+
+        }
+
+        if(c.gatePosts > 0){
+
+          materials.push({
+
+            name:
+              "Chain-link gate posts",
+
+            quantity:
+              `${c.gatePosts} posts`
+
+          });
+
+        }
+
+        if(c.topRail){
+
+          materials.push({
+
+            name:
+              "Chain-link top rail",
+
+            quantity:
+              `${c.topRailPieces} pieces × ${formatNumber(c.topRailPieceLength)} ft`
+
+          });
+
+        }
+
+        if(c.tensionWire){
+
+          materials.push({
+
+            name:
+              "Bottom tension wire",
+
+            quantity:
+              `${formatNumber(c.tensionWireFeet)} ft`
+
+          });
+
+        }
+
+        materials.push({
+
+          name:
+            "Chain-link fence ties",
+
+          quantity:
+            `${c.fenceTieCount} planning allowance`
+
+        });
+
+        materials.push({
+
+          name:
+            "Terminal / corner brace and tension hardware",
+
+          quantity:
+            `${c.terminalPosts} post locations — verify manufacturer kit`
+
+        });
+
+        materials.push({
+
+          name:
+            "Line post caps",
+
+          quantity:
+            `${c.linePosts} caps`
+
+        });
+
+        materials.push({
+
+          name:
+            "Terminal / corner / gate post caps",
+
+          quantity:
+            `${c.terminalPosts} caps`
+
+        });
+
+        if(c.privacySlats){
+
+          materials.push({
+
+            name:
+              "Chain-link privacy slats",
+
+            quantity:
+              "Verify manufacturer package quantity"
+
+          });
+
+        }
+
+        materials.push({
+
+          name:
+            "Concrete — 80 lb bags",
+
+          quantity:
+            `${c.concreteBags} bags planning allowance`
+
+        });
+
+        materials.push({
+
+          name:
+            "Base gravel",
+
+          quantity:
+            `${c.gravelBags} bags planning allowance`
+
+        });
+
+        if(c.singleGateCount > 0){
+
+          materials.push({
+
+            name:
+              "Chain-link single gate frame / mesh kit",
+
+            quantity:
+              `${c.singleGateCount} gate(s)`
+
+          });
+
+          materials.push({
+
+            name:
+              "Single gate hinges",
+
+            quantity:
+              `${c.singleGateHinges}`
+
+          });
+
+        }
+
+        if(c.doubleGateCount > 0){
+
+          materials.push({
+
+            name:
+              "Chain-link double gate frame / mesh kit",
+
+            quantity:
+              `${c.doubleGateCount} gate(s)`
+
+          });
+
+          materials.push({
+
+            name:
+              "Double gate hinges",
+
+            quantity:
+              `${c.doubleGateHinges}`
+
+          });
+
+          materials.push({
+
+            name:
+              "Drop rods for double gates",
+
+            quantity:
+              `${c.dropRods}`
+
+          });
+
+        }
+
+        if(c.gateLatches > 0){
+
+          materials.push({
+
+            name:
+              "Chain-link gate latches",
+
+            quantity:
+              `${c.gateLatches}`
+
+          });
+
+        }
+
+        return materials;
+
+      }
+
+
+      /*
+        WOOD
+      */
+
+      if(
+        c.fenceType === "woodPrivacy" ||
+        c.fenceType === "woodPicket"
+      ){
+
+        materials.push({
+
+          name:
+            `Fence posts — ${c.postSize}`,
+
+          quantity:
+            `${c.totalPosts} posts`
+
+        });
+
+        if(c.cornerPosts > 0){
+
+          materials.push({
+
+            name:
+              `Corner posts — ${c.postSize}`,
+
+            quantity:
+              `${c.cornerPosts} posts`
+
+          });
+
+        }
+
+        if(c.endPosts > 0){
+
+          materials.push({
+
+            name:
+              `End posts — ${c.postSize}`,
+
+            quantity:
+              `${c.endPosts} posts`
+
+          });
+
+        }
+
+        if(c.gatePosts > 0){
+
+          materials.push({
+
+            name:
+              `Gate posts — ${c.postSize}`,
+
+            quantity:
+              `${c.gatePosts} posts`
+
+          });
+
+        }
+
+        if(c.linePosts > 0){
+
+          materials.push({
+
+            name:
+              `Line posts — ${c.postSize}`,
+
+            quantity:
+              `${c.linePosts} posts`
+
+          });
+
+        }
+
+        materials.push({
+
+          name:
+            c.coveringType === "pickets"
+            ? "Wood fence pickets"
+            : "Wood fence panels",
+
+          quantity:
+            `${c.coveringWithWaste} ${
+              c.coveringType
+            } including 10% waste`
+
+        });
+
+        materials.push({
+
+          name:"Horizontal fence rails",
+
+          quantity:
+            `${c.totalRails} rails`
+
+        });
+
+        materials.push({
+
+          name:"Concrete — 80 lb bags",
+
+          quantity:
+            `${c.concreteBags} bags planning allowance`
+
+        });
+
+        materials.push({
+
+          name:"Base gravel",
+
+          quantity:
+            `${c.gravelBags} bags planning allowance`
+
+        });
+
+        materials.push({
+
+          name:"Post caps",
+
+          quantity:
+            `${c.postCaps}`
+
+        });
+
+        materials.push({
+
+          name:"Exterior fence screws / fasteners",
+
+          quantity:
+            `${c.fastenerBoxes} box(es) planning allowance`
+
+        });
+
+        if(c.singleGateCount > 0){
+
+          materials.push({
+
+            name:"Single gate hinges",
+
+            quantity:
+              `${c.singleGateHinges}`
+
+          });
+
+        }
+
+        if(c.doubleGateCount > 0){
+
+          materials.push({
+
+            name:"Double gate hinges",
+
+            quantity:
+              `${c.doubleGateHinges}`
+
+          });
+
+        }
+
+        if(c.gateLatches > 0){
+
+          materials.push({
+
+            name:"Gate latches",
+
+            quantity:
+              `${c.gateLatches}`
+
+          });
+
+        }
+
+        if(c.dropRods > 0){
+
+          materials.push({
+
+            name:"Drop rods for double gates",
+
+            quantity:
+              `${c.dropRods}`
+
+          });
+
+        }
+
+        if(c.singleGateCount > 0){
+
+          materials.push({
+
+            name:"Single gate construction materials",
+
+            quantity:
+              `${c.singleGateCount} gate(s) — verify actual gate design`
+
+          });
+
+        }
+
+        if(c.doubleGateCount > 0){
+
+          materials.push({
+
+            name:"Double gate construction materials",
+
+            quantity:
+              `${c.doubleGateCount} gate(s) — verify actual gate design`
+
+          });
+
+        }
+
+        return materials;
+
+      }
+
+
+      /*
+        VINYL
+      */
+
+      if(c.fenceType === "vinylPrivacy"){
+
+        materials.push({
+
+          name:
+            "Vinyl fence panels",
+
+          quantity:
+            `${c.coveringWithWaste} panels including 10% waste`
+
+        });
+
+        materials.push({
+
+          name:
+            "Vinyl fence posts",
+
+          quantity:
+            `${c.totalPosts} posts`
+
+        });
+
+        materials.push({
+
+          name:
+            "Vinyl post caps",
+
+          quantity:
+            `${c.postCaps}`
+
+        });
+
+        materials.push({
+
+          name:
+            "Vinyl panel / post brackets and manufacturer hardware",
+
+          quantity:
+            "Verify manufacturer system"
+
+        });
+
+        materials.push({
+
+          name:
+            "Concrete — 80 lb bags",
+
+          quantity:
+            `${c.concreteBags} bags planning allowance`
+
+        });
+
+        materials.push({
+
+          name:
+            "Base gravel",
+
+          quantity:
+            `${c.gravelBags} bags planning allowance`
+
+        });
+
+        if(c.singleGateCount > 0){
+
+          materials.push({
+
+            name:
+              "Vinyl single gate",
+
+            quantity:
+              `${c.singleGateCount} gate(s)`
+
+          });
+
+        }
+
+        if(c.doubleGateCount > 0){
+
+          materials.push({
+
+            name:
+              "Vinyl double gate",
+
+            quantity:
+              `${c.doubleGateCount} gate(s)`
+
+          });
+
+        }
+
+        materials.push({
+
+          name:
+            "Gate hinges and latches",
+
+          quantity:
+            "Verify manufacturer system"
+
+        });
+
+        return materials;
+
+      }
+
+
+      /*
+        ALUMINUM
+      */
+
+      if(c.fenceType === "aluminum"){
+
+        materials.push({
+
+          name:
+            "Aluminum fence panels",
+
+          quantity:
+            `${c.coveringWithWaste} panels including 10% waste`
+
+        });
+
+        materials.push({
+
+          name:
+            "Aluminum fence posts",
+
+          quantity:
+            `${c.totalPosts} posts`
+
+        });
+
+        materials.push({
+
+          name:
+            "Aluminum post caps",
+
+          quantity:
+            `${c.postCaps}`
+
+        });
+
+        materials.push({
+
+          name:
+            "Aluminum panel brackets / fasteners",
+
+          quantity:
+            "Verify manufacturer system"
+
+        });
+
+        materials.push({
+
+          name:
+            "Concrete — 80 lb bags",
+
+          quantity:
+            `${c.concreteBags} bags planning allowance`
+
+        });
+
+        materials.push({
+
+          name:
+            "Base gravel",
+
+          quantity:
+            `${c.gravelBags} bags planning allowance`
+
+        });
+
+        if(c.singleGateCount > 0){
+
+          materials.push({
+
+            name:
+              "Aluminum single gate",
+                      quantity:
           `${c.singleGateCount} gate(s)`
 
       });
@@ -7199,8 +7663,7 @@ function saveAIPlanEdits(){
       document.getElementById("previewBudget")
         .value
     ) || 0;
-
-  editingPlan.tasks.forEach((task,index) => {
+      editingPlan.tasks.forEach((task,index) => {
 
     const input =
       document.getElementById(
@@ -7539,6 +8002,7 @@ function escapeAttribute(value){
     .replace(/`/g,"&#096;");
 
 }
+
 
 /* =========================================================
    START APP
