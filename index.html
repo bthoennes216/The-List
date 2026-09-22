@@ -22,12 +22,12 @@ body{
 }
 
 header{
-  background:#fff;
+  background:#f5f3eb;
   padding:18px 16px 14px;
   position:sticky;
   top:0;
   z-index:20;
-  border-bottom:1px solid #ddd;
+  border-bottom:1px solid #ddd9cc;
 }
 
 header h1{
@@ -71,9 +71,9 @@ nav button{
 }
 
 nav button.active{
-  background:#fff;
-  color:#556B2F;
-  border-color:#fff;
+  background:#556B2F;
+  color:#fff;
+  border-color:#556B2F;
 }
 
 body{
@@ -535,14 +535,6 @@ hr{
 
 <section id="homePage">
 
-  <div class="homeHero">
-    <h2>🏠 Welcome to The List</h2>
-    <p>
-      Keep your home projects, plans, materials, maintenance,
-      shopping and family notes in one place.
-    </p>
-  </div>
-
 <div class="card" style="
   background:#f7f5ee;
   border:2px solid #d6d2c4;
@@ -659,7 +651,12 @@ hr{
   </div>
 </div>
 
-<div class="card">
+<div class="card" style="
+  background:#f7f5ee;
+  border:2px solid #d6d2c4;
+  border-radius:14px;
+  padding:18px;
+">
 
   <div style="
     display:flex;
@@ -673,7 +670,7 @@ hr{
     </h2>
 
     <button
-      class="small secondary"
+      class="small" style="background:#556B2F; color:white;"
       onclick="showPage('calendarPage'); clearCalendarRange()">
       View Calendar →
     </button>
@@ -688,19 +685,19 @@ hr{
   ">
 
 <button
-  class="secondary"
+  class="" style="background:#556B2F; color:white;"
   onclick="showCalendarRange('thisWeek')">
   This Week
 </button>
 
     <button
-      class="secondary"
+      class="" style="background:#556B2F; color:white;"
       onclick="showCalendarRange('nextWeek')">
       Next Week
     </button>
 
     <button
-      class="secondary"
+      class="" style="background:#556B2F; color:white;"
       onclick="showCalendarRange('thisMonth')"
       style="grid-column:1 / -1;">
       This Month
@@ -714,23 +711,19 @@ hr{
 
 </div>
 
-  <div class="card">
+  <div class="card" style="
+    background:#f7f5ee;
+    border:2px solid #d6d2c4;
+    border-radius:14px;
+    padding:18px;
+  ">
     <h2>🚀 Quick Actions</h2>
 
     <div class="row">
-      <button onclick="newProject()">＋ Project</button>
-      <button onclick="buildMyPlan()">✨ Build My Plan</button>
+      <button style="background:#556B2F; color:white;" onclick="newProject()">＋ Project</button>
+      <button style="background:#556B2F; color:white;" onclick="buildMyPlan()">✨ Build My Plan</button>
     </div>
 
-    <div class="row" style="margin-top:8px;">
-      <button class="secondary" onclick="showPage('shoppingPage')">
-        🛒 Shopping
-      </button>
-
-      <button class="secondary" onclick="showPage('calendarPage')">
-        📅 Calendar
-      </button>
-    </div>
   </div>
 
 </section>
