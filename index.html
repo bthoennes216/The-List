@@ -1327,8 +1327,8 @@ data.projects.forEach(project => {
 
 function renderHomeUpcoming(){
 
- const box =
-  document.getElementById("homeUpcomingItems");
+  const box =
+    document.getElementById("homeUpcoming");
 
   const upcoming = [];
 
@@ -1371,14 +1371,7 @@ function renderHomeUpcoming(){
   upcoming.sort((a,b) =>
     a.date.localeCompare(b.date)
   );
-const rangeBox =
-  document.getElementById("homeUpcomingRange");
 
-if(rangeBox){
-
-  rangeBox.innerHTML = "";
-
-}
   if(!upcoming.length){
 
     box.innerHTML =
@@ -1413,7 +1406,6 @@ if(rangeBox){
     .join("");
 
 }
-
 
 /* =========================================================
    PROJECTS
