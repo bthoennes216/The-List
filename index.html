@@ -45,27 +45,45 @@ nav{
   display:flex;
   overflow-x:auto;
   gap:8px;
-  padding:10px;
-  background:#fff;
-  border-bottom:1px solid #ddd;
-  position:sticky;
-  top:0;
-  z-index:30;
+  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+  background:#f5f3eb;
+  border-top:1px solid #ddd9cc;
+  border-bottom:0;
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  top:auto;
+  z-index:100;
   -webkit-overflow-scrolling:touch;
+  box-shadow:0 -3px 10px rgba(0,0,0,.10);
 }
 
 nav button{
   white-space:nowrap;
+  flex:0 0 auto;
   padding:9px 13px;
-  border:1px solid #ddd;
+  border:1px solid rgba(255,255,255,.25);
   border-radius:20px;
-  background:#f7f7f8;
+  background:#556B2F;
+  color:#fff;
   font-weight:600;
 }
 
 nav button.active{
-  background:#222;
-  color:#fff;
+  background:#fff;
+  color:#556B2F;
+  border-color:#fff;
+}
+
+body{
+  padding-bottom:76px;
+}
+
+@supports(padding:max(0px)){
+  body{
+    padding-bottom:max(76px, calc(66px + env(safe-area-inset-bottom)));
+  }
 }
 
 main{
