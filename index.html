@@ -568,22 +568,44 @@ header::after{
 }
 
 nav{
-  background:var(--warm-card);
+  background:rgba(247,245,238,.97);
   border-top:1px solid var(--border);
-  box-shadow:0 -4px 14px rgba(70,55,35,.10);
+  padding:9px 12px calc(9px + env(safe-area-inset-bottom));
+  gap:9px;
+  box-shadow:0 -5px 18px rgba(70,55,35,.13);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
 }
 
 nav button{
   background:var(--forest);
+  border:1px solid rgba(255,255,255,.18);
   border-color:var(--forest);
   color:#fff;
-  box-shadow:0 2px 5px rgba(49,84,61,.16);
+  min-height:46px;
+  padding:10px 16px;
+  border-radius:23px;
+  box-shadow:0 2px 6px rgba(49,84,61,.18);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+
+nav button:active{
+  transform:scale(.97);
 }
 
 nav button.active{
   background:var(--forest);
   border-color:var(--forest);
   color:#fff;
+  box-shadow:0 3px 8px rgba(49,84,61,.24), inset 0 0 0 1px rgba(255,255,255,.18);
+}
+
+@media(max-width:600px){
+  nav button{
+    min-width:max-content;
+    font-size:14px;
+    padding:10px 15px;
+  }
 }
 
 main{
@@ -722,6 +744,73 @@ input,textarea,select{
 .stat{
   background:#f7f3eb;
 }
+
+
+/* =========================================================
+   AI BUILD PLANNER
+   ========================================================= */
+.aiBuildHero{
+  background:linear-gradient(135deg,#31543d 0%,#3f654b 55%,#bd6540 100%);
+  color:#fff;
+  border:none;
+}
+.aiBuildHero h2{color:#fff;}
+.aiBuildHero p{color:rgba(255,255,255,.88);}
+.aiFeatureGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+  margin-top:12px;
+}
+.aiFeature{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:11px;
+  padding:10px;
+  font-size:13px;
+}
+.aiConcept{
+  background:#f7f2e8;
+  border:1px solid #ded5c5;
+  border-radius:14px;
+  padding:10px;
+  overflow:hidden;
+}
+.aiConcept svg{display:block;width:100%;height:auto;border-radius:10px;background:#eee7da;}
+.cutList{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+.cutList th,.cutList td{
+  padding:9px 7px;
+  border-bottom:1px solid #e2dacd;
+  text-align:left;
+  vertical-align:top;
+}
+.cutList th{color:#625b50;font-size:12px;text-transform:uppercase;letter-spacing:.35px;}
+.aiPrompt{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;
+  background:#292824;
+  color:#f7f2e8;
+  border-radius:10px;
+  padding:12px;
+  white-space:pre-wrap;
+}
+.aiStep{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  padding:9px 0;
+  border-bottom:1px solid #eee4d7;
+}
+.aiStep:last-child{border-bottom:0;}
+.aiStepNum{
+  width:28px;height:28px;min-width:28px;border-radius:50%;
+  background:#31543d;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;
+}
+@media(max-width:500px){.aiFeatureGrid{grid-template-columns:1fr 1fr;}.cutList{font-size:12px;}}
 
 </style>
 </head>
@@ -951,6 +1040,10 @@ input,textarea,select{
     <button onclick="buildMyPlan()" style="margin-top:10px;">
       ✨ Build My Plan
     </button>
+
+    <div class="smallText" style="margin-top:10px;">
+      Describe what you want to build. The List can turn supported DIY projects into measurements, a concept, cut list, materials and build steps.
+    </div>
 
     <p class="smallText" style="margin-bottom:0;">
       Tap a project to open it. Swipe left to delete.
@@ -4113,7 +4206,7 @@ function buildMyPlan(){
   const questions =
     isFence
     ? getFenceQuestions(inferredFenceType)
-    : getGenericQuestions();
+    : getSmartProjectQuestions(name, description);
 
   showPlanQuestions(
     name,
@@ -4570,6 +4663,138 @@ function getFenceQuestions(defaultFenceType){
 
 }
 
+
+/* =========================================================
+   SMART AI PROJECT TYPES
+   ========================================================= */
+
+function isCubbyProject(text){
+  return /(cubb(y|ies)|mudroom|locker|hallway storage|entryway storage|backpack storage|shoe storage)/i.test(String(text || ""));
+}
+
+function getSmartProjectQuestions(name, description){
+  const combined = `${name} ${description}`;
+  if(isCubbyProject(combined)){
+    return getCubbyQuestions();
+  }
+  return getGenericQuestions();
+}
+
+function getCubbyQuestions(){
+  return [
+    {id:"wallWidth",question:"How much wall width is available?",placeholder:"Example: 60 inches"},
+    {id:"overallHeight",question:"How tall should the unit be?",placeholder:"Example: 72 inches",defaultValue:"72"},
+    {id:"overallDepth",question:"How deep can the unit be?",placeholder:"Example: 18 inches",defaultValue:"18"},
+    {id:"cubbyCount",question:"How many main cubby compartments do you want?",placeholder:"Example: 5",defaultValue:"5"},
+    {id:"benchHeight",question:"Do you want a bench seat, and at what height?",placeholder:"Example: Yes, 18 inches",defaultValue:"Yes, 18 inches"},
+    {id:"shoeStorage",question:"What should go below the bench?",type:"select",options:["Open shoe storage","Drawers","Doors","No lower storage"],defaultValue:"Open shoe storage"},
+    {id:"hooks",question:"How many backpack / coat hooks do you want?",placeholder:"Example: 10",defaultValue:"10"},
+    {id:"backPanel",question:"Do you want a finished back panel?",type:"select",options:["Yes","No"],defaultValue:"Yes"},
+    {id:"material",question:"What main material do you want?",type:"select",options:["3/4 inch plywood","Furniture-grade plywood","MDF","Let The List choose"],defaultValue:"3/4 inch plywood"},
+    {id:"finish",question:"What finish do you want?",placeholder:"Example: Warm white with wood bench"},
+    {id:"budget",question:"What is your target budget?",placeholder:"Example: 600"}
+  ];
+}
+
+function parseInches(value, fallback=0){
+  const text = String(value || "").toLowerCase().replace(/,/g,"").trim();
+  const feetInches = text.match(/(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(?:(\d+(?:\.\d+)?)\s*(?:in|inches|\"))?/);
+  if(feetInches){ return parseFloat(feetInches[1])*12 + (parseFloat(feetInches[2])||0); }
+  const n = parseFloat(text.match(/-?\d+(?:\.\d+)?/)?.[0] || "");
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function calculateCubbyBuild(a){
+  const warnings=[];
+  const wallWidth=parseInches(a.wallWidth,60);
+  const height=parseInches(a.overallHeight,72);
+  const depth=parseInches(a.overallDepth,18);
+  const count=Math.max(1,Math.min(12,parseInt(a.cubbyCount)||5));
+  const benchMatch=String(a.benchHeight||"").match(/(\d+(?:\.\d+)?)/);
+  const benchHeight=benchMatch ? parseFloat(benchMatch[1]) : 18;
+  const hookCount=Math.max(0,Math.min(30,parseInt(a.hooks)||count*2));
+  const dividerCount=count-1;
+  const cubbyWidth=Math.max(1,(wallWidth-(dividerCount*0.75))/count);
+  const plywoodDepth=Math.max(6,depth-0.25);
+  const backPanel=a.backPanel === "Yes";
+  const bench=a.benchHeight && /yes/i.test(a.benchHeight);
+  const shelfHeight=Math.max(1,height-(bench?benchHeight:0));
+  const sheetArea=48*96;
+  let panelArea=0;
+  const cuts=[];
+  function cut(qty,part,w,d,note){
+    cuts.push({qty,part,size:`${fmt(w)} × ${fmt(d)} in`,note:note||""});
+    panelArea += qty*w*d;
+  }
+  cut(2,"Side panels",height,plywoodDepth,"Full-height sides");
+  cut(1,"Top",wallWidth,plywoodDepth,"Top cap");
+  cut(1,"Bottom / base",wallWidth,plywoodDepth,"Base");
+  if(dividerCount>0) cut(dividerCount,"Vertical dividers",shelfHeight,plywoodDepth,"Between cubbies");
+  if(bench) cut(1,"Bench seat",wallWidth,plywoodDepth,"Bench top");
+  if(bench && a.shoeStorage === "Open shoe storage") cut(1,"Lower shoe shelf",wallWidth,plywoodDepth,"Open shoe storage shelf");
+  if(backPanel) cut(count,"Back panels",Math.max(1,cubbyWidth),Math.max(1,shelfHeight),"One back per cubby; use 1/4 in plywood recommended");
+  const sheets=Math.max(1,Math.ceil(panelArea/(sheetArea*0.72)));
+  const trimLinear=Math.ceil((wallWidth*2+height*2+wallWidth)/12);
+  const screwBoxes=Math.max(1,Math.ceil((count*18)/100));
+  const hookRail=Math.ceil(wallWidth/96);
+  const steps=[
+    "Confirm wall width, height, depth and stud locations.",
+    "Cut plywood panels using the cut list and label every piece.",
+    "Assemble the outer cabinet and square it before fastening.",
+    `Install ${dividerCount} vertical divider${dividerCount===1?"":"s"} and verify equal openings.`,
+    bench ? "Install the bench seat and add structural supports into studs." : "Install the lower shelf / base supports.",
+    backPanel ? "Install the back panels and secure the cabinet to wall studs." : "Secure the cabinet to wall studs.",
+    `Install ${hookCount} hooks at kid-friendly spacing.`,
+    "Add trim, fill fastener holes, sand and apply the selected finish.",
+    "Final-check all anchors, edges and load-bearing connections before use."
+  ];
+  if(wallWidth < count*10) warnings.push("The calculated cubby openings are under about 10 inches wide. Consider fewer compartments or a wider wall.");
+  if(depth < 14) warnings.push("A depth under 14 inches may be tight for backpacks and shoes.");
+  if(height > 96) warnings.push("The unit is taller than a standard 4×8 sheet length; plan a joint or alternate material layout.");
+  return {
+    type:"cubby",
+    wallWidth,height,depth,count,cubbyWidth,dividerCount,benchHeight,hookCount,bench,backPanel,
+    plywoodDepth,sheets,trimLinear,screwBoxes,hookRail,cuts,steps,warnings,
+    material:a.material || "3/4 inch plywood",
+    finish:a.finish || "",
+    shoeStorage:a.shoeStorage || "Open shoe storage"
+  };
+}
+
+function fmt(n){ return Number.isInteger(n) ? String(n) : Number(n).toFixed(2).replace(/0+$/,'').replace(/\.$/,''); }
+
+function buildCubbyTaskList(c){
+  return c.steps.map(s=>s);
+}
+
+function buildCubbyMaterialList(c){
+  const materials=[
+    {name:`${c.material || "3/4 inch plywood"} — 4×8 sheets`,quantity:`${c.sheets} sheets planning allowance`},
+    {name:"1/4 inch plywood back panels",quantity:c.backPanel?`${c.count} panels at approximately ${fmt(c.cubbyWidth)} × ${fmt(c.height-(c.bench?c.benchHeight:0))} in`:`Not required`},
+    {name:"Wood screws / pocket screws",quantity:`${c.screwBoxes} box${c.screwBoxes===1?"":"es"} planning allowance`},
+    {name:"Construction adhesive",quantity:"1 tube"},
+    {name:"Trim / face frame material",quantity:`Approximately ${c.trimLinear} linear ft`},
+    {name:"Backpack / coat hooks",quantity:`${c.hookCount} hooks`},
+    {name:"Wall anchors / stud fasteners",quantity:"As required by wall construction"},
+    {name:"Wood filler",quantity:"1 container"},
+    {name:"Sandpaper",quantity:"Assorted grits"},
+    {name:"Primer + finish paint / stain",quantity:"Based on selected finish"}
+  ];
+  if(c.shoeStorage === "Drawers") materials.push({name:"Drawer boxes + slides",quantity:`${c.count} drawer bays — size after final opening dimensions`});
+  return materials;
+}
+
+function cubbyConceptSVG(c){
+  const W=760,H=500,pad=55,unitW=650,unitH=Math.min(390,Math.max(250,c.height*4.2)),x=55,y=H-unitH-45,benchY=y+unitH*(1-c.benchHeight/Math.max(1,c.height));
+  const cellW=unitW/c.count;
+  let html=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Concept drawing of the planned hallway cubbies"><rect width="760" height="500" fill="#eee7da"/><rect x="0" y="${y+unitH-35}" width="760" height="80" fill="#ddd5c7"/><rect x="${x}" y="${y}" width="${unitW}" height="${unitH}" rx="5" fill="#fbf8f0" stroke="#31543d" stroke-width="7"/>`;
+  for(let i=1;i<c.count;i++) html+=`<line x1="${x+i*cellW}" y1="${y}" x2="${x+i*cellW}" y2="${y+unitH}" stroke="#31543d" stroke-width="6"/>`;
+  if(c.bench) html+=`<rect x="${x}" y="${benchY}" width="${unitW}" height="${unitH*0.08}" fill="#bd6540"/><rect x="${x}" y="${benchY+unitH*0.08}" width="${unitW}" height="${unitH-(benchY-y)-unitH*0.08}" fill="#efe9dd"/>`;
+  const hookY=y+unitH*0.43;
+  for(let i=0;i<c.hookCount;i++){const hx=x+(i+0.5)*(unitW/c.hookCount);html+=`<circle cx="${hx}" cy="${hookY}" r="5" fill="#c79a3b"/><line x1="${hx}" y1="${hookY+5}" x2="${hx}" y2="${hookY+20}" stroke="#c79a3b" stroke-width="3"/>`;}
+  html+=`<text x="380" y="30" text-anchor="middle" font-family="Arial" font-size="20" font-weight="700" fill="#292824">${c.count}-Compartment Hallway Cubbies</text><text x="380" y="475" text-anchor="middle" font-family="Arial" font-size="14" fill="#756f65">${fmt(c.wallWidth)} in W × ${fmt(c.height)} in H × ${fmt(c.depth)} in D</text></svg>`;
+  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(html);
+}
 
 /* =========================================================
    GENERIC QUESTIONS
@@ -5942,6 +6167,13 @@ function generateAIPlanFromAnswers(){
         calculation
       );
 
+  }else if(isCubbyProject(`${name} ${description}`)){
+
+    calculation = calculateCubbyBuild(answers);
+    budget = extractNumber(answers.budget);
+    tasks = buildCubbyTaskList(calculation);
+    materials = buildCubbyMaterialList(calculation);
+
   }else{
 
     budget =
@@ -6045,7 +6277,9 @@ function generateAIPlanFromAnswers(){
 
     budget:budget,
 
-    isFence:isFence
+    isFence:isFence,
+
+    isCubby:isCubbyProject(`${name} ${description}`)
 
   };
 
@@ -6955,6 +7189,42 @@ function showPlanPreview(){
     document.getElementById("projectDetail");
 
   let calculationHTML = "";
+  let smartBuildHTML = "";
+
+  if(plan.calculation && plan.calculation.type === "cubby"){
+    const c = plan.calculation;
+    smartBuildHTML = `
+      <div class="card aiBuildHero">
+        <h2>✨ AI Build Concept</h2>
+        <p>The List turned your idea into a measured build concept. Change the measurements above and regenerate the plan to recalculate everything.</p>
+        <div class="aiFeatureGrid">
+          <div class="aiFeature">📐 ${fmt(c.wallWidth)}″ wide</div>
+          <div class="aiFeature">↕ ${fmt(c.height)}″ tall</div>
+          <div class="aiFeature">↔ ${fmt(c.depth)}″ deep</div>
+          <div class="aiFeature">▦ ${c.count} compartments</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🖼️ Project Concept</h2>
+        <div class="aiConcept"><img src="${cubbyConceptSVG(c)}" alt="Concept drawing of the hallway cubbies"></div>
+        <p class="smallText">This visual is a measured concept preview. A future AI image connection can replace it with a photorealistic rendering of your actual hallway.</p>
+        <div class="aiPrompt">${escapeHTML(`Photorealistic warm-modern hallway built-in cubbies, ${c.count} equal compartments, ${fmt(c.wallWidth)} inches wide, ${fmt(c.height)} inches tall, ${fmt(c.depth)} inches deep, ${c.hookCount} hooks, ${c.bench?"bench seat":"no bench"}, ${c.shoeStorage.toLowerCase()}, family-friendly, warm ivory and forest green accents, natural wood details, realistic residential interior photography.`)}</div>
+      </div>
+      <div class="card">
+        <h2>🪚 Cut List</h2>
+        <div style="overflow-x:auto;">
+          <table class="cutList"><thead><tr><th>Qty</th><th>Piece</th><th>Cut Size</th><th>Use</th></tr></thead><tbody>
+            ${c.cuts.map(x=>`<tr><td>${x.qty}</td><td>${escapeHTML(x.part)}</td><td>${escapeHTML(x.size)}</td><td>${escapeHTML(x.note)}</td></tr>`).join("")}
+          </tbody></table>
+        </div>
+        <div class="successBox">✓ Planning allowance: about ${c.sheets} full 4×8 plywood sheets before optimizing the sheet layout.</div>
+      </div>
+      <div class="card">
+        <h2>🔨 Build Order</h2>
+        ${c.steps.map((step,i)=>`<div class="aiStep"><div class="aiStepNum">${i+1}</div><div>${escapeHTML(step)}</div></div>`).join("")}
+        ${c.warnings.length?`<div class="warning"><strong>⚠️ Review before building</strong>${c.warnings.map(w=>`<div>• ${escapeHTML(w)}</div>`).join("")}</div>`:""}
+      </div>`;
+  }
 
   if(plan.calculation){
 
@@ -7328,6 +7598,8 @@ function showPlanPreview(){
 
     </div>
 
+    ${smartBuildHTML}
+
     ${calculationHTML}
 
     <div class="card">
@@ -7685,6 +7957,8 @@ function addAIPlanToProjects(){
     category:
       editingPlan.isFence
       ? "Exterior"
+      : editingPlan.isCubby
+      ? "Interior"
       : "Home",
 
     description:
