@@ -3165,8 +3165,6 @@ function renderSelectedDate(){
 
 function showCalendarRange(range){
 
-  showPage("calendarPage");
-
   const today = new Date();
 
   today.setHours(0,0,0,0);
@@ -3230,11 +3228,112 @@ function showCalendarRange(range){
 
   }
 
-  renderCalendarRange(
+  renderHomeUpcomingRange(
     title,
     startDate,
     endDate
   );
+
+}
+
+function renderHomeUpcomingRange(
+  title,
+  startDate,
+  endDate
+){
+
+  const rangeBox =
+    document.getElementById("homeUpcomingRange");
+
+  const upcomingBox =
+    document.getElementById("homeUpcomingItems");
+
+  if(!rangeBox) return;
+
+  const items = [];
+
+  let current = new Date(startDate);
+  current.setHours(0,0,0,0);
+
+  const finalDate = new Date(endDate);
+  finalDate.setHours(0,0,0,0);
+
+  while(current <= finalDate){
+
+    const key = dateKey(current);
+
+    const tasks = getTasksForDate(key);
+    const events = getEventsForDate(key);
+
+    tasks.forEach(item => {
+      items.push({
+        date:key,
+        title:item.title,
+        project:item.project,
+        type:"Task"
+      });
+    });
+
+    events.forEach(item => {
+      items.push({
+        date:key,
+        title:item.title,
+        project:item.project,
+        type:item.type
+      });
+    });
+
+    current.setDate(current.getDate() + 1);
+
+  }
+
+  items.sort((a,b) => a.date.localeCompare(b.date));
+
+  rangeBox.innerHTML = `
+
+    <div style="
+      margin-top:12px;
+      padding:12px;
+      background:#f7f5ee;
+      border:1px solid #d6d2c4;
+      border-radius:10px;
+    ">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:8px;
+        margin-bottom:10px;
+      ">
+        <strong>📅 ${title}</strong>
+        <span class="smallText">
+          ${formatDate(dateKey(startDate))} – ${formatDate(dateKey(endDate))}
+        </span>
+      </div>
+
+      ${
+        items.length
+        ? items.map(item => `
+          <div class="task">
+            <div class="taskText">
+              <strong>${escapeHTML(item.title)}</strong>
+              <div class="smallText">
+                ${escapeHTML(item.project)} · ${formatDate(item.date)}
+              </div>
+            </div>
+          </div>
+        `).join("")
+        : `<div class="empty">Nothing scheduled for this period.</div>`
+      }
+
+    </div>
+
+  `;
+
+  if(upcomingBox){
+    upcomingBox.innerHTML = "";
+  }
 
 }
 
