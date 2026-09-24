@@ -1268,6 +1268,14 @@ input,textarea,select{
 <script>
 
 const STORAGE_KEY = "theListDataV2";
+
+/* =========================================================
+   THE LIST AI BACKEND
+   Replace this URL with the Cloudflare Worker URL shown
+   by the "Visit" button for your the-list-ai Worker.
+   Do not put your OpenAI API key in this file.
+   ========================================================= */
+const AI_BACKEND_URL = "https://the-list-ai.bkt216.workers.dev/";
 function ensureProjectStatuses(){
 
   data.projects.forEach(project => {
@@ -6075,218 +6083,243 @@ function calculateFenceMaterials(answers){
    PLAN GENERATION
    ========================================================= */
 
-function generateAIPlanFromAnswers(){
+async function generateAIPlanFromAnswers(){
 
   if(!editingPlan){
     return;
   }
 
   const name =
-    document.getElementById(
-      "planProjectName"
-    ).value.trim();
+    document.getElementById("planProjectName").value.trim();
 
   const description =
-    document.getElementById(
-      "planDescription"
-    ).value.trim();
+    document.getElementById("planDescription").value.trim();
 
   if(!name){
-
     alert("Please enter a project name.");
-
     return;
-
   }
 
   const answers = {};
 
   editingPlan.questions.forEach(q => {
-
-    /*
-      Hidden conditional questions are deliberately
-      stored as blank so an old value cannot accidentally
-      affect a different fence style.
-    */
-
     answers[q.id] =
       questionIsVisible(q)
       ? getPlanAnswer(q.id)
       : "";
-
   });
 
   const answerRecords =
     editingPlan.questions
-      .filter(q => {
-
-        /*
-          Keep common questions and questions that were
-          actually visible for the selected fence style.
-        */
-
-        return questionIsVisible(q);
-
-      })
+      .filter(q => questionIsVisible(q))
       .map(q => ({
-
         question:q.question,
-
-        answer:
-          answers[q.id] || "Not provided."
-
+        answer:answers[q.id] || "Not provided."
       }));
 
-  const isFence =
-    /fence/i.test(name);
+  const isFence = /fence/i.test(name);
+  const isCubby = isCubbyProject(`${name} ${description}`);
 
   let calculation = null;
   let tasks = [];
   let materials = [];
-  let budget = 0;
+  let budget = extractNumber(answers.budget);
+  let aiPlan = null;
 
+  /* Keep the proven local calculators for fence and cubby projects. */
   if(isFence){
 
-    calculation =
-      calculateFenceMaterials(
-        answers
-      );
+    calculation = calculateFenceMaterials(answers);
+    tasks = buildFenceTaskList(calculation);
+    materials = buildFenceMaterialList(calculation);
 
-    budget =
-      extractNumber(
-        answers.budget
-      );
-
-    tasks =
-      buildFenceTaskList(
-        calculation
-      );
-
-    materials =
-      buildFenceMaterialList(
-        calculation
-      );
-
-  }else if(isCubbyProject(`${name} ${description}`)){
+  }else if(isCubby){
 
     calculation = calculateCubbyBuild(answers);
-    budget = extractNumber(answers.budget);
     tasks = buildCubbyTaskList(calculation);
     materials = buildCubbyMaterialList(calculation);
 
   }else{
 
-    budget =
-      extractNumber(
-        answers.budget
+    /* Generic projects now use the Cloudflare/OpenAI planner. */
+    const button = document.querySelector('button[onclick="generateAIPlanFromAnswers()"]');
+    if(button){
+      button.disabled = true;
+      button.textContent = "✨ Building your plan...";
+    }
+
+    try{
+
+      aiPlan = await requestTheListAI({
+        projectDescription:`${name}\n${description}`,
+        measurements:answers,
+        style:answers.finish || answers.materials || "",
+        refinement:`
+Interpret "The best" as a request to recommend the best practical DIY materials and construction approach, balancing durability, safety, availability and reasonable cost.
+
+Do not leave generic placeholders such as "calculate later", "determine after material selection", or "verify dimensions" when a reasonable planning quantity can be calculated from the supplied information. Make clearly labeled standard assumptions when necessary, and include those assumptions in the assumptions array.
+
+For construction projects, produce a real planning-level material takeoff with quantities and specifications, a cut list where cutting is involved, a tool list, a logical build sequence, project tasks, shopping list and calendar-ready work items.
+
+For a shed/workshop or similar structure, address foundation/floor, framing, sheathing/siding, roof, openings, fasteners, weatherproofing, finish and workbench/storage elements as applicable. Do not claim code compliance or engineering approval. Flag permits, structural, electrical, plumbing, roofing or other professional/code-review items when applicable.
+
+The finished result should be useful enough for a homeowner to review before buying materials, while clearly identifying anything that still needs field verification.
+`,
+        existingPlan:null,
+        toolsOwned:[],
+        homeContext:data.home || {}
+      });
+
+      budget = budget || extractNumber(answers.budget);
+
+      tasks = (aiPlan.projectTasks || []).map((t,i) =>
+        `${t.title}${t.description ? ` — ${t.description}` : ""}${t.estimatedTime ? ` (${t.estimatedTime})` : ""}`
       );
 
-    tasks = [
-
-      "Confirm project dimensions",
-
-      "Confirm desired finished result",
-
-      "Research and confirm materials",
-
-      "Measure the project area",
-
-      "Calculate material quantities",
-
-      "Add reasonable waste allowance",
-
-      "Price materials",
-
-      "Purchase materials",
-
-      "Prepare the work area",
-
-      "Complete the project",
-
-      "Inspect finished work",
-
-      "Clean up",
-
-      "Save measurements and product information"
-
-    ];
-
-    materials = [
-
-      {
-        name:"Primary project materials",
-        quantity:
-          "Calculate after confirming dimensions"
-      },
-
-      {
-        name:"Fasteners / installation supplies",
-        quantity:
-          "Determine after material selection"
-      },
-
-      {
-        name:"Finishing materials",
-        quantity:
-          "Determine from selected finish"
+      if(!tasks.length){
+        tasks = (aiPlan.buildSteps || []).map(s =>
+          `${s.title}${s.instructions ? ` — ${s.instructions}` : ""}`
+        );
       }
 
-    ];
+      materials = (aiPlan.materials || []).map(m => ({
+        name:m.item,
+        quantity:m.quantity + (m.specification ? ` — ${m.specification}` : "")
+      }));
 
+      if(!materials.length){
+        materials = [{name:"AI material takeoff unavailable",quantity:"Review the AI plan details below."}];
+      }
+
+    }catch(err){
+
+      console.error("The List AI build error:",err);
+      alert(`The AI planner could not complete the plan.\n\n${err.message || "Check the Cloudflare Worker URL and try again."}`);
+      return;
+
+    }finally{
+      if(button){
+        button.disabled = false;
+        button.textContent = "✨ Calculate & Build Plan";
+      }
+    }
   }
 
   editingPlan = {
-
-    name:name,
-
-    description:description,
-
+    name:aiPlan?.projectName || name,
+    description:aiPlan?.summary || description,
     answers:answerRecords,
-
     rawAnswers:answers,
-
     calculation:calculation,
-
+    aiPlan:aiPlan,
     tasks:tasks.map((text,index) => ({
-
-      id:
-        Date.now().toString() +
-        "-" +
-        index,
-
-      text:text,
-
+      id:Date.now().toString()+"-"+index,
+      text,
       done:false,
-
       dueDate:""
-
     })),
-
     materials:materials.map((m,index) => ({
-
-      id:
-        Date.now().toString() +
-        "-" +
-        index,
-
+      id:Date.now().toString()+"-"+index,
       name:m.name,
-
       quantity:m.quantity
-
     })),
-
     budget:budget,
-
     isFence:isFence,
-
-    isCubby:isCubbyProject(`${name} ${description}`)
-
+    isCubby:isCubby
   };
 
   showPlanPreview();
-
 }
 
+async function requestTheListAI(payload){
+
+  if(!AI_BACKEND_URL || AI_BACKEND_URL.includes("PASTE_YOUR")){
+    throw new Error("The Cloudflare Worker URL has not been added to The List yet.");
+  }
+
+  const response = await fetch(
+    AI_BACKEND_URL.replace(/\/$/,"") + "/build",
+    {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    }
+  );
+
+  const text = await response.text();
+  let data;
+
+  try{
+    data = JSON.parse(text);
+  }catch{
+    throw new Error("The AI backend returned an invalid response.");
+  }
+
+  if(!response.ok || !data.ok){
+    throw new Error(data?.error || "The AI backend returned an error.");
+  }
+
+  if(!data.plan){
+    throw new Error("The AI backend returned no project plan.");
+  }
+
+  return data.plan;
+}
+
+async function generateAIProjectImage(){
+
+  if(!editingPlan?.aiPlan?.imagePrompt){
+    alert("No AI design prompt is available for this project.");
+    return;
+  }
+
+  if(!AI_BACKEND_URL || AI_BACKEND_URL.includes("PASTE_YOUR")){
+    alert("The Cloudflare Worker URL has not been added to The List yet.");
+    return;
+  }
+
+  const button = document.getElementById("generateAIImageButton");
+  if(button){
+    button.disabled = true;
+    button.textContent = "🎨 Creating design...";
+  }
+
+  try{
+    const response = await fetch(
+      AI_BACKEND_URL.replace(/\/$/,"") + "/image",
+      {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({imagePrompt:editingPlan.aiPlan.imagePrompt})
+      }
+    );
+
+    const text = await response.text();
+    let data;
+    try{ data = JSON.parse(text); }
+    catch{ throw new Error("The image service returned an invalid response."); }
+
+    if(!response.ok || !data.ok){
+      throw new Error(data?.error || "The image service returned an error.");
+    }
+
+    const image = data.image || {};
+    editingPlan.aiImage = image.b64_json
+      ? `data:image/png;base64,${image.b64_json}`
+      : (image.url || "");
+
+    showPlanPreview();
+
+  }catch(err){
+    alert(`The design image could not be generated.\n\n${err.message || "Try again."}`);
+  }finally{
+    const b = document.getElementById("generateAIImageButton");
+    if(b){
+      b.disabled = false;
+      b.textContent = "🎨 Generate Design Image";
+    }
+  }
+}
 
 /* =========================================================
    FENCE TASK LIST
@@ -7226,6 +7259,98 @@ function showPlanPreview(){
       </div>`;
   }
 
+  if(plan.aiPlan){
+    const a = plan.aiPlan;
+    const dims = (a.recommendedDimensions || []).map(x => `
+      <div class="aiFeature">
+        <strong>${escapeHTML(x.name)}</strong><br>
+        ${escapeHTML(x.value)}
+        ${x.reasoning ? `<div class="smallText" style="margin-top:4px;">${escapeHTML(x.reasoning)}</div>` : ""}
+      </div>
+    `).join("");
+
+    const cutRows = (a.cutList || []).map(x => `
+      <tr>
+        <td>${escapeHTML(x.quantity)}</td>
+        <td>${escapeHTML(x.piece)}</td>
+        <td>${escapeHTML(x.dimensions)}</td>
+        <td>${escapeHTML(x.material)}</td>
+        <td>${escapeHTML(x.notes)}</td>
+      </tr>
+    `).join("");
+
+    const materialRows = (a.materials || []).map(x => `
+      <div class="answerBox">
+        <strong>${escapeHTML(x.item)}</strong>
+        <div>${escapeHTML(x.quantity)}</div>
+        ${x.specification ? `<div class="smallText">${escapeHTML(x.specification)}</div>` : ""}
+        ${x.notes ? `<div class="smallText">${escapeHTML(x.notes)}</div>` : ""}
+      </div>
+    `).join("");
+
+    const toolRows = (a.toolsNeeded || []).map(x => `
+      <div class="answerBox">
+        <strong>${escapeHTML(x.tool)}</strong>
+        <div>${escapeHTML(x.reason)}</div>
+        <div class="smallText">${x.required ? "Required for this plan" : "Helpful / optional"}</div>
+      </div>
+    `).join("");
+
+    const stepRows = (a.buildSteps || []).map(x => `
+      <div class="aiStep">
+        <div class="aiStepNum">${escapeHTML(x.step)}</div>
+        <div><strong>${escapeHTML(x.title)}</strong><div>${escapeHTML(x.instructions)}</div>${x.safety ? `<div class="smallText">⚠️ ${escapeHTML(x.safety)}</div>` : ""}</div>
+      </div>
+    `).join("");
+
+    const shoppingRows = (a.shoppingList || []).map(x => `
+      <div class="answerBox">
+        <strong>${escapeHTML(x.item)}</strong>
+        <div>${escapeHTML(x.quantity)}</div>
+        ${x.notes ? `<div class="smallText">${escapeHTML(x.notes)}</div>` : ""}
+      </div>
+    `).join("");
+
+    const assumptions = (a.assumptions || []).map(x => `<div>• ${escapeHTML(x)}</div>`).join("");
+    const warnings = (a.warnings || []).map(x => `<div>• ${escapeHTML(x)}</div>`).join("");
+
+    smartBuildHTML = `
+      <div class="card aiBuildHero">
+        <h2>✨ AI Build Plan</h2>
+        <p>${escapeHTML(a.summary || "The List created a planning-level build concept from your answers.")}</p>
+        ${dims ? `<div class="aiFeatureGrid">${dims}</div>` : ""}
+      </div>
+
+      <div class="card">
+        <h2>🎨 Design Concept</h2>
+        <p>${escapeHTML(a.designConcept || "")}</p>
+        ${editingPlan.aiImage ? `<div class="aiConcept"><img src="${escapeAttribute(editingPlan.aiImage)}" alt="AI concept rendering of the project"></div>` : ""}
+        <button id="generateAIImageButton" onclick="generateAIProjectImage()">🎨 Generate Design Image</button>
+        <p class="smallText">Concept image only — not an engineering drawing or proof of exact dimensions.</p>
+      </div>
+
+      <div class="card">
+        <h2>🧰 AI Material Takeoff</h2>
+        ${materialRows || `<div class="smallText">No materials returned.</div>`}
+      </div>
+
+      ${cutRows ? `<div class="card"><h2>🪚 Cut List</h2><div style="overflow-x:auto;"><table class="cutList"><thead><tr><th>Qty</th><th>Piece</th><th>Dimensions</th><th>Material</th><th>Notes</th></tr></thead><tbody>${cutRows}</tbody></table></div></div>` : ""}
+
+      <div class="card">
+        <h2>🔨 Tools</h2>
+        ${a.toolsAlreadyHave?.length ? `<h3>Tools You Already Have</h3>${a.toolsAlreadyHave.map(x=>`<div class="answerBox">✓ ${escapeHTML(x)}</div>`).join("")}` : ""}
+        ${toolRows ? `<h3>Tools Needed</h3>${toolRows}` : ""}
+      </div>
+
+      ${stepRows ? `<div class="card"><h2>📋 Build Order</h2>${stepRows}</div>` : ""}
+
+      ${shoppingRows ? `<div class="card"><h2>🛒 AI Shopping List</h2>${shoppingRows}<p class="smallText">The editable material list below will be added to The List Shopping section when you save the project.</p></div>` : ""}
+
+      ${assumptions ? `<div class="card"><h2>📝 Assumptions</h2><div class="smallText">${assumptions}</div></div>` : ""}
+      ${warnings ? `<div class="card warning"><strong>⚠️ Review Before Building</strong>${warnings}</div>` : ""}
+    `;
+  }
+
   if(plan.calculation){
 
     const c =
@@ -7984,7 +8109,13 @@ function addAIPlanToProjects(){
       editingPlan.calculation || null,
 
     calculation:
-      editingPlan.calculation || null
+      editingPlan.calculation || null,
+
+    aiPlan:
+      editingPlan.aiPlan || null,
+
+    aiImage:
+      editingPlan.aiImage || ""
 
   };
 
