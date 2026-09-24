@@ -730,6 +730,11 @@ input,textarea,select{
   min-height:56px;
   margin:0;
 }
+.quickProjectCard{background:#fbfaf4;border:1px solid #dedfd2}
+.quickProjectCard textarea{min-height:106px}
+.quickProjectCard .quickProjectSubmit{width:100%;min-height:52px;background:#344f3d}
+.quickProjectCard details{margin-top:17px;border-top:1px solid #e4e5dc;padding-top:13px}
+.quickProjectCard summary{cursor:pointer;color:#3d5943;font-weight:700}
 .homeInfoTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
 .homeInfoTabs button{background:#f8f5ed;color:#314d3a;border:1px solid #c9d1c3;min-height:52px}
 .homeInfoTabs button.active{background:#344e3d;color:#fff;border-color:#344e3d}
@@ -1096,7 +1101,7 @@ body{padding-bottom:152px}
     <h2>🚀 Start a Project</h2>
 
     <div class="row">
-      <button style="background:#556B2F; color:white;" onclick="newProject()">＋ New Project</button>
+      <button style="background:#344f3d; color:white;" onclick="newProject()">＋ Start a Project</button>
     </div>
 
   </div>
@@ -1105,18 +1110,29 @@ body{padding-bottom:152px}
 
 <section id="projectsPage" class="hidden">
 
-  <div class="card">
-    <h2>📋 Projects</h2>
-
-    <button onclick="newProject()">＋ New Project</button>
-
-    <p class="smallText" style="margin:10px 0;">
-      Give your project a name, then add tasks yourself or build a plan with AI.
-    </p>
-
-    <p class="smallText" style="margin-bottom:0;">
-      Tap a project to open it. Swipe left to delete.
-    </p>
+  <div class="card quickProjectCard">
+    <h2>✨ Start a Project</h2>
+    <p class="smallText">Tell me what you want to do. I'll name the project and organize the tasks, materials, tools, and DIY steps.</p>
+    <form id="quickProjectForm" onsubmit="createQuickProject(event)">
+      <label for="quickProjectPrompt">What would you like to make or improve?</label>
+      <textarea id="quickProjectPrompt" maxlength="4000" required placeholder="Example: I want to build a storage bench for the entryway. It should seat two people and match the wood trim."></textarea>
+      <label for="quickProjectPhotos">Photos of the space (optional)</label>
+      <input id="quickProjectPhotos" type="file" accept="image/*" multiple onchange="updateQuickProjectPhotos()">
+      <p id="quickProjectPhotoCount" class="smallText"></p>
+      <button type="submit" class="quickProjectSubmit" id="quickProjectButton">✨ Create My Project</button>
+      <p id="quickProjectStatus" class="smallText" role="status"></p>
+    </form>
+    <details>
+      <summary>I'd rather start with an empty project</summary>
+      <form id="newProjectForm" onsubmit="saveNewProject(event)">
+        <label for="newProjectName">Project name</label>
+        <input id="newProjectName" placeholder="Example: Build a backyard fire pit" required maxlength="100">
+        <label for="newProjectDescription">Description (optional)</label>
+        <textarea id="newProjectDescription" placeholder="Add details whenever you're ready."></textarea>
+        <p id="newProjectError" class="smallText" role="alert"></p>
+        <button type="submit" class="secondary">Create Empty Project</button>
+      </form>
+    </details>
   </div>
 
   <div id="projectsList"></div>
@@ -1969,8 +1985,7 @@ function renderProjects(){
     box.innerHTML = `
       <div class="card empty">
         No projects yet.<br><br>
-        Start one with <strong>＋ New Project</strong>
-        or use <strong>✨ Build My Plan</strong>.
+        Describe what you want to do above and The List will put your plan together.
       </div>
     `;
 
@@ -2237,24 +2252,57 @@ function setupProjectSwipe(){
 function newProject(){
   editingPlan = null;
   planningProjectId = null;
-  showPage("projectDetailPage");
-  document.getElementById("projectDetail").innerHTML = `
-    <div class="card">
-      <button type="button" class="secondary" onclick="showPage('projectsPage')">
-        ← Back to Projects
-      </button>
-      <h2 style="margin-top:15px;">＋ New Project</h2>
-      <form id="newProjectForm" onsubmit="saveNewProject(event)">
-        <label for="newProjectName">Project name</label>
-        <input id="newProjectName" placeholder="Example: Build a backyard fire pit" required maxlength="100">
-        <label for="newProjectDescription">What do you want to do? (optional)</label>
-        <textarea id="newProjectDescription" placeholder="A few details will help if you build a plan with AI."></textarea>
-        <p id="newProjectError" class="smallText" role="alert"></p>
-        <button type="submit">Create Project</button>
-      </form>
-    </div>
-  `;
-  document.getElementById("newProjectName").focus();
+  showPage("projectsPage");
+  const input = document.getElementById("quickProjectPrompt");
+  input.scrollIntoView({behavior:"smooth",block:"center"});
+  input.focus({preventScroll:true});
+}
+
+function updateQuickProjectPhotos(){
+  const count = document.getElementById("quickProjectPhotos").files?.length || 0;
+  document.getElementById("quickProjectPhotoCount").textContent = count
+    ? `${Math.min(count,3)} photo${Math.min(count,3) === 1 ? "" : "s"} will be used${count > 3 ? " (first 3 only)" : ""}.`
+    : "";
+}
+
+async function createQuickProject(event){
+  event.preventDefault();
+  if(aiPlanningBusy) return;
+  const input = document.getElementById("quickProjectPrompt");
+  const prompt = input.value.trim();
+  if(!prompt) return;
+  const photosInput = document.getElementById("quickProjectPhotos");
+  const status = document.getElementById("quickProjectStatus");
+  const button = document.getElementById("quickProjectButton");
+  aiPlanningBusy = true;
+  button.disabled = true;
+  button.textContent = "✨ Making your project…";
+  status.textContent = "Organizing your tasks, materials, tools, and DIY steps…";
+  try{
+    const photos = await Promise.all([...photosInput.files].slice(0,3).map(compressProjectPhoto));
+    const {plan,tasks,materials} = await buildStructuredChatPlan(prompt.slice(0,100),[{role:"user",content:prompt}],photos);
+    const name = String(plan.projectName || prompt).trim().slice(0,100) || "New home project";
+    const id = `project-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    const project = {id,name,category:"Home",status:"planned",startedAt:"",completedAt:"",
+      description:plan.summary || prompt,tasks,materials,records:[],notes:"",
+      roomPhotos:photos,aiPlan:plan,aiImage:""};
+    data.projects.push(project);
+    data.aiChats[id] = [{role:"user",content:prompt},{role:"assistant",content:plan.summary || name}];
+    try{saveData();}
+    catch(err){data.projects.pop();delete data.aiChats[id];throw err;}
+    input.value = "";
+    photosInput.value = "";
+    updateQuickProjectPhotos();
+    status.textContent = "";
+    renderProjects();
+    openProject(id);
+  }catch(err){
+    status.textContent = `Could not make this project yet. ${err.message || "Please try again."}`;
+  }finally{
+    aiPlanningBusy = false;
+    button.disabled = false;
+    button.textContent = "✨ Create My Project";
+  }
 }
 
 function saveNewProject(event){
@@ -2440,6 +2488,12 @@ function openProject(id){
         <div><strong>${escapeHTML(step.title)}</strong><p>${escapeHTML(step.instructions)}</p>${step.safety ? `<p class="smallText">⚠️ ${escapeHTML(step.safety)}</p>` : ""}</div>
       </div>`).join("")}
       ${project.aiPlan.warnings?.length ? `<div class="warning"><strong>Before you begin</strong>${project.aiPlan.warnings.map(note => `<p>${escapeHTML(note)}</p>`).join("")}</div>` : ""}
+    </div>` : ""}
+
+    ${project.aiPlan?.measurementsNeeded?.length ? `<div class="card">
+      <h2>📏 Measurements to check</h2>
+      <p class="smallText">Confirm these before buying materials or starting work.</p>
+      ${project.aiPlan.measurementsNeeded.map(item => `<div class="toolRow"><span><strong>${escapeHTML(item.name)}</strong>${item.whyNeeded ? `<div class="smallText">${escapeHTML(item.whyNeeded)}</div>` : ""}</span></div>`).join("")}
     </div>` : ""}
 
     <div class="card">
