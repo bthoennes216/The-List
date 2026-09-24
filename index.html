@@ -677,58 +677,33 @@ input,textarea,select{
   border-color:var(--border) !important;
 }
 
-#homePage > .card:nth-of-type(2) button{
-  background:var(--forest) !important;
-  color:#fff !important;
-}
-
-#homePage > .card:nth-of-type(2) button.small{
-  background:var(--forest) !important;
-}
-
-#homePage > .card:nth-of-type(2) button:nth-child(2){
-  background:var(--warm-card-2) !important;
-  color:var(--forest) !important;
-  border:1px solid #bdb29f;
-  box-shadow:none;
-}
-
-#homePage > .card:nth-of-type(2) button:nth-child(3){
-  background:var(--warm-card-2) !important;
-  color:var(--terracotta) !important;
-  border:1px solid #cdb8aa;
-  box-shadow:none;
-}
-
 .upcomingActions{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
+  gap:9px;
   margin-bottom:12px;
 }
 
 #homePage > .card:nth-of-type(2) .upcomingActions > button{
   width:100%;
-  min-height:72px;
+  min-height:54px;
   padding:10px;
-  border:0;
-  border-radius:14px;
-  color:#fff !important;
-  font-size:16px;
-  font-weight:700;
-  box-shadow:0 3px 8px rgba(65,50,30,.10);
+  border:1px solid #cfc4b1;
+  border-radius:13px;
+  background:var(--warm-card-2) !important;
+  color:var(--forest) !important;
+  font-size:15px;
+  font-weight:600;
+  box-shadow:none;
 }
-#homePage > .card:nth-of-type(2) .upcomingActions > button:nth-child(1){
+#homePage > .card:nth-of-type(2) .upcomingActions > button[aria-pressed="true"]{
+  background:#e8efe4 !important;
+  border-color:#adc0ae;
+}
+#homePage > .card:nth-of-type(2) .upcomingActions > .viewCalendar{
   background:var(--forest) !important;
-}
-#homePage > .card:nth-of-type(2) .upcomingActions > button:nth-child(2){
-  background:var(--terracotta) !important;
-}
-#homePage > .card:nth-of-type(2) .upcomingActions > button:nth-child(3){
-  background:var(--sage) !important;
-}
-#homePage > .card:nth-of-type(2) .upcomingActions > button:nth-child(4){
-  background:var(--brass) !important;
+  color:#fff !important;
+  border-color:var(--forest);
 }
 
 #homePage > .card:nth-of-type(3) button{
@@ -1027,16 +1002,16 @@ body{padding-bottom:152px}
   <h2>📅 Upcoming</h2>
 
   <div class="upcomingActions">
-    <button type="button" onclick="showCalendarRange('thisWeek')">
+    <button type="button" data-range="thisWeek" aria-pressed="false" onclick="showCalendarRange('thisWeek')">
       This Week
     </button>
-    <button type="button" onclick="showCalendarRange('nextWeek')">
+    <button type="button" data-range="nextWeek" aria-pressed="false" onclick="showCalendarRange('nextWeek')">
       Next Week
     </button>
-    <button type="button" onclick="showCalendarRange('thisMonth')">
+    <button type="button" data-range="thisMonth" aria-pressed="false" onclick="showCalendarRange('thisMonth')">
       This Month
     </button>
-    <button type="button" onclick="showPage('calendarPage'); clearCalendarRange()">
+    <button type="button" class="viewCalendar" onclick="showPage('calendarPage'); clearCalendarRange()">
       View Calendar →
     </button>
   </div>
@@ -1768,6 +1743,14 @@ function renderHomeUpcoming(){
   if(!box){
     return;
   }
+
+  const rangeBox =
+    document.getElementById("homeUpcomingRange");
+  if(rangeBox){
+    rangeBox.innerHTML = "";
+  }
+  document.querySelectorAll(".upcomingActions [data-range]")
+    .forEach(button => button.setAttribute("aria-pressed","false"));
 
   const upcoming = [];
 
@@ -3716,6 +3699,11 @@ function showCalendarRange(range){
     startDate,
     endDate
   );
+
+  document.querySelectorAll(".upcomingActions [data-range]")
+    .forEach(button =>
+      button.setAttribute("aria-pressed",String(button.dataset.range === range))
+    );
 
 }
 
