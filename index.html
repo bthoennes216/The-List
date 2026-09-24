@@ -700,6 +700,37 @@ input,textarea,select{
   box-shadow:none;
 }
 
+.upcomingActions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+
+#homePage > .card:nth-of-type(2) .upcomingActions > button{
+  width:100%;
+  min-height:72px;
+  padding:10px;
+  border:0;
+  border-radius:14px;
+  color:#fff !important;
+  font-size:16px;
+  font-weight:700;
+  box-shadow:0 3px 8px rgba(65,50,30,.10);
+}
+#homePage > .card:nth-of-type(2) .upcomingActions > button:nth-child(1){
+  background:var(--forest) !important;
+}
+#homePage > .card:nth-of-type(2) .upcomingActions > button:nth-child(2){
+  background:var(--terracotta) !important;
+}
+#homePage > .card:nth-of-type(2) .upcomingActions > button:nth-child(3){
+  background:var(--sage) !important;
+}
+#homePage > .card:nth-of-type(2) .upcomingActions > button:nth-child(4){
+  background:var(--brass) !important;
+}
+
 #homePage > .card:nth-of-type(3) button{
   background:var(--forest) !important;
   color:#fff !important;
@@ -993,51 +1024,21 @@ body{padding-bottom:152px}
   padding:18px;
 ">
 
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:12px;
-  ">
+  <h2>📅 Upcoming</h2>
 
-    <h2 style="margin:0;">
-      📅 Upcoming
-    </h2>
-
-    <button
-      class="small" style="background:#556B2F; color:white;"
-      onclick="showPage('calendarPage'); clearCalendarRange()">
-      View Calendar →
+  <div class="upcomingActions">
+    <button type="button" onclick="showCalendarRange('thisWeek')">
+      This Week
     </button>
-
-  </div>
-
-  <div style="
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:8px;
-    margin-bottom:12px;
-  ">
-
-<button
-  class="" style="background:#556B2F; color:white;"
-  onclick="showCalendarRange('thisWeek')">
-  This Week
-</button>
-
-    <button
-      class="" style="background:#556B2F; color:white;"
-      onclick="showCalendarRange('nextWeek')">
+    <button type="button" onclick="showCalendarRange('nextWeek')">
       Next Week
     </button>
-
-    <button
-      class="" style="background:#556B2F; color:white;"
-      onclick="showCalendarRange('thisMonth')"
-      style="grid-column:1 / -1;">
+    <button type="button" onclick="showCalendarRange('thisMonth')">
       This Month
     </button>
-
+    <button type="button" onclick="showPage('calendarPage'); clearCalendarRange()">
+      View Calendar →
+    </button>
   </div>
 
 <div id="homeUpcomingRange"></div>
