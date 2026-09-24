@@ -457,6 +457,10 @@ label{
   border-radius:4px;
   padding:2px;
 }
+.calendarItem.maintenanceItem{
+  background:#e8dcc7;
+  color:#594126;
+}
 
 .moreItems{
   font-size:9px;
@@ -1227,6 +1231,16 @@ body{padding-bottom:152px}
     <input id="maintenanceDue"
       type="date">
 
+    <label for="maintenanceRepeat">Repeat</label>
+    <select id="maintenanceRepeat">
+      <option value="none">Does not repeat</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+      <option value="quarterly">Every 3 months</option>
+      <option value="halfYear">Every 6 months</option>
+      <option value="yearly">Yearly</option>
+    </select>
+
     <textarea id="maintenanceNotes"
       placeholder="Notes"></textarea>
 
@@ -1794,6 +1808,17 @@ function renderHomeUpcoming(){
 
     }
 
+  });
+
+  data.maintenance.forEach(item => {
+    const nextDate = nextMaintenanceDate(item,today);
+    if(nextDate){
+      upcoming.push({
+        date:nextDate,
+        title:item.name,
+        project:"Maintenance"
+      });
+    }
   });
 
   upcoming.sort((a,b) =>
@@ -3376,6 +3401,50 @@ function getEventsForDate(dateString){
 
 }
 
+function maintenanceOccursOn(item,dateString){
+  const start = item.dueDate;
+  if(!start || !/^\d{4}-\d{2}-\d{2}$/.test(start) || dateString < start) return false;
+  if(dateString === start) return true;
+
+  const repeat = item.repeat || "none";
+  if(repeat === "none") return false;
+
+  const [sy,sm,sd] = start.split("-").map(Number);
+  const [y,m,d] = dateString.split("-").map(Number);
+  if(repeat === "weekly"){
+    const days = (Date.UTC(y,m-1,d) - Date.UTC(sy,sm-1,sd)) / 86400000;
+    return days > 0 && days % 7 === 0;
+  }
+
+  const interval = {monthly:1,quarterly:3,halfYear:6,yearly:12}[repeat];
+  if(!interval) return false;
+  const months = (y-sy)*12 + (m-sm);
+  return months > 0 && months % interval === 0 &&
+    d === Math.min(sd,new Date(y,m,0).getDate());
+}
+
+function getMaintenanceForDate(dateString){
+  return data.maintenance
+    .filter(item => maintenanceOccursOn(item,dateString))
+    .map(item => ({
+      title:item.name,
+      project:"Maintenance",
+      type:"Maintenance"
+    }));
+}
+
+function nextMaintenanceDate(item,fromDate){
+  if(!item.dueDate) return "";
+  const start = new Date(fromDate + "T12:00:00");
+  for(let offset=0;offset<=366;offset++){
+    const candidate = new Date(start);
+    candidate.setDate(start.getDate()+offset);
+    const key = dateKey(candidate);
+    if(maintenanceOccursOn(item,key)) return key;
+  }
+  return "";
+}
+
 function renderCalendar(){
 
   const year =
@@ -3448,8 +3517,11 @@ function renderCalendar(){
     const events =
       getEventsForDate(key);
 
+    const maintenance =
+      getMaintenanceForDate(key);
+
     const items =
-      [...tasks,...events];
+      [...tasks,...events,...maintenance];
 
     cell.innerHTML = `
 
@@ -3459,7 +3531,7 @@ function renderCalendar(){
 
       ${items.slice(0,2).map(item => `
 
-        <div class="calendarItem">
+        <div class="calendarItem${item.type === "Maintenance" ? " maintenanceItem" : ""}">
           ${escapeHTML(item.title)}
         </div>
 
@@ -3520,8 +3592,11 @@ function renderSelectedDate(){
   const events =
     getEventsForDate(selectedCalendarDate);
 
+  const maintenance =
+    getMaintenanceForDate(selectedCalendarDate);
+
   const items =
-    [...tasks,...events];
+    [...tasks,...events,...maintenance];
 
   box.innerHTML = `
 
@@ -3665,6 +3740,7 @@ function renderHomeUpcomingRange(
 
     const tasks = getTasksForDate(key);
     const events = getEventsForDate(key);
+    const maintenance = getMaintenanceForDate(key);
 
     tasks.forEach(item => {
       items.push({
@@ -3676,6 +3752,15 @@ function renderHomeUpcomingRange(
     });
 
     events.forEach(item => {
+      items.push({
+        date:key,
+        title:item.title,
+        project:item.project,
+        type:item.type
+      });
+    });
+
+    maintenance.forEach(item => {
       items.push({
         date:key,
         title:item.title,
@@ -3775,6 +3860,9 @@ function renderCalendarRange(
     const events =
       getEventsForDate(key);
 
+    const maintenance =
+      getMaintenanceForDate(key);
+
     tasks.forEach(item => {
 
       items.push({
@@ -3799,6 +3887,15 @@ function renderCalendarRange(
 
       });
 
+    });
+
+    maintenance.forEach(item => {
+      items.push({
+        date:key,
+        title:item.title,
+        project:item.project,
+        type:item.type
+      });
     });
 
     current.setDate(
@@ -4023,14 +4120,26 @@ function addMaintenance(){
     return;
   }
 
+  const dueDate =
+    document.getElementById("maintenanceDue").value;
+
+  const repeat =
+    document.getElementById("maintenanceRepeat").value;
+
+  if(repeat !== "none" && !dueDate){
+    alert("Choose a first due date for repeating maintenance.");
+    return;
+  }
+
   data.maintenance.push({
 
     id:Date.now().toString(),
 
     name:name,
 
-    dueDate:
-      document.getElementById("maintenanceDue").value,
+    dueDate:dueDate,
+
+    repeat:repeat,
 
     notes:
       document.getElementById("maintenanceNotes").value
@@ -4039,12 +4148,23 @@ function addMaintenance(){
 
   document.getElementById("maintenanceName").value = "";
   document.getElementById("maintenanceDue").value = "";
+  document.getElementById("maintenanceRepeat").value = "none";
   document.getElementById("maintenanceNotes").value = "";
 
   saveData();
 
   renderMaintenance();
 
+}
+
+function maintenanceRepeatLabel(repeat){
+  return {
+    weekly:"Weekly",
+    monthly:"Monthly",
+    quarterly:"Every 3 months",
+    halfYear:"Every 6 months",
+    yearly:"Yearly"
+  }[repeat] || "";
 }
 
 function renderMaintenance(){
@@ -4079,7 +4199,7 @@ function renderMaintenance(){
             ${
               item.dueDate
               ? `<div class="smallText">
-                  Due ${formatDate(item.dueDate)}
+                  Due ${formatDate(item.dueDate)}${item.repeat && item.repeat !== "none" ? " · " + escapeHTML(maintenanceRepeatLabel(item.repeat)) : ""}
                  </div>`
               : ""
             }
