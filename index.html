@@ -730,6 +730,13 @@ input,textarea,select{
   min-height:56px;
   margin:0;
 }
+.shoppingTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.shoppingTabs button{background:#f8f5ed;color:#314d3a;border:1px solid #c9d1c3;min-height:52px}
+.shoppingTabs button.active{background:#344e3d;color:#fff;border-color:#344e3d}
+.toolRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #e8e4d8}
+.toolRow:last-child{border:0}
+.toolRow button{flex:0 0 auto}
+.toolPhotoStatus{min-height:20px}
 
 .progress div{
   background:var(--forest);
@@ -1110,6 +1117,12 @@ body{padding-bottom:152px}
 
 <section id="shoppingPage" class="hidden">
 
+  <div class="shoppingTabs" role="group" aria-label="Shopping sections">
+    <button type="button" id="shoppingListTab" onclick="showShoppingSection('list')">🛒 Shopping List</button>
+    <button type="button" id="toolInventoryTab" onclick="showShoppingSection('tools')">🧰 Tool Inventory</button>
+  </div>
+
+  <div id="shoppingListSection">
   <div class="card">
     <h2>🛒 Shopping List</h2>
 
@@ -1121,6 +1134,25 @@ body{padding-bottom:152px}
   </div>
 
   <div id="shoppingList"></div>
+  </div>
+
+  <div id="toolInventorySection" class="hidden">
+    <div class="card">
+      <h2>🧰 My Tools</h2>
+      <p class="smallText">Add tools you already own. The AI planner will use this list when suggesting what to buy.</p>
+      <label for="toolNameInput">Tool name</label>
+      <input id="toolNameInput" maxlength="100" placeholder="Example: cordless drill" onkeydown="if(event.key==='Enter') addTool()">
+      <button type="button" onclick="addTool()">＋ Add Tool</button>
+    </div>
+    <div class="card">
+      <h3>Add tools from a photo</h3>
+      <p class="smallText">Choose a photo with several tools, then review the names before saving.</p>
+      <input id="toolPhotoInput" type="file" accept="image/*" aria-label="Choose a photo of tools" onchange="scanToolPhoto()">
+      <p id="toolPhotoStatus" class="smallText toolPhotoStatus" role="status"></p>
+      <div id="toolPhotoSuggestions"></div>
+    </div>
+    <div class="card"><h3>Owned tools <span id="toolCount"></span></h3><div id="toolInventoryList"></div></div>
+  </div>
 
 </section>
 
@@ -1389,6 +1421,7 @@ const defaultData = {
 
   projects:[],
   shopping:[],
+  tools:[],
   aiChats:{},
   maintenance:[],
   calendar:[],
@@ -1437,6 +1470,10 @@ function loadData(){
 
     parsed.shopping = Array.isArray(parsed.shopping)
       ? parsed.shopping
+      : [];
+
+    parsed.tools = Array.isArray(parsed.tools)
+      ? parsed.tools.filter(tool => tool && typeof tool.name === "string")
       : [];
 
     parsed.maintenance = Array.isArray(parsed.maintenance)
@@ -1664,6 +1701,7 @@ function showPage(pageId){
 
   if(pageId === "shoppingPage"){
     renderShopping();
+    showShoppingSection(shoppingSection);
   }
 
   if(pageId === "calendarPage"){
@@ -2321,6 +2359,25 @@ function openProject(id){
       : ""
     }
 
+    ${project.aiPlan ? `<div class="card">
+      <h2>🔨 Tools for this project</h2>
+      ${(project.aiPlan.toolsAlreadyHave || []).length ? `<p class="smallText">Already owned: ${escapeHTML(project.aiPlan.toolsAlreadyHave.join(", "))}</p>` : ""}
+      ${(project.aiPlan.toolsNeeded || []).length
+        ? project.aiPlan.toolsNeeded.map(item => `<div class="toolRow"><span>${escapeHTML(item.tool)} ${item.required ? "· Required" : "· Optional"}</span></div>`).join("")
+        : `<p class="smallText">No extra tools listed.</p>`}
+      <button type="button" onclick="addMissingToolsToShopping('${escapeAttribute(project.id)}')">🛒 Add missing required tools to Shopping</button>
+    </div>` : ""}
+
+    <div class="card">
+      <h2>📷 Project Photos</h2>
+      <p class="smallText">Add up to 3 photos of the room or space. The AI will use them to plan and picture the finished project.</p>
+      <input type="file" accept="image/*" multiple aria-label="Add photos of the project space" onchange="addProjectPhotos('${escapeAttribute(project.id)}',this)">
+      <p id="projectPhotoStatus" class="smallText" role="status"></p>
+      <div id="projectPhotoGallery"></div>
+      ${project.aiPlan ? `<button type="button" onclick="generateSavedProjectImage('${escapeAttribute(project.id)}')">🎨 Picture the finished project</button><p id="savedImageStatus" class="smallText" role="status"></p>` : ""}
+      ${project.aiImage ? `<div class="aiConcept"><img src="${escapeAttribute(project.aiImage)}" alt="AI concept of the completed project"></div>` : ""}
+    </div>
+
     <div class="card">
 
       <h2>✅ Tasks</h2>
@@ -2452,7 +2509,69 @@ function openProject(id){
 
   renderProjectTasks(project);
   renderProjectMaterials(project);
+  renderProjectPhotos(project);
 
+}
+async function compressProjectPhoto(file){
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1,960 / Math.max(bitmap.width,bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);
+  bitmap.close();
+  return canvas.toDataURL("image/jpeg",0.65);
+}
+
+function renderProjectPhotos(project){
+  const gallery = document.getElementById("projectPhotoGallery");
+  if(!gallery) return;
+  gallery.innerHTML = (project.roomPhotos || []).map((photo,index) => `
+    <div style="display:inline-block;position:relative;margin:0 8px 12px 0;vertical-align:top">
+      <img src="${escapeAttribute(photo)}" alt="Project space photo ${index+1}" style="width:110px;height:110px;object-fit:cover;border-radius:12px">
+      <button type="button" class="small secondary" onclick="removeProjectPhoto('${escapeAttribute(project.id)}',${index})" style="display:block;width:100%">Remove</button>
+    </div>`).join("");
+}
+
+async function addProjectPhotos(projectId,input){
+  const project = data.projects.find(p => String(p.id) === String(projectId));
+  if(!project) return;
+  const status = document.getElementById("projectPhotoStatus");
+  const available = 3 - (project.roomPhotos || []).length;
+  if(available <= 0){status.textContent = "Remove a photo before adding another.";input.value="";return;}
+  status.textContent = "Adding photos…";
+  const oldPhotos = [...(project.roomPhotos || [])];
+  try{
+    const photos = await Promise.all([...input.files].slice(0,available).map(compressProjectPhoto));
+    project.roomPhotos = [...oldPhotos,...photos];
+    saveData();
+    renderProjectPhotos(project);
+    status.textContent = `${photos.length} photo${photos.length === 1 ? "" : "s"} added. Build your plan to use them.`;
+  }catch(err){
+    project.roomPhotos = oldPhotos;
+    status.textContent = "Could not save the photo. Try a smaller photo or free up storage on this device.";
+  }finally{input.value="";}
+}
+
+function removeProjectPhoto(projectId,index){
+  const project = data.projects.find(p => String(p.id) === String(projectId));
+  if(!project) return;
+  project.roomPhotos.splice(index,1);
+  saveData();
+  renderProjectPhotos(project);
+}
+
+async function generateSavedProjectImage(projectId){
+  const project = data.projects.find(p => String(p.id) === String(projectId));
+  if(!project?.aiPlan?.imagePrompt) return;
+  const status = document.getElementById("savedImageStatus");
+  status.textContent = "Creating finished project image…";
+  try{
+    const image = await requestProjectImage(project.aiPlan.imagePrompt,project.roomPhotos || []);
+    project.aiImage = image;
+    saveData();
+    openProject(projectId);
+  }catch(err){status.textContent = err.message || "Could not create image.";}
 }
 function focusProjectTasks(){
   const input = document.getElementById("newTaskText");
@@ -3325,6 +3444,123 @@ function renderShopping(){
 
   `).join("");
 
+}
+
+let shoppingSection = "list";
+let scannedToolNames = [];
+
+function showShoppingSection(section){
+  shoppingSection = section === "tools" ? "tools" : "list";
+  document.getElementById("shoppingListSection").classList.toggle("hidden", shoppingSection !== "list");
+  document.getElementById("toolInventorySection").classList.toggle("hidden", shoppingSection !== "tools");
+  ["shoppingListTab","toolInventoryTab"].forEach((id,index) => {
+    const active = (index === 0) === (shoppingSection === "list");
+    document.getElementById(id).classList.toggle("active",active);
+    document.getElementById(id).setAttribute("aria-pressed",String(active));
+  });
+  if(shoppingSection === "tools") renderToolInventory();
+}
+
+function toolKey(name){
+  return String(name || "").trim().replace(/\s+/g," ").toLocaleLowerCase();
+}
+
+function addTool(name){
+  const input = document.getElementById("toolNameInput");
+  const toolName = String(name || input.value).trim().replace(/\s+/g," ").slice(0,100);
+  if(!toolName) return false;
+  if(data.tools.some(tool => toolKey(tool.name) === toolKey(toolName))){
+    if(!name) input.value = "";
+    return false;
+  }
+  data.tools.push({id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()),name:toolName});
+  if(!name) input.value = "";
+  saveData();
+  renderToolInventory();
+  return true;
+}
+
+function removeTool(id){
+  data.tools = data.tools.filter(tool => String(tool.id) !== String(id));
+  saveData();
+  renderToolInventory();
+}
+
+function renderToolInventory(){
+  const list = document.getElementById("toolInventoryList");
+  document.getElementById("toolCount").textContent = `(${data.tools.length})`;
+  list.innerHTML = data.tools.length
+    ? data.tools.map(tool => `<div class="toolRow"><span>${escapeHTML(tool.name)}</span><button class="small secondary" type="button" onclick="removeTool('${escapeAttribute(tool.id)}')" aria-label="Remove ${escapeAttribute(tool.name)}">Remove</button></div>`).join("")
+    : `<p class="smallText">No tools added yet.</p>`;
+}
+
+function showScannedTools(){
+  const box = document.getElementById("toolPhotoSuggestions");
+  box.innerHTML = scannedToolNames.length
+    ? `<strong>Review these tools</strong>${scannedToolNames.map((name,index) => `<label class="toolRow"><span><input type="checkbox" class="scannedToolChoice" value="${index}" checked style="width:auto;margin:0 10px 0 0">${escapeHTML(name)}</span></label>`).join("")}<button type="button" onclick="saveScannedTools()">Add selected tools</button>`
+    : "";
+}
+
+function saveScannedTools(){
+  const selected = [...document.querySelectorAll(".scannedToolChoice:checked")]
+    .map(input => scannedToolNames[Number(input.value)]).filter(Boolean);
+  let added = 0;
+  selected.forEach(name => {if(addTool(name)) added++;});
+  scannedToolNames = [];
+  showScannedTools();
+  document.getElementById("toolPhotoStatus").textContent = `${added} tool${added === 1 ? "" : "s"} added to your inventory.`;
+}
+
+async function scanToolPhoto(){
+  const input = document.getElementById("toolPhotoInput");
+  const file = input.files?.[0];
+  if(!file) return;
+  const status = document.getElementById("toolPhotoStatus");
+  scannedToolNames = [];
+  showScannedTools();
+  status.textContent = "Finding tools in photo…";
+  try{
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1,1280 / Math.max(bitmap.width,bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);
+    bitmap.close();
+    const image = canvas.toDataURL("image/jpeg",0.75);
+    const response = await fetch(AI_BACKEND_URL.replace(/\/$/,"") + "/tools",{
+      method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image})
+    });
+    const result = await response.json();
+    if(!response.ok || !result.ok) throw new Error(result.error || "Photo scan is unavailable.");
+    scannedToolNames = (Array.isArray(result.tools) ? result.tools : [])
+      .filter(name => typeof name === "string")
+      .map(name => name.trim().slice(0,100))
+      .filter(name => name && !data.tools.some(tool => toolKey(tool.name) === toolKey(name)))
+      .slice(0,30);
+    status.textContent = scannedToolNames.length
+      ? `Found ${scannedToolNames.length} possible tools. Uncheck any that are incorrect.`
+      : "No new tools found. You can add them by name above.";
+    showScannedTools();
+  }catch(err){
+    status.textContent = `Could not identify tools in this photo. ${err.message || "Try again."}`;
+  }finally{input.value = "";}
+}
+
+function addMissingToolsToShopping(projectId){
+  const project = data.projects.find(item => String(item.id) === String(projectId));
+  if(!project?.aiPlan) return;
+  const needed = (project.aiPlan.toolsNeeded || []).filter(item => item?.required && item.tool);
+  let added = 0;
+  needed.forEach(item => {
+    const key = toolKey(item.tool);
+    if(data.tools.some(tool => toolKey(tool.name) === key)) return;
+    if(data.shopping.some(row => !row.done && toolKey(row.name) === key && row.project === project.name)) return;
+    data.shopping.push({id:String(Date.now()+Math.random()),name:item.tool,quantity:"1",project:project.name,done:false});
+    added++;
+  });
+  if(added) saveData();
+  alert(added ? `${added} missing tool${added === 1 ? "" : "s"} added to Shopping.` : "No new required tools to add.");
 }
 
 function addShoppingItem(){
@@ -6436,7 +6672,8 @@ For a shed/workshop or similar structure, address foundation/floor, framing, she
 The finished result should be useful enough for a homeowner to review before buying materials, while clearly identifying anything that still needs field verification.
 `,
         existingPlan:null,
-        toolsOwned:[],
+        toolsOwned:data.tools.map(tool => tool.name),
+        roomPhotos:(data.projects.find(p => String(p.id) === String(planningProjectId))?.roomPhotos || []),
         homeContext:data.home || {}
       });
 
@@ -6555,28 +6792,8 @@ async function generateAIProjectImage(){
   }
 
   try{
-    const response = await fetch(
-      AI_BACKEND_URL.replace(/\/$/,"") + "/image",
-      {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({imagePrompt:editingPlan.aiPlan.imagePrompt})
-      }
-    );
-
-    const text = await response.text();
-    let data;
-    try{ data = JSON.parse(text); }
-    catch{ throw new Error("The image service returned an invalid response."); }
-
-    if(!response.ok || !data.ok){
-      throw new Error(data?.error || "The image service returned an error.");
-    }
-
-    const image = data.image || {};
-    editingPlan.aiImage = image.b64_json
-      ? `data:image/png;base64,${image.b64_json}`
-      : (image.url || "");
+    const roomPhotos = data.projects.find(p => String(p.id) === String(planningProjectId))?.roomPhotos || [];
+    editingPlan.aiImage = await requestProjectImage(editingPlan.aiPlan.imagePrompt,roomPhotos);
 
     showPlanPreview();
 
@@ -6589,6 +6806,18 @@ async function generateAIProjectImage(){
       b.textContent = "🎨 Generate Design Image";
     }
   }
+}
+
+async function requestProjectImage(imagePrompt,roomPhotos){
+  const response = await fetch(AI_BACKEND_URL.replace(/\/$/,"") + "/image",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({imagePrompt,roomPhotos})
+  });
+  const result = await response.json();
+  if(!response.ok || !result.ok) throw new Error(result.error || "The image service returned an error.");
+  const image = result.image || {};
+  if(!image.b64_json && !image.url) throw new Error("No image was returned.");
+  return image.b64_json ? `data:image/png;base64,${image.b64_json}` : image.url;
 }
 
 /* =========================================================
