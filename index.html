@@ -2340,6 +2340,10 @@ function openProject(id){
         ${escapeHTML(project.description || "")}
       </p>
 
+      ${!project.aiPlan && String(project.notes || "").startsWith("Started from AI Chat:")
+        ? `<button type="button" id="organizeChatProjectButton" onclick="organizeChatProject('${escapeAttribute(project.id)}')">✨ Organize this chat into a plan</button>
+          <p id="chatPlanStatus" class="smallText" role="status"></p>` : ""}
+
       ${project.status !== "completed" ? `
         <div class="projectStartActions">
           <button type="button" class="secondary" onclick="focusProjectTasks()">
@@ -2424,9 +2428,18 @@ function openProject(id){
       <h2>🔨 Tools for this project</h2>
       ${(project.aiPlan.toolsAlreadyHave || []).length ? `<p class="smallText">Already owned: ${escapeHTML(project.aiPlan.toolsAlreadyHave.join(", "))}</p>` : ""}
       ${(project.aiPlan.toolsNeeded || []).length
-        ? project.aiPlan.toolsNeeded.map(item => `<div class="toolRow"><span>${escapeHTML(item.tool)} ${item.required ? "· Required" : "· Optional"}</span></div>`).join("")
+        ? project.aiPlan.toolsNeeded.map(item => `<div class="toolRow"><span><strong>${escapeHTML(item.tool)}</strong> ${item.required ? "· Required" : "· Optional"}${item.reason ? `<div class="smallText">${escapeHTML(item.reason)}</div>` : ""}</span></div>`).join("")
         : `<p class="smallText">No extra tools listed.</p>`}
       <button type="button" onclick="addMissingToolsToShopping('${escapeAttribute(project.id)}')">🛒 Add missing required tools to Shopping</button>
+    </div>` : ""}
+
+    ${project.aiPlan?.buildSteps?.length ? `<div class="card">
+      <h2>🛠 DIY Instructions</h2>
+      ${project.aiPlan.buildSteps.map((step,index) => `<div class="aiStep">
+        <div class="aiStepNum">${index+1}</div>
+        <div><strong>${escapeHTML(step.title)}</strong><p>${escapeHTML(step.instructions)}</p>${step.safety ? `<p class="smallText">⚠️ ${escapeHTML(step.safety)}</p>` : ""}</div>
+      </div>`).join("")}
+      ${project.aiPlan.warnings?.length ? `<div class="warning"><strong>Before you begin</strong>${project.aiPlan.warnings.map(note => `<p>${escapeHTML(note)}</p>`).join("")}</div>` : ""}
     </div>` : ""}
 
     <div class="card">
@@ -2466,7 +2479,7 @@ function openProject(id){
       <h2>🧰 Materials</h2>
 
       ${
-        project.takeoff
+        (project.takeoff || project.aiPlan)
         ? `
           <button
             class="success"
@@ -9055,21 +9068,93 @@ function dismissAIProjectPrompt(index){
   aiProjectDraftIndex = null;
   saveData();renderAIChat();
 }
-function createProjectFromChat(index){
+let aiPlanningBusy = false;
+async function buildStructuredChatPlan(name,context,roomPhotos=[]){
+  const conversation = context.map(item => `${item.role === "user" ? "Homeowner" : "AI"}: ${item.content}`)
+    .join("\n\n").slice(-9000);
+  const plan = await requestTheListAI({
+    projectDescription:`${name}\n\nProject discussion:\n${conversation}`,
+    measurements:{},style:"",
+    refinement:"Turn this discussion into a practical project record. Separate actionable project tasks, a material takeoff with quantities or clearly labeled estimates, tools needed versus tools already owned, and numbered DIY build instructions. Use the homeowner's actual request as the project scope. Identify unknown measurements rather than inventing them.",
+    existingPlan:null,toolsOwned:data.tools.map(tool => tool.name),
+    roomPhotos,homeContext:data.home || {}
+  });
+  const taskRows = (plan.projectTasks || []).length ? plan.projectTasks
+    : (plan.buildSteps || []).map(step => ({title:step.title,description:step.instructions}));
+  const tasks = taskRows.filter(row => row?.title).map((row,index) => ({
+    id:`task-${Date.now()}-${index}`,text:`${row.title}${row.description ? ` — ${row.description}` : ""}`,
+    done:false,dueDate:"",source:"aiPlan"
+  }));
+  const materials = (plan.materials || []).filter(row => row?.item).map((row,index) => ({
+    id:`material-${Date.now()}-${index}`,name:row.item,
+    quantity:`${row.quantity || "Amount to confirm"}${row.specification ? ` — ${row.specification}` : ""}`,
+    source:"aiPlan"
+  }));
+  if(!tasks.length && !materials.length && !(plan.buildSteps || []).length){
+    throw new Error("The planner returned no tasks, materials, or instructions. Please try again.");
+  }
+  if(!(plan.buildSteps || []).length && tasks.length){
+    plan.buildSteps = tasks.map((task,index) => ({
+      step:index+1,title:taskRows[index]?.title || task.text,
+      instructions:taskRows[index]?.description || "Complete this project task.",safety:""
+    }));
+  }
+  return {plan,tasks,materials};
+}
+
+async function createProjectFromChat(index){
+  if(aiPlanningBusy) return;
   const title = document.getElementById("aiDraftProjectName")?.value.trim();
   const reply = aiThread()[index];
   if(!title || !reply || reply.role !== "assistant") return;
-  const id = `project-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
   const context = aiThread().slice(Math.max(0,index-5),index+1)
     .filter(item => item.role === "user" || item.role === "assistant")
     .map(item => ({role:item.role,content:item.content}));
-  data.projects.push({id,name:title,category:"Home",status:"planned",startedAt:"",completedAt:"",
-    description:reply.content.slice(0,800),tasks:[],materials:[],records:[],
-    notes:`Started from AI Chat:\n${reply.content}`});
-  data.aiChats[id] = context;
-  reply.projectPromptDismissed = true;
-  aiProjectDraftIndex = null;
-  saveData();renderProjects();openProject(id);
+  const status = document.getElementById("aiChatStatus");
+  const button = document.querySelector('.aiActionCard button[onclick="createProjectFromChat('+index+')"]');
+  aiPlanningBusy = true;
+  if(button){button.disabled=true;button.textContent="Organizing your plan…";}
+  status.textContent = "Separating tasks, materials, tools, and DIY instructions…";
+  try{
+    const {plan,tasks,materials} = await buildStructuredChatPlan(title,context);
+    const id = `project-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    data.projects.push({id,name:title,category:"Home",status:"planned",startedAt:"",completedAt:"",
+      description:plan.summary || title,tasks,materials,records:[],notes:"Created from AI Chat.",
+      aiPlan:plan,aiImage:(reply.images || []).at(-1) || ""});
+    data.aiChats[id] = context;
+    reply.projectPromptDismissed = true;
+    aiProjectDraftIndex = null;
+    saveData();renderProjects();openProject(id);
+  }catch(err){
+    status.textContent = `The project wasn't created yet. ${err.message || "Try again."}`;
+    if(button){button.disabled=false;button.textContent="Create Project";}
+  }finally{aiPlanningBusy = false;}
+}
+
+async function organizeChatProject(projectId){
+  const project = data.projects.find(item => String(item.id) === String(projectId));
+  if(!project || project.aiPlan || aiPlanningBusy) return;
+  const button = document.getElementById("organizeChatProjectButton");
+  const status = document.getElementById("chatPlanStatus");
+  const context = (data.aiChats[project.id] || []).filter(item =>
+    (item.role === "user" || item.role === "assistant") && typeof item.content === "string");
+  if(!context.length) context.push({role:"user",content:project.notes || project.description || project.name});
+  aiPlanningBusy = true;
+  button.disabled = true;
+  button.textContent = "Organizing your plan…";
+  status.textContent = "Separating tasks, materials, tools, and DIY instructions…";
+  try{
+    const {plan,tasks,materials} = await buildStructuredChatPlan(project.name,context,project.roomPhotos || []);
+    project.description = plan.summary || project.description;
+    project.tasks = [...(project.tasks || []),...tasks];
+    project.materials = [...(project.materials || []),...materials];
+    project.aiPlan = plan;
+    saveData();openProject(project.id);
+  }catch(err){
+    status.textContent = `Could not organize this project. ${err.message || "Try again."}`;
+    button.disabled = false;
+    button.textContent = "✨ Organize this chat into a plan";
+  }finally{aiPlanningBusy = false;}
 }
 async function generateAIChatImage(index){
   if(aiImageBusy || aiBusy) return;
