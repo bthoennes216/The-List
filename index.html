@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f4efe4">
+<link rel="icon" type="image/png" href="the-list-icon.png">
+<link rel="apple-touch-icon" href="the-list-icon.png">
 
 <title>The List</title>
 
@@ -33,6 +35,18 @@ header{
 header h1{
   margin:0;
   font-size:27px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+header .appLogo{
+  display:block;
+  width:44px;
+  height:44px;
+  flex:none;
+  object-fit:cover;
+  clip-path:inset(1.5% round 23%);
 }
 
 header p{
@@ -934,7 +948,7 @@ body{padding-bottom:152px}
 <body>
 
 <header>
-  <h1>🏠 The List</h1>
+  <h1><img class="appLogo" src="the-list-icon.png" alt="" width="44" height="44">The List</h1>
   <p>Your home. Your projects. All in one place.</p>
   <div id="homeHeaderMeta" class="homeMeta"></div>
 </header>
