@@ -734,6 +734,19 @@ input,textarea,select{
   background:#dbe3d6;
 }
 
+.projectCard{
+  padding:15px 16px;
+}
+
+.projectCard h3{
+  margin:0;
+  line-height:1.35;
+}
+
+.projectCard .smallText{
+  margin-top:10px;
+}
+
 .projectStartActions{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -2089,28 +2102,6 @@ function renderProjects(){
           <h3>
             ${escapeHTML(project.name)}
           </h3>
-
-          <div class="projectMeta">
-
-            ${escapeHTML(project.category || "Home")}
-
-            ${
-              project.budget
-              ? ` · Budget $${Number(project.budget).toFixed(0)}`
-              : ""
-            }
-
-          </div>
-
-          <p>
-            ${escapeHTML(project.description || "No description yet.")}
-          </p>
-
-          ${
-            project.takeoff
-            ? `<span class="badge">📐 Material Takeoff</span>`
-            : ""
-          }
 
           <div class="smallText">
             ${completed} of ${total} tasks complete
