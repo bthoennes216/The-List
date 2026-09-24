@@ -812,6 +812,16 @@ input,textarea,select{
 }
 @media(max-width:500px){.aiFeatureGrid{grid-template-columns:1fr 1fr;}.cutList{font-size:12px;}}
 
+
+/* AI Chat */
+.aiTabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.aiTabs button{margin:0}.aiTabs button.selected{background:#41492d;color:white}
+.aiPanel[hidden]{display:none}
+.aiMessages{height:min(46vh,410px);min-height:220px;overflow-y:auto;background:#f8f6ef;border:1px solid #dedbcf;border-radius:14px;padding:12px;margin:12px 0}
+.aiBubble{max-width:93%;padding:10px 12px;border-radius:13px;margin:8px 0;white-space:pre-wrap;overflow-wrap:anywhere;background:white;border:1px solid #e1ded4}
+.aiBubble.mine{margin-left:auto;background:#e8ecdf}
+.aiComposer{display:flex;align-items:flex-end;gap:8px}.aiComposer textarea{flex:1;min-height:64px;margin:0}.aiComposer button{margin:0;flex:0 0 auto}
+.aiNote{font-size:13px;color:#5e6058;line-height:1.45}
 </style>
 </head>
 
@@ -827,6 +837,7 @@ input,textarea,select{
   <button type="button" data-page="homePage" id="navHome">Home</button>
   <button type="button" data-page="projectsPage" id="navProjects">Projects</button>
   <button type="button" data-page="shoppingPage" id="navShopping">Shopping</button>
+  <button type="button" data-page="aiChatPage" id="navAIChat">AI Chat</button>
   <button type="button" data-page="calendarPage" id="navCalendar">Calendar</button>
   <button type="button" data-page="maintenancePage" id="navMaintenance">Maintenance</button>
   <button type="button" data-page="homeInfoPage" id="navHomeInfo">Home Info</button>
@@ -1052,6 +1063,45 @@ input,textarea,select{
 
   <div id="projectsList"></div>
 
+</section>
+
+
+<section id="aiChatPage" class="hidden">
+  <div class="card">
+    <h2>✨ AI Chat</h2>
+    <p class="aiNote">Choose how you'd like to plan. The List AI uses this app's AI service. ChatGPT opens in your own ChatGPT account.</p>
+    <div class="aiTabs">
+      <button type="button" id="modeList" onclick="setAIMode('list')">The List AI</button>
+      <button type="button" id="modeChatGPT" onclick="setAIMode('chatgpt')">Use ChatGPT</button>
+    </div>
+    <label for="aiProjectSelect">Project context (optional)</label>
+    <select id="aiProjectSelect" onchange="renderAIChat()"></select>
+  </div>
+  <div id="aiListPanel" class="card aiPanel">
+    <h3>Chat in The List</h3>
+    <p class="aiNote">Your messages use The List's OpenAI API account. Saving a reply to a project is always your choice.</p>
+    <div id="aiMessages" class="aiMessages" aria-live="polite"></div>
+    <div class="aiComposer">
+      <textarea id="aiMessageInput" maxlength="4000" placeholder="Ask about a project, materials, tools, or a design..."></textarea>
+      <button type="button" id="aiSendButton" onclick="sendAIChat()">Send</button>
+    </div>
+    <p id="aiChatStatus" class="aiNote" role="status"></p>
+    <button type="button" class="secondary" onclick="saveLastAIReply()">Save last reply to project notes</button>
+    <button type="button" class="secondary" onclick="clearAIChat()">Clear conversation</button>
+  </div>
+  <div id="aiChatGPTPanel" class="card aiPanel" hidden>
+    <h3>Continue in ChatGPT</h3>
+    <p class="aiNote">Uses your own ChatGPT access. Conversations stay in ChatGPT; The List cannot read your account or use your ChatGPT subscription for in-app AI.</p>
+    <label for="chatGPTPrompt">What would you like help with?</label>
+    <textarea id="chatGPTPrompt" maxlength="4000" placeholder="Example: Plan a backyard fire pit with materials and build steps"></textarea>
+    <button type="button" onclick="copyChatGPTPrompt()">Copy project prompt</button>
+    <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="button" id="openChatGPTLink">Open ChatGPT ↗</a>
+    <p id="chatGPTStatus" class="aiNote" role="status"></p>
+    <label for="chatGPTResult">Paste a plan or answer from ChatGPT</label>
+    <textarea id="chatGPTResult" placeholder="Paste the answer here to save it in The List"></textarea>
+    <button type="button" onclick="importChatGPTAnswer()">Save in The List</button>
+    <p class="aiNote">Choose a project above to append it to notes, or leave project context blank to create a new project.</p>
+  </div>
 </section>
 
 <section id="shoppingPage" class="hidden">
@@ -1319,6 +1369,7 @@ const defaultData = {
 
   projects:[],
   shopping:[],
+  aiChats:{},
   maintenance:[],
   calendar:[],
 
@@ -1360,6 +1411,8 @@ function loadData(){
     parsed.projects = Array.isArray(parsed.projects)
       ? parsed.projects
       : [];
+
+    parsed.aiChats = parsed.aiChats && typeof parsed.aiChats === "object" && !Array.isArray(parsed.aiChats) ? parsed.aiChats : {};
 
     parsed.shopping = Array.isArray(parsed.shopping)
       ? parsed.shopping
@@ -1525,6 +1578,7 @@ const pageIds = [
   "homePage",
   "projectsPage",
   "shoppingPage",
+  "aiChatPage",
   "calendarPage",
   "maintenancePage",
   "homeInfoPage",
@@ -1554,6 +1608,7 @@ function showPage(pageId){
     homePage:"navHome",
     projectsPage:"navProjects",
     shoppingPage:"navShopping",
+    aiChatPage:"navAIChat",
     calendarPage:"navCalendar",
     maintenancePage:"navMaintenance",
     homeInfoPage:"navHomeInfo",
@@ -1579,6 +1634,10 @@ function showPage(pageId){
 
   if(pageId === "projectsPage"){
     renderProjects();
+  }
+
+  if(pageId === "aiChatPage"){
+    renderAIChat();
   }
 
   if(pageId === "shoppingPage"){
@@ -8280,6 +8339,128 @@ function escapeAttribute(value){
   return escapeHTML(value)
     .replace(/`/g,"&#096;");
 
+}
+
+
+/* =========================================================
+   AI CHAT AND CHATGPT HANDOFF
+   ========================================================= */
+let aiMode = "list";
+let aiBusy = false;
+function setAIMode(mode){
+  aiMode = mode === "chatgpt" ? "chatgpt" : "list";
+  document.getElementById("aiListPanel").hidden = aiMode !== "list";
+  document.getElementById("aiChatGPTPanel").hidden = aiMode !== "chatgpt";
+  document.getElementById("modeList").classList.toggle("selected", aiMode === "list");
+  document.getElementById("modeChatGPT").classList.toggle("selected", aiMode === "chatgpt");
+}
+function selectedAIProject(){
+  const id = document.getElementById("aiProjectSelect").value;
+  return data.projects.find(p => String(p.id) === id) || null;
+}
+function aiThreadKey(){
+  const p = selectedAIProject();
+  return p ? String(p.id) : "general";
+}
+function aiThread(){
+  const key = aiThreadKey();
+  if(!Array.isArray(data.aiChats[key])) data.aiChats[key] = [];
+  return data.aiChats[key];
+}
+function renderAIChat(){
+  const select = document.getElementById("aiProjectSelect");
+  const previous = select.value;
+  select.innerHTML = '<option value="">General chat / new project</option>' +
+    data.projects.map(p => `<option value="${escapeAttribute(p.id)}">${escapeHTML(p.name)}</option>`).join("");
+  if([...select.options].some(o => o.value === previous)) select.value = previous;
+  const box = document.getElementById("aiMessages");
+  const messages = aiThread();
+  box.innerHTML = messages.length ? messages.map(m =>
+    `<div class="aiBubble ${m.role === "user" ? "mine" : ""}"><strong>${m.role === "user" ? "You" : "The List AI"}</strong><br>${escapeHTML(m.content)}</div>`
+  ).join("") : '<p class="aiNote">Ask a question to start planning.</p>';
+  box.scrollTop = box.scrollHeight;
+  setAIMode(aiMode);
+}
+async function sendAIChat(){
+  if(aiBusy) return;
+  const input = document.getElementById("aiMessageInput");
+  const message = input.value.trim();
+  if(!message) return;
+  const key = aiThreadKey();
+  const project = selectedAIProject();
+  const history = aiThread().slice(-10).map(m => ({role:m.role,content:m.content}));
+  const status = document.getElementById("aiChatStatus");
+  aiBusy = true;
+  document.getElementById("aiSendButton").disabled = true;
+  status.textContent = "Thinking...";
+  try{
+    const response = await fetch(AI_BACKEND_URL.replace(/\/$/,"") + "/chat", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({message,history,project:project ? {
+        name:project.name, description:project.description || "",
+        notes:(project.notes || "").slice(0,1500),
+        tasks:(project.tasks || []).slice(0,20).map(t => t.text || t.title || "")
+      } : null, homeContext:data.home || {}})
+    });
+    const result = await response.json();
+    if(!response.ok || !result.ok || typeof result.reply !== "string")
+      throw new Error(result.error || "The chat service is unavailable.");
+    data.aiChats[key] = [...(data.aiChats[key] || []),
+      {role:"user",content:message},{role:"assistant",content:result.reply}].slice(-40);
+    saveData(); input.value = ""; status.textContent = ""; renderAIChat();
+  }catch(err){
+    status.textContent = `${err.message || "The chat service is unavailable."} Your message was not sent.`;
+  }finally{
+    aiBusy = false;
+    document.getElementById("aiSendButton").disabled = false;
+  }
+}
+function saveLastAIReply(){
+  const project = selectedAIProject();
+  const last = aiThread().filter(m => m.role === "assistant").at(-1);
+  const status = document.getElementById("aiChatStatus");
+  if(!project || !last){status.textContent = "Select a project and send a message first.";return;}
+  project.notes = (project.notes || "") + `\n\nAI Chat (${new Date().toLocaleDateString()}):\n${last.content}`;
+  saveData();status.textContent = `Saved to ${project.name} notes.`;
+}
+function clearAIChat(){
+  if(!confirm("Clear the conversation for this project on this device?")) return;
+  data.aiChats[aiThreadKey()] = [];
+  saveData();renderAIChat();
+}
+function chatGPTProjectPrompt(){
+  const request = document.getElementById("chatGPTPrompt").value.trim();
+  const project = selectedAIProject();
+  const context = project ? `Project: ${project.name}\nDescription: ${project.description || ""}\nNotes: ${(project.notes || "").slice(0,1500)}\n` : "";
+  return `Help me plan a home project for The List app. Give a clear summary, steps, materials with quantities and assumptions, tools needed, safety considerations, and a shopping list. I will review the plan before building.\n\n${context}My request: ${request}`;
+}
+async function copyChatGPTPrompt(){
+  const status = document.getElementById("chatGPTStatus");
+  if(!document.getElementById("chatGPTPrompt").value.trim()){
+    status.textContent = "Describe what you want help with first.";return;
+  }
+  try{await navigator.clipboard.writeText(chatGPTProjectPrompt());status.textContent = "Prompt copied. Open ChatGPT and paste it there.";}
+  catch{status.textContent = "Clipboard unavailable. Select and copy the text below.";
+    document.getElementById("chatGPTPrompt").value = chatGPTProjectPrompt();}
+}
+function importChatGPTAnswer(){
+  const answer = document.getElementById("chatGPTResult").value.trim();
+  const status = document.getElementById("chatGPTStatus");
+  if(!answer){status.textContent = "Paste an answer from ChatGPT first.";return;}
+  const project = selectedAIProject();
+  if(project){
+    project.notes = (project.notes || "") + `\n\nChatGPT plan (${new Date().toLocaleDateString()}):\n${answer}`;
+    saveData();status.textContent = `Saved to ${project.name} notes.`;
+  }else{
+    const name = document.getElementById("chatGPTPrompt").value.trim().slice(0,80) || "Imported ChatGPT plan";
+    const newProject = {id:"project-"+Date.now()+"-"+Math.random().toString(36).slice(2,8),name,
+      category:"Home",status:"planned",startedAt:"",completedAt:"",description:name,
+      tasks:[],materials:[],records:[],answers:[],budget:0,notes:answer};
+    data.projects.push(newProject);saveData();status.textContent = `Created ${name} with the plan in notes.`;
+    document.getElementById("aiProjectSelect").innerHTML += `<option value="${escapeAttribute(newProject.id)}">${escapeHTML(name)}</option>`;
+    document.getElementById("aiProjectSelect").value = newProject.id;
+  }
+  document.getElementById("chatGPTResult").value = "";
 }
 
 /* =========================================================
