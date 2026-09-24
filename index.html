@@ -1225,11 +1225,16 @@ body{padding-bottom:152px}
 
     <h2>🔧 Maintenance</h2>
 
+    <label for="maintenanceName">Maintenance item</label>
     <input id="maintenanceName"
-      placeholder="Example: Change HVAC filter">
+      placeholder="Example: Change air filter">
 
+    <label for="maintenanceDue">First due date</label>
     <input id="maintenanceDue"
       type="date">
+    <p class="smallText" style="margin:0 0 12px;">
+      Example: choose April 3 to show it on the calendar.
+    </p>
 
     <label for="maintenanceRepeat">Repeat</label>
     <select id="maintenanceRepeat">
@@ -1241,6 +1246,7 @@ body{padding-bottom:152px}
       <option value="yearly">Yearly</option>
     </select>
 
+    <label for="maintenanceNotes">Notes (optional)</label>
     <textarea id="maintenanceNotes"
       placeholder="Notes"></textarea>
 
@@ -4167,6 +4173,34 @@ function maintenanceRepeatLabel(repeat){
   }[repeat] || "";
 }
 
+function maintenanceRepeatOptions(selected){
+  return [
+    ["none","Does not repeat"],
+    ["weekly","Weekly"],
+    ["monthly","Monthly"],
+    ["quarterly","Every 3 months"],
+    ["halfYear","Every 6 months"],
+    ["yearly","Yearly"]
+  ].map(([value,label]) =>
+    `<option value="${value}"${value === (selected || "none") ? " selected" : ""}>${label}</option>`
+  ).join("");
+}
+
+function saveMaintenanceSchedule(index){
+  const item = data.maintenance[index];
+  if(!item) return;
+  const dueDate = document.getElementById(`maintenanceEditDue${index}`).value;
+  const repeat = document.getElementById(`maintenanceEditRepeat${index}`).value;
+  if(repeat !== "none" && !dueDate){
+    alert("Choose a first due date for repeating maintenance.");
+    return;
+  }
+  item.dueDate = dueDate;
+  item.repeat = repeat;
+  saveData();
+  renderMaintenance();
+}
+
 function renderMaintenance(){
 
   const box =
@@ -4211,6 +4245,22 @@ function renderMaintenance(){
                  </p>`
               : ""
             }
+
+            <details style="margin-top:10px;">
+              <summary style="cursor:pointer;color:#31543d;font-weight:600;">
+                ${item.dueDate ? "Edit date & repeat" : "Set due date"}
+              </summary>
+              <label for="maintenanceEditDue${index}">First due date</label>
+              <input id="maintenanceEditDue${index}" type="date"
+                value="${escapeAttribute(item.dueDate || "")}">
+              <label for="maintenanceEditRepeat${index}">Repeat</label>
+              <select id="maintenanceEditRepeat${index}">
+                ${maintenanceRepeatOptions(item.repeat)}
+              </select>
+              <button type="button" onclick="saveMaintenanceSchedule(${index})">
+                Save schedule
+              </button>
+            </details>
 
           </div>
 
