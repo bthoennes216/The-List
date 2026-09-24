@@ -832,6 +832,23 @@ input,textarea,select{
   overflow:hidden;
 }
 .aiConcept svg{display:block;width:100%;height:auto;border-radius:10px;background:#eee7da;}
+.aiConcept img{display:block;width:100%;height:auto;max-height:360px;object-fit:contain;border-radius:10px;}
+.imageOpen{display:block;width:100%;margin:0;padding:0;border:0;border-radius:10px;background:transparent;cursor:zoom-in;overflow:hidden;}
+.imageOpen:focus-visible{outline:3px solid var(--forest);outline-offset:3px;}
+.photoOpen{width:110px;height:110px;border-radius:12px;}
+.photoOpen img{display:block;width:100%;height:100%;object-fit:cover;}
+.imageHint{margin:8px 0 0;}
+.imageViewer{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#17251d;color:white;overflow:hidden;}
+.imageViewer::backdrop{background:rgba(0,0,0,.88);}
+.imageViewerLayout{height:100%;display:flex;flex-direction:column;}
+.imageViewerBar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 15px 12px;}
+.imageViewerBar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;}
+.imageViewerBar button,.imageViewerControls button{background:#304736;color:white;border:1px solid #64806b;min-width:44px;min-height:44px;margin:0;}
+.imageViewerStage{flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none;overscroll-behavior:contain;cursor:grab;}
+.imageViewerStage:active{cursor:grabbing;}
+.imageViewerStage img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;user-select:none;-webkit-user-select:none;pointer-events:none;transform-origin:center center;will-change:transform;}
+.imageViewerControls{display:flex;justify-content:center;align-items:center;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));}
+.imageViewerControls span{min-width:49px;text-align:center;font-variant-numeric:tabular-nums;}
 .cutList{
   width:100%;
   border-collapse:collapse;
@@ -904,8 +921,9 @@ input,textarea,select{
 .aiMessageActions button{background:transparent;color:#526458;border:0;padding:5px 8px;font-size:12px}
 .aiMessageActions button:hover,.aiMessageActions button:focus-visible{background:#eaf0e6}
 .aiImageGallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 2px}
-.aiImageGallery img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #e5e4dc}
-.aiImageGallery:has(img:only-child){grid-template-columns:minmax(0,1fr);max-width:360px}
+.aiImageGallery img{display:block;width:100%;height:auto;max-height:260px;object-fit:contain;border-radius:12px;border:1px solid #e5e4dc;background:#f8f6ef}
+.aiImageGallery .imageOpen{border-radius:12px;}
+.aiImageGallery:has(> .imageOpen:only-of-type){grid-template-columns:minmax(0,1fr);max-width:360px}
 .aiImageGallery p{grid-column:1/-1;font-size:12px;color:#6e756c;margin:2px 0}
 .aiActionCard{max-width:94%;background:#f2f5ed;border:1px solid #d5e1d3;border-radius:14px;padding:13px 14px;margin:10px 0 0}
 .aiActionCard strong{display:block;margin-bottom:9px}
@@ -1466,6 +1484,19 @@ body{padding-bottom:152px}
 </section>
 
 </main>
+
+<dialog id="imageViewer" class="imageViewer" aria-label="Image viewer" onclose="resetImageViewer()">
+  <div class="imageViewerLayout">
+    <div class="imageViewerBar"><span id="imageViewerTitle">Project image</span><button type="button" onclick="closeImageViewer()" aria-label="Close image viewer">✕</button></div>
+    <div id="imageViewerStage" class="imageViewerStage" aria-label="Drag to move image; pinch to zoom"><img id="imageViewerPhoto" alt="" draggable="false"></div>
+    <div class="imageViewerControls">
+      <button type="button" onclick="zoomImageViewer(0.75)" aria-label="Zoom out">−</button>
+      <span id="imageViewerZoom">100%</span>
+      <button type="button" onclick="zoomImageViewer(1.5)" aria-label="Zoom in">＋</button>
+      <button type="button" onclick="resetImageViewer()">Fit</button>
+    </div>
+  </div>
+</dialog>
 
 <script>
 
@@ -2621,7 +2652,7 @@ function openProject(id){
       <p id="projectPhotoStatus" class="smallText" role="status"></p>
       <div id="projectPhotoGallery"></div>
       ${project.aiPlan ? `<button type="button" onclick="generateSavedProjectImage('${escapeAttribute(project.id)}')">🎨 Picture the finished project</button><p id="savedImageStatus" class="smallText" role="status"></p>` : ""}
-      ${project.aiImage ? `<div class="aiConcept"><img src="${escapeAttribute(project.aiImage)}" alt="AI concept of the completed project"></div>` : ""}
+      ${project.aiImage ? `<div class="aiConcept"><button type="button" class="imageOpen" onclick="openImageViewer(this.querySelector('img'))" aria-label="Open finished project image"><img src="${escapeAttribute(project.aiImage)}" alt="AI concept of the completed project"></button></div><p class="smallText imageHint">Tap the image to view it full screen.</p>` : ""}
     </div>
 
     <div class="card">
@@ -2790,7 +2821,7 @@ function renderProjectPhotos(project){
   if(!gallery) return;
   gallery.innerHTML = (project.roomPhotos || []).map((photo,index) => `
     <div style="display:inline-block;position:relative;margin:0 8px 12px 0;vertical-align:top">
-      <img src="${escapeAttribute(photo)}" alt="Project space photo ${index+1}" style="width:110px;height:110px;object-fit:cover;border-radius:12px">
+      <button type="button" class="imageOpen photoOpen" onclick="openImageViewer(this.querySelector('img'))" aria-label="Open project space photo ${index+1}"><img src="${escapeAttribute(photo)}" alt="Project space photo ${index+1}"></button>
       <button type="button" class="small secondary" onclick="removeProjectPhoto('${escapeAttribute(project.id)}',${index})" style="display:block;width:100%">Remove</button>
     </div>`).join("");
 }
@@ -2822,6 +2853,98 @@ function removeProjectPhoto(projectId,index){
   saveData();
   renderProjectPhotos(project);
 }
+
+const imageViewerState = {scale:1,x:0,y:0,pointers:new Map(),gesture:null};
+
+function openImageViewer(source){
+  if(!source?.src) return;
+  const dialog = document.getElementById("imageViewer");
+  resetImageViewer();
+  const photo = document.getElementById("imageViewerPhoto");
+  photo.src = source.currentSrc || source.src;
+  photo.alt = source.alt || "Project image";
+  document.getElementById("imageViewerTitle").textContent = photo.alt;
+  dialog.showModal();
+  dialog.querySelector('[aria-label="Close image viewer"]').focus();
+}
+
+function closeImageViewer(){
+  const dialog = document.getElementById("imageViewer");
+  if(dialog.open) dialog.close();
+  document.getElementById("imageViewerPhoto").removeAttribute("src");
+}
+
+function updateImageViewer(){
+  const state = imageViewerState;
+  const stage = document.getElementById("imageViewerStage");
+  const photo = document.getElementById("imageViewerPhoto");
+  const maxX = Math.max(0,(photo.offsetWidth * state.scale - stage.clientWidth) / 2);
+  const maxY = Math.max(0,(photo.offsetHeight * state.scale - stage.clientHeight) / 2);
+  state.x = Math.max(-maxX,Math.min(maxX,state.x));
+  state.y = Math.max(-maxY,Math.min(maxY,state.y));
+  photo.style.transform = `translate3d(${state.x}px,${state.y}px,0) scale(${state.scale})`;
+  document.getElementById("imageViewerZoom").textContent = `${Math.round(state.scale*100)}%`;
+}
+
+function resetImageViewer(){
+  Object.assign(imageViewerState,{scale:1,x:0,y:0,gesture:null});
+  imageViewerState.pointers.clear();
+  updateImageViewer();
+}
+
+function zoomImageViewer(factor){
+  const state = imageViewerState;
+  const next = Math.max(1,Math.min(5,state.scale * factor));
+  const ratio = next / state.scale;
+  state.x *= ratio;
+  state.y *= ratio;
+  state.scale = next;
+  updateImageViewer();
+}
+
+function startImageViewerGesture(){
+  const points = [...imageViewerState.pointers.values()];
+  if(!points.length){imageViewerState.gesture = null;return;}
+  const a = points[0], b = points[1] || a;
+  imageViewerState.gesture = {
+    x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.hypot(a.x-b.x,a.y-b.y),
+    scale:imageViewerState.scale,panX:imageViewerState.x,panY:imageViewerState.y
+  };
+}
+
+const imageViewerStage = document.getElementById("imageViewerStage");
+imageViewerStage.addEventListener("pointerdown",event => {
+  event.preventDefault();
+  imageViewerStage.setPointerCapture(event.pointerId);
+  imageViewerState.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  startImageViewerGesture();
+});
+imageViewerStage.addEventListener("pointermove",event => {
+  if(!imageViewerState.pointers.has(event.pointerId)) return;
+  event.preventDefault();
+  imageViewerState.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const points = [...imageViewerState.pointers.values()];
+  const start = imageViewerState.gesture;
+  if(!start) return;
+  const a = points[0], b = points[1] || a;
+  const centerX = (a.x+b.x)/2, centerY = (a.y+b.y)/2;
+  const distance = Math.hypot(a.x-b.x,a.y-b.y);
+  const next = points.length > 1 && start.distance
+    ? Math.max(1,Math.min(5,start.scale * distance/start.distance)) : start.scale;
+  const ratio = next/start.scale;
+  const rect = imageViewerStage.getBoundingClientRect();
+  imageViewerState.scale = next;
+  imageViewerState.x = start.panX*ratio + (start.x-rect.left-rect.width/2)*(1-ratio) + centerX-start.x;
+  imageViewerState.y = start.panY*ratio + (start.y-rect.top-rect.height/2)*(1-ratio) + centerY-start.y;
+  updateImageViewer();
+});
+for(const type of ["pointerup","pointercancel","lostpointercapture"]){
+  imageViewerStage.addEventListener(type,event => {
+    imageViewerState.pointers.delete(event.pointerId);
+    startImageViewerGesture();
+  });
+}
+imageViewerStage.addEventListener("dblclick",() => zoomImageViewer(imageViewerState.scale > 1 ? 1/imageViewerState.scale : 2));
 
 async function generateSavedProjectImage(projectId){
   const project = data.projects.find(p => String(p.id) === String(projectId));
@@ -8032,7 +8155,7 @@ function showPlanPreview(){
       </div>
       <div class="card">
         <h2>🖼️ Project Concept</h2>
-        <div class="aiConcept"><img src="${cubbyConceptSVG(c)}" alt="Concept drawing of the hallway cubbies"></div>
+        <div class="aiConcept"><button type="button" class="imageOpen" onclick="openImageViewer(this.querySelector('img'))" aria-label="Open hallway cubbies concept"><img src="${cubbyConceptSVG(c)}" alt="Concept drawing of the hallway cubbies"></button></div>
         <p class="smallText">This visual is a measured concept preview. A future AI image connection can replace it with a photorealistic rendering of your actual hallway.</p>
         <div class="aiPrompt">${escapeHTML(`Photorealistic warm-modern hallway built-in cubbies, ${c.count} equal compartments, ${fmt(c.wallWidth)} inches wide, ${fmt(c.height)} inches tall, ${fmt(c.depth)} inches deep, ${c.hookCount} hooks, ${c.bench?"bench seat":"no bench"}, ${c.shoeStorage.toLowerCase()}, family-friendly, warm ivory and forest green accents, natural wood details, realistic residential interior photography.`)}</div>
       </div>
@@ -8117,7 +8240,7 @@ function showPlanPreview(){
       <div class="card">
         <h2>🎨 Design Concept</h2>
         <p>${escapeHTML(a.designConcept || "")}</p>
-        ${editingPlan.aiImage ? `<div class="aiConcept"><img src="${escapeAttribute(editingPlan.aiImage)}" alt="AI concept rendering of the project"></div>` : ""}
+        ${editingPlan.aiImage ? `<div class="aiConcept"><button type="button" class="imageOpen" onclick="openImageViewer(this.querySelector('img'))" aria-label="Open AI concept image"><img src="${escapeAttribute(editingPlan.aiImage)}" alt="AI concept rendering of the project"></button></div>` : ""}
         <button id="generateAIImageButton" onclick="generateAIProjectImage()">🎨 Generate Design Image</button>
         <p class="smallText">Concept image only — not an engineering drawing or proof of exact dimensions.</p>
       </div>
@@ -9194,7 +9317,7 @@ function renderAIMessage(message,index){
   return `<div class="aiEntry ${mine ? "mine" : ""}">
     <div class="aiSender">${mine ? "You" : "✦ The List AI"}</div>
     <div class="aiBubble">${mine ? escapeHTML(message.content) : renderChatMarkdown(message.content)}
-      ${images.length ? `<div class="aiImageGallery">${images.map((src,i) => `<img src="${escapeAttribute(src)}" alt="Visual project idea ${i+1}" loading="lazy">`).join("")}<p>Visual ideas are examples. Review dimensions and details before building.</p></div>` : ""}
+      ${images.length ? `<div class="aiImageGallery">${images.map((src,i) => `<button type="button" class="imageOpen" onclick="openImageViewer(this.querySelector('img'))" aria-label="Open visual project idea ${i+1}"><img src="${escapeAttribute(src)}" alt="Visual project idea ${i+1}" loading="lazy"></button>`).join("")}<p>Visual ideas are examples. Review dimensions and details before building.</p></div>` : ""}
     </div>
     ${mine ? "" : `<div class="aiMessageActions">
       <button type="button" onclick="copyAIReply(${index})" aria-label="Copy reply">Copy</button>
