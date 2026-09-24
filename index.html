@@ -720,6 +720,17 @@ input,textarea,select{
   background:#dbe3d6;
 }
 
+.projectStartActions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:14px 0;
+}
+.projectStartActions button{
+  min-height:56px;
+  margin:0;
+}
+
 .progress div{
   background:var(--forest);
 }
@@ -1028,11 +1039,10 @@ body{padding-bottom:152px}
     border-radius:14px;
     padding:18px;
   ">
-    <h2>🚀 Quick Actions</h2>
+    <h2>🚀 Start a Project</h2>
 
     <div class="row">
-      <button style="background:#556B2F; color:white;" onclick="newProject()">＋ Project</button>
-      <button style="background:#556B2F; color:white;" onclick="buildMyPlan()">✨ Build My Plan</button>
+      <button style="background:#556B2F; color:white;" onclick="newProject()">＋ New Project</button>
     </div>
 
   </div>
@@ -1046,13 +1056,9 @@ body{padding-bottom:152px}
 
     <button onclick="newProject()">＋ New Project</button>
 
-    <button onclick="buildMyPlan()" style="margin-top:10px;">
-      ✨ Build My Plan
-    </button>
-
-    <div class="smallText" style="margin-top:10px;">
-      Describe what you want to build. The List can turn supported DIY projects into measurements, a concept, cut list, materials and build steps.
-    </div>
+    <p class="smallText" style="margin:10px 0;">
+      Give your project a name, then add tasks yourself or build a plan with AI.
+    </p>
 
     <p class="smallText" style="margin-bottom:0;">
       Tap a project to open it. Swipe left to delete.
@@ -1073,7 +1079,7 @@ body{padding-bottom:152px}
       <button type="button" id="modeChatGPT" onclick="setAIMode('chatgpt')">Use ChatGPT</button>
     </div>
     <label for="aiProjectSelect">Project context (optional)</label>
-    <select id="aiProjectSelect" onchange="renderAIChat()"></select>
+    <select id="aiProjectSelect" onchange="this.dataset.pendingProjectId=''; renderAIChat()"></select>
   </div>
   <div id="aiListPanel" class="card aiPanel">
     <h3>Chat in The List</h3>
@@ -1098,7 +1104,7 @@ body{padding-bottom:152px}
     <label for="chatGPTResult">Paste a plan or answer from ChatGPT</label>
     <textarea id="chatGPTResult" placeholder="Paste the answer here to save it in The List"></textarea>
     <button type="button" onclick="importChatGPTAnswer()">Save in The List</button>
-    <p class="aiNote">Choose a project above to append it to notes, or leave project context blank to create a new project.</p>
+    <p class="aiNote">Select a project above to save the ChatGPT answer to its notes.</p>
   </div>
 </section>
 
@@ -1399,6 +1405,7 @@ ensureProjectStatuses();
 let currentCalendarDate = new Date();
 let selectedCalendarDate = null;
 let editingPlan = null;
+let planningProjectId = null;
 
 
 /* =========================================================
@@ -2129,46 +2136,53 @@ function setupProjectSwipe(){
    ========================================================= */
 
 function newProject(){
+  editingPlan = null;
+  planningProjectId = null;
+  showPage("projectDetailPage");
+  document.getElementById("projectDetail").innerHTML = `
+    <div class="card">
+      <button type="button" class="secondary" onclick="showPage('projectsPage')">
+        ← Back to Projects
+      </button>
+      <h2 style="margin-top:15px;">＋ New Project</h2>
+      <form id="newProjectForm" onsubmit="saveNewProject(event)">
+        <label for="newProjectName">Project name</label>
+        <input id="newProjectName" placeholder="Example: Build a backyard fire pit" required maxlength="100">
+        <label for="newProjectDescription">What do you want to do? (optional)</label>
+        <textarea id="newProjectDescription" placeholder="A few details will help if you build a plan with AI."></textarea>
+        <p id="newProjectError" class="smallText" role="alert"></p>
+        <button type="submit">Create Project</button>
+      </form>
+    </div>
+  `;
+  document.getElementById("newProjectName").focus();
+}
 
-  const name =
-    prompt("Project name:");
-
+function saveNewProject(event){
+  event.preventDefault();
+  const name = document.getElementById("newProjectName").value.trim();
+  const description = document.getElementById("newProjectDescription").value.trim();
   if(!name){
+    document.getElementById("newProjectError").textContent = "Enter a project name.";
     return;
   }
-
-  const category =
-    prompt("Category:", "Home");
-
-  const id =
-    "project-" +
-    Date.now().toString() +
-    "-" +
-    Math.random()
-      .toString(36)
-      .substring(2,8);
-
-data.projects.push({
-
-    id:id,
-    name:name,
-    category:category || "Home",
-    
+  const id = "project-" + Date.now() + "-" + Math.random().toString(36).slice(2,8);
+  data.projects.push({
+    id,
+    name,
+    category:"Home",
     status:"planned",
     startedAt:"",
     completedAt:"",
-
-    description:"",
+    description,
     tasks:[],
-
+    materials:[],
+    records:[],
+    notes:""
   });
-
   saveData();
-
   renderProjects();
-
   openProject(id);
-
 }
 
 
@@ -2193,6 +2207,7 @@ function openProject(id){
 
   }
 
+  document.getElementById("aiProjectSelect").dataset.pendingProjectId = String(project.id);
   showPage("projectDetailPage");
 
   const box =
@@ -2225,6 +2240,17 @@ function openProject(id){
       <p>
         ${escapeHTML(project.description || "")}
       </p>
+
+      ${project.status !== "completed" ? `
+        <div class="projectStartActions">
+          <button type="button" class="secondary" onclick="focusProjectTasks()">
+            ＋ Add tasks myself
+          </button>
+          <button type="button" onclick="buildPlanForProject('${escapeAttribute(project.id)}')">
+            ✨ Build a plan with AI
+          </button>
+        </div>
+      ` : ""}
 
       <div style="
         margin:16px 0;
@@ -2428,6 +2454,14 @@ function openProject(id){
   renderProjectMaterials(project);
 
 }
+function focusProjectTasks(){
+  const input = document.getElementById("newTaskText");
+  if(input){
+    input.scrollIntoView({behavior:"smooth",block:"center"});
+    input.focus({preventScroll:true});
+  }
+}
+
 function startProject(projectId){
 
   const project =
@@ -4422,43 +4456,42 @@ function saveFamilyNote(){
    ========================================================= */
 
 function buildMyPlan(){
+  newProject();
+}
 
-  const name =
-    prompt(
-      "What project do you want to plan?"
-    );
-
-  if(!name){
-    return;
-  }
-
-  const description =
-    prompt(
-      "Briefly describe what you want to accomplish:",
-      ""
-    ) || "";
-
-  const isFence =
-    /fence/i.test(name);
-
-  const inferredFenceType =
-    isFence
-    ? inferFenceTypeFromText(
-        `${name} ${description}`
-      )
+function buildPlanForProject(projectId){
+  const project = data.projects.find(p => String(p.id) === String(projectId));
+  if(!project) return;
+  planningProjectId = project.id;
+  const name = project.name;
+  const description = project.description || "";
+  const isFence = /fence/i.test(name);
+  const inferredFenceType = isFence
+    ? inferFenceTypeFromText(`${name} ${description}`)
     : "";
-
-  const questions =
-    isFence
+  const questions = isFence
     ? getFenceQuestions(inferredFenceType)
     : getSmartProjectQuestions(name, description);
+  showPlanQuestions(name, description, questions);
+}
 
-  showPlanQuestions(
-    name,
-    description,
-    questions
-  );
+function cancelProjectPlan(){
+  const projectId = planningProjectId;
+  editingPlan = null;
+  planningProjectId = null;
+  if(projectId){
+    openProject(projectId);
+  }else{
+    showPage("projectsPage");
+  }
+}
 
+function restartPlanForProject(){
+  if(planningProjectId){
+    buildPlanForProject(planningProjectId);
+  }else{
+    newProject();
+  }
 }
 
 
@@ -5175,7 +5208,7 @@ function showPlanQuestions(
 
       <button
         class="secondary"
-        onclick="showPage('projectsPage')">
+        onclick="cancelProjectPlan()">
         ← Cancel
       </button>
 
@@ -5218,7 +5251,7 @@ function showPlanQuestions(
       <button
         class="secondary"
         style="margin-top:10px;"
-        onclick="showPage('projectsPage')">
+        onclick="cancelProjectPlan()">
         Cancel
       </button>
 
@@ -8111,7 +8144,7 @@ function showPlanPreview(){
       <button
         class="secondary"
         style="margin-top:10px;"
-        onclick="buildMyPlan()">
+        onclick="restartPlanForProject()">
         Start Over
       </button>
 
@@ -8356,17 +8389,35 @@ function addAIPlanToProjects(){
 
   };
 
-  data.projects.push(project);
-
-  saveData();
-
-  editingPlan = null;
-
-  alert(
-    "✓ Project saved to The List."
+  const existingProject = data.projects.find(
+    item => String(item.id) === String(planningProjectId)
   );
 
-  openProject(project.id);
+  if(existingProject){
+    existingProject.name = project.name;
+    existingProject.description = project.description;
+    existingProject.tasks = [
+      ...(existingProject.tasks || []).filter(task => task.source !== "aiPlan"),
+      ...project.tasks.map(task => ({...task,source:"aiPlan"}))
+    ];
+    existingProject.materials = [
+      ...(existingProject.materials || []).filter(material => material.source !== "aiPlan"),
+      ...project.materials.map(material => ({...material,source:"aiPlan"}))
+    ];
+    existingProject.budget = project.budget || existingProject.budget || 0;
+    existingProject.answers = project.answers;
+    existingProject.takeoff = project.takeoff;
+    existingProject.calculation = project.calculation;
+    existingProject.aiPlan = project.aiPlan;
+    existingProject.aiImage = project.aiImage;
+  }else{
+    data.projects.push(project);
+  }
+
+  saveData();
+  editingPlan = null;
+  planningProjectId = null;
+  openProject(existingProject ? existingProject.id : project.id);
 
 }
 
@@ -8547,8 +8598,9 @@ function aiThread(){
 }
 function renderAIChat(){
   const select = document.getElementById("aiProjectSelect");
-  const previous = select.value;
-  select.innerHTML = '<option value="">General chat / new project</option>' +
+  const previous = select.dataset.pendingProjectId || select.value;
+  delete select.dataset.pendingProjectId;
+  select.innerHTML = '<option value="">General chat (select a project to save)</option>' +
     data.projects.map(p => `<option value="${escapeAttribute(p.id)}">${escapeHTML(p.name)}</option>`).join("");
   if([...select.options].some(o => o.value === previous)) select.value = previous;
   const box = document.getElementById("aiMessages");
@@ -8626,18 +8678,9 @@ function importChatGPTAnswer(){
   const status = document.getElementById("chatGPTStatus");
   if(!answer){status.textContent = "Paste an answer from ChatGPT first.";return;}
   const project = selectedAIProject();
-  if(project){
-    project.notes = (project.notes || "") + `\n\nChatGPT plan (${new Date().toLocaleDateString()}):\n${answer}`;
-    saveData();status.textContent = `Saved to ${project.name} notes.`;
-  }else{
-    const name = document.getElementById("chatGPTPrompt").value.trim().slice(0,80) || "Imported ChatGPT plan";
-    const newProject = {id:"project-"+Date.now()+"-"+Math.random().toString(36).slice(2,8),name,
-      category:"Home",status:"planned",startedAt:"",completedAt:"",description:name,
-      tasks:[],materials:[],records:[],answers:[],budget:0,notes:answer};
-    data.projects.push(newProject);saveData();status.textContent = `Created ${name} with the plan in notes.`;
-    document.getElementById("aiProjectSelect").innerHTML += `<option value="${escapeAttribute(newProject.id)}">${escapeHTML(name)}</option>`;
-    document.getElementById("aiProjectSelect").value = newProject.id;
-  }
+  if(!project){status.textContent = "Create or select a project before saving this answer.";return;}
+  project.notes = (project.notes || "") + `\n\nChatGPT plan (${new Date().toLocaleDateString()}):\n${answer}`;
+  saveData();status.textContent = `Saved to ${project.name} notes.`;
   document.getElementById("chatGPTResult").value = "";
 }
 
