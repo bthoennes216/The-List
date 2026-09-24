@@ -843,12 +843,59 @@ input,textarea,select{
 
 /* AI Chat */
 .aiTabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
-.aiTabs button{margin:0}.aiTabs button.selected{background:#41492d;color:white}
+.aiTabs button{margin:0;background:#f5f2e9;color:#37513f;border:1px solid #d7d9cb}
+.aiTabs button.selected{background:#344f3d;color:white;border-color:#344f3d}
 .aiPanel[hidden]{display:none}
-.aiMessages{height:min(46vh,410px);min-height:220px;overflow-y:auto;background:#f8f6ef;border:1px solid #dedbcf;border-radius:14px;padding:12px;margin:12px 0}
-.aiBubble{max-width:93%;padding:10px 12px;border-radius:13px;margin:8px 0;white-space:pre-wrap;overflow-wrap:anywhere;background:white;border:1px solid #e1ded4}
-.aiBubble.mine{margin-left:auto;background:#e8ecdf}
-.aiComposer{display:flex;align-items:flex-end;gap:8px}.aiComposer textarea{flex:1;min-height:64px;margin:0}.aiComposer button{margin:0;flex:0 0 auto}
+.aiChatIntro{margin-bottom:10px}
+.aiChatIntro p{margin:4px 0 12px}
+.aiChatIntro select{margin-bottom:2px}
+.aiConversation{padding:0;overflow:hidden;border:1px solid #e1ded3;box-shadow:0 5px 20px rgba(45,61,46,.08)}
+.aiConversationHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid #e8e5db;background:#fbfaf5}
+.aiConversationHeader h3{margin:0;font-size:16px}
+.aiConversationHeader .aiNote{margin:2px 0 0}
+.aiConversationHeader details{position:relative;flex:0 0 auto}
+.aiConversationHeader summary{cursor:pointer;list-style:none;border:1px solid #d5d9cd;border-radius:10px;padding:8px 11px;color:#344f3d;font-weight:700}
+.aiConversationHeader details[open] summary{background:#eff2eb}
+.aiConversationHeader details button{margin-top:8px;white-space:nowrap}
+.aiMessages{height:clamp(290px,52dvh,640px);overflow-y:auto;background:#fbfaf6;padding:18px 14px;scroll-behavior:smooth}
+.aiEntry{display:flex;flex-direction:column;align-items:flex-start;margin:0 0 22px;min-width:0}
+.aiEntry.mine{align-items:flex-end}
+.aiSender{color:#6a7166;font-size:12px;font-weight:700;margin:0 8px 5px}
+.aiBubble{max-width:94%;padding:13px 15px;border-radius:16px;overflow-wrap:anywhere;background:#fff;border:1px solid #e5e4dc;line-height:1.55;color:#242b26;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.aiEntry.mine .aiBubble{background:#eaf0e6;border-color:#d4e1d2;border-bottom-right-radius:5px;white-space:pre-wrap}
+.aiEntry:not(.mine) .aiBubble{border-bottom-left-radius:5px}
+.aiBubble p{margin:0 0 10px}.aiBubble p:last-child{margin-bottom:0}
+.aiBubble h3,.aiBubble h4{margin:13px 0 6px;line-height:1.25}.aiBubble h3:first-child,.aiBubble h4:first-child{margin-top:0}
+.aiBubble ul,.aiBubble ol{margin:6px 0 12px;padding-left:22px}.aiBubble li{margin:4px 0}
+.aiBubble pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f2ed;padding:12px;border-radius:9px;font-size:13px}
+.aiBubble code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f2f2ed;padding:1px 4px;border-radius:4px}
+.aiBubble pre code{background:none;padding:0}
+.aiBubble blockquote{border-left:3px solid #a6bca5;margin:8px 0;padding-left:12px;color:#576257}
+.aiBubble a{color:#275b42;text-decoration:underline}
+.aiBubble .aiTableWrap{overflow-x:auto;margin:8px 0 12px}.aiBubble table{border-collapse:collapse;font-size:14px;min-width:100%}.aiBubble th,.aiBubble td{border-bottom:1px solid #e4e6de;padding:7px;text-align:left;vertical-align:top}
+.aiMessageActions{display:flex;gap:5px;margin:5px 7px 0}
+.aiMessageActions button{background:transparent;color:#526458;border:0;padding:5px 8px;font-size:12px}
+.aiMessageActions button:hover,.aiMessageActions button:focus-visible{background:#eaf0e6}
+.aiImageGallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 2px}
+.aiImageGallery img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #e5e4dc}
+.aiImageGallery:has(img:only-child){grid-template-columns:minmax(0,1fr);max-width:360px}
+.aiImageGallery p{grid-column:1/-1;font-size:12px;color:#6e756c;margin:2px 0}
+.aiActionCard{max-width:94%;background:#f2f5ed;border:1px solid #d5e1d3;border-radius:14px;padding:13px 14px;margin:10px 0 0}
+.aiActionCard strong{display:block;margin-bottom:9px}
+.aiActionCard .row{display:flex;gap:8px}.aiActionCard button{font-size:13px;padding:8px 11px}
+.aiActionCard input{margin:0 0 9px}.aiActionCard label{font-size:13px;font-weight:700}
+.aiWelcome{text-align:center;margin:auto;max-width:330px;padding:42px 10px;color:#405847}
+.aiWelcome strong{display:block;font-size:21px;margin:7px 0}.aiWelcome p{line-height:1.5}
+.aiThinking{color:#5d7162;font-size:14px;padding:9px 12px}
+.aiComposerWrap{padding:12px 14px 14px;background:#fff;border-top:1px solid #e8e5db}
+.aiSuggestions{display:flex;gap:7px;overflow-x:auto;padding-bottom:9px;scrollbar-width:thin}
+.aiSuggestions button{flex:0 0 auto;background:#f8f7f1;color:#37523f;border:1px solid #d9ded3;border-radius:20px;padding:7px 11px;font-size:12px}
+.aiComposer{display:flex;align-items:flex-end;gap:8px;border:1px solid #cbd6c9;border-radius:16px;padding:6px 6px 6px 12px;background:#fdfdfa}
+.aiComposer:focus-within{box-shadow:0 0 0 2px #b9d1bb}
+.aiComposer textarea{flex:1;min-height:43px;max-height:130px;margin:0;padding:9px 2px;border:0;background:transparent;resize:vertical;outline:none;font-size:16px}
+.aiComposer button{margin:0;flex:0 0 auto;min-width:43px;min-height:43px;border-radius:12px;background:#344f3d}
+.aiComposer button:disabled{opacity:.55}
+.aiComposerHint{font-size:11px;color:#788074;margin:7px 3px 0}
 .aiNote{font-size:13px;color:#5e6058;line-height:1.45}
 
 /* Soft two-row bottom navigation */
@@ -1078,27 +1125,31 @@ body{padding-bottom:152px}
 
 
 <section id="aiChatPage" class="hidden">
-  <div class="card">
-    <h2>✨ AI Chat</h2>
-    <p class="aiNote">Choose how you'd like to plan. The List AI uses this app's AI service. ChatGPT opens in your own ChatGPT account.</p>
+  <div class="card aiChatIntro">
+    <h2>✨ Ask The List</h2>
+    <p class="aiNote">Talk through a project, ask follow-up questions, and keep the conversation together.</p>
+    <label for="aiProjectSelect">Conversation about</label>
+    <select id="aiProjectSelect" onchange="this.dataset.pendingProjectId=''; renderAIChat()"></select>
     <div class="aiTabs">
       <button type="button" id="modeList" onclick="setAIMode('list')">The List AI</button>
-      <button type="button" id="modeChatGPT" onclick="setAIMode('chatgpt')">Use ChatGPT</button>
+      <button type="button" id="modeChatGPT" onclick="setAIMode('chatgpt')">Open ChatGPT ↗</button>
     </div>
-    <label for="aiProjectSelect">Project context (optional)</label>
-    <select id="aiProjectSelect" onchange="this.dataset.pendingProjectId=''; renderAIChat()"></select>
   </div>
-  <div id="aiListPanel" class="card aiPanel">
-    <h3>Chat in The List</h3>
-    <p class="aiNote">Your messages use The List's OpenAI API account. Saving a reply to a project is always your choice.</p>
-    <div id="aiMessages" class="aiMessages" aria-live="polite"></div>
-    <div class="aiComposer">
-      <textarea id="aiMessageInput" maxlength="4000" placeholder="Ask about a project, materials, tools, or a design..."></textarea>
-      <button type="button" id="aiSendButton" onclick="sendAIChat()">Send</button>
+  <div id="aiListPanel" class="card aiPanel aiConversation">
+    <div class="aiConversationHeader">
+      <div><h3>Conversation</h3><p class="aiNote" id="aiConversationLabel"></p></div>
+      <details><summary aria-label="Conversation options">⋯</summary><button type="button" class="secondary small" onclick="clearAIChat()">Clear conversation</button></details>
     </div>
-    <p id="aiChatStatus" class="aiNote" role="status"></p>
-    <button type="button" class="secondary" onclick="saveLastAIReply()">Save last reply to project notes</button>
-    <button type="button" class="secondary" onclick="clearAIChat()">Clear conversation</button>
+    <div id="aiMessages" class="aiMessages" aria-live="polite"></div>
+    <div class="aiComposerWrap">
+      <div id="aiSuggestions" class="aiSuggestions" aria-label="Suggested follow-up questions"></div>
+      <div class="aiComposer">
+        <textarea id="aiMessageInput" maxlength="4000" rows="1" aria-label="Message The List AI" placeholder="Ask anything about your home or project..." onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendAIChat()}"></textarea>
+        <button type="button" id="aiSendButton" onclick="sendAIChat()" aria-label="Send message">➤</button>
+      </div>
+      <p class="aiComposerHint">Enter to send · Shift + Enter for a new line</p>
+      <p id="aiChatStatus" class="aiNote" role="status"></p>
+    </div>
   </div>
   <div id="aiChatGPTPanel" class="card aiPanel" hidden>
     <h3>Continue in ChatGPT</h3>
@@ -8820,6 +8871,8 @@ function setAIMode(mode){
   document.getElementById("aiChatGPTPanel").hidden = aiMode !== "chatgpt";
   document.getElementById("modeList").classList.toggle("selected", aiMode === "list");
   document.getElementById("modeChatGPT").classList.toggle("selected", aiMode === "chatgpt");
+  document.getElementById("modeList").setAttribute("aria-pressed",String(aiMode === "list"));
+  document.getElementById("modeChatGPT").setAttribute("aria-pressed",String(aiMode === "chatgpt"));
 }
 function selectedAIProject(){
   const id = document.getElementById("aiProjectSelect").value;
@@ -8834,6 +8887,181 @@ function aiThread(){
   if(!Array.isArray(data.aiChats[key])) data.aiChats[key] = [];
   return data.aiChats[key];
 }
+function renderChatInline(value){
+  const code = [];
+  let html = escapeHTML(value).replace(/`([^`]+)`/g,(_,content) => {
+    code.push(`<code>${content}</code>`);
+    return `\u0001${code.length - 1}\u0002`;
+  });
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(_,label,href) => {
+    try{
+      const url = new URL(href.replace(/&amp;/g,"&"));
+      if(!["https:","http:"].includes(url.protocol)) return label;
+      return `<a href="${escapeAttribute(url.href)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }catch{return label;}
+  });
+  html = html.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/(^|\s)\*([^*\n]+)\*/g,"$1<em>$2</em>");
+  return html.replace(/\u0001(\d+)\u0002/g,(_,index) => code[Number(index)]);
+}
+function renderChatMarkdown(content){
+  const lines = String(content || "").replace(/\r\n/g,"\n").split("\n");
+  const output = [];
+  let paragraph = [];
+  let list = "";
+  const flushParagraph = () => {
+    if(paragraph.length){output.push(`<p>${paragraph.map(renderChatInline).join("<br>")}</p>`);paragraph=[];}
+  };
+  const flushList = () => {if(list){output.push(`</${list}>`);list="";}};
+  for(let index=0;index<lines.length;index++){
+    const line = lines[index];
+    if(/^\s*```/.test(line)){
+      flushParagraph();flushList();
+      const code = [];
+      while(++index<lines.length && !/^\s*```/.test(lines[index])) code.push(lines[index]);
+      output.push(`<pre><code>${escapeHTML(code.join("\n"))}</code></pre>`);
+      continue;
+    }
+    if(!line.trim()){flushParagraph();flushList();continue;}
+    const heading = line.match(/^\s*#{1,4}\s+(.+)$/);
+    if(heading){flushParagraph();flushList();output.push(`<h3>${renderChatInline(heading[1])}</h3>`);continue;}
+    const bullet = line.match(/^\s*[-*•]\s+(.+)$/);
+    const numbered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+    if(bullet || numbered){
+      flushParagraph();
+      const type = bullet ? "ul" : "ol";
+      if(list !== type){flushList();output.push(`<${type}>`);list=type;}
+      output.push(`<li>${renderChatInline((bullet || numbered)[1])}</li>`);
+      continue;
+    }
+    if(/^\s*>\s?/.test(line)){
+      flushParagraph();flushList();output.push(`<blockquote>${renderChatInline(line.replace(/^\s*>\s?/,""))}</blockquote>`);continue;
+    }
+    if(line.includes("|") && /^\s*\|?\s*:?-{3,}/.test(lines[index+1] || "")){
+      flushParagraph();flushList();
+      const cells = row => row.trim().replace(/^\||\|$/g,"").split("|").map(cell => renderChatInline(cell.trim()));
+      const header = cells(line);
+      index++;
+      const rows = [];
+      while(index+1<lines.length && lines[index+1].includes("|")) rows.push(cells(lines[++index]));
+      output.push(`<div class="aiTableWrap"><table><thead><tr>${header.map(cell => `<th>${cell}</th>`).join("")}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      continue;
+    }
+    flushList();paragraph.push(line);
+  }
+  flushParagraph();flushList();
+  return output.join("");
+}
+function renderAIMessage(message,index){
+  const mine = message.role === "user";
+  const images = Array.isArray(message.images) ? message.images : [];
+  const showVisualPrompt = !mine && index === aiThread().length-1 && !message.imagePromptDismissed && !images.length;
+  const showProjectPrompt = !mine && index === aiThread().length-1 && !selectedAIProject() && !message.projectPromptDismissed;
+  return `<div class="aiEntry ${mine ? "mine" : ""}">
+    <div class="aiSender">${mine ? "You" : "✦ The List AI"}</div>
+    <div class="aiBubble">${mine ? escapeHTML(message.content) : renderChatMarkdown(message.content)}
+      ${images.length ? `<div class="aiImageGallery">${images.map((src,i) => `<img src="${escapeAttribute(src)}" alt="Visual project idea ${i+1}" loading="lazy">`).join("")}<p>Visual ideas are examples. Review dimensions and details before building.</p></div>` : ""}
+    </div>
+    ${mine ? "" : `<div class="aiMessageActions">
+      <button type="button" onclick="copyAIReply(${index})" aria-label="Copy reply">Copy</button>
+      <button type="button" onclick="generateAIChatImage(${index})" aria-label="${images.length ? "Show another visual idea" : "Show a visual idea"}">🎨 ${images.length ? "Another idea" : "Show a visual idea"}</button>
+      ${selectedAIProject() ? `<button type="button" onclick="saveAIReplyAt(${index})" aria-label="Save reply to project notes">Save to project</button>` : ""}
+    </div>${showVisualPrompt ? `<div class="aiActionCard">
+      <strong>Would you like to see an example of this design or project?</strong>
+      <div class="row"><button type="button" onclick="generateAIChatImage(${index})">Yes, show me</button><button type="button" class="secondary" onclick="dismissAIVisualPrompt(${index})">No</button></div>
+    </div>` : ""}
+    ${showProjectPrompt ? `<div class="aiActionCard">
+      <strong>Make this your next project?</strong>
+      ${aiProjectDraftIndex === index ? `<label for="aiDraftProjectName">Project name</label><input id="aiDraftProjectName" maxlength="100" value="${escapeAttribute(chatProjectTitle(index))}"><div class="row"><button type="button" onclick="createProjectFromChat(${index})">Create Project</button><button type="button" class="secondary" onclick="dismissAIProjectPrompt(${index})">Not now</button></div>`
+        : `<div class="row"><button type="button" onclick="showAIProjectDraft(${index})">Yes</button><button type="button" class="secondary" onclick="dismissAIProjectPrompt(${index})">No</button></div>`}
+    </div>` : ""}`}
+  </div>`;
+}
+let aiProjectDraftIndex = null;
+let aiImageBusy = false;
+function dismissAIVisualPrompt(index){
+  const reply = aiThread()[index];
+  if(!reply) return;
+  reply.imagePromptDismissed = true;
+  saveData();renderAIChat();
+}
+function chatProjectTitle(index){
+  const messages = aiThread();
+  const earlier = messages.slice(0,index).reverse().find(message => message.role === "user");
+  let name = String(earlier?.content || "New home project")
+    .replace(/^(can you |could you |please |help me |i want to |i'd like to |how do i |tell me about )+/i,"")
+    .replace(/[?.!]+$/g,"").trim();
+  if(name.length > 76) name = name.slice(0,76).replace(/\s+\S*$/,"");
+  return name ? name.charAt(0).toUpperCase()+name.slice(1) : "New home project";
+}
+function showAIProjectDraft(index){
+  aiProjectDraftIndex = index;
+  renderAIChat();
+  document.getElementById("aiDraftProjectName")?.focus();
+}
+function dismissAIProjectPrompt(index){
+  const reply = aiThread()[index];
+  if(!reply) return;
+  reply.projectPromptDismissed = true;
+  aiProjectDraftIndex = null;
+  saveData();renderAIChat();
+}
+function createProjectFromChat(index){
+  const title = document.getElementById("aiDraftProjectName")?.value.trim();
+  const reply = aiThread()[index];
+  if(!title || !reply || reply.role !== "assistant") return;
+  const id = `project-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+  const context = aiThread().slice(Math.max(0,index-5),index+1)
+    .filter(item => item.role === "user" || item.role === "assistant")
+    .map(item => ({role:item.role,content:item.content}));
+  data.projects.push({id,name:title,category:"Home",status:"planned",startedAt:"",completedAt:"",
+    description:reply.content.slice(0,800),tasks:[],materials:[],records:[],
+    notes:`Started from AI Chat:\n${reply.content}`});
+  data.aiChats[id] = context;
+  reply.projectPromptDismissed = true;
+  aiProjectDraftIndex = null;
+  saveData();renderProjects();openProject(id);
+}
+async function generateAIChatImage(index){
+  if(aiImageBusy || aiBusy) return;
+  const reply = aiThread()[index];
+  if(!reply || reply.role !== "assistant") return;
+  const key = aiThreadKey();
+  const project = selectedAIProject();
+  const earlier = aiThread().slice(0,index).reverse().find(item => item.role === "user");
+  const status = document.getElementById("aiChatStatus");
+  const prompt = `Photorealistic visual example of this completed home project or design idea. Show the final result, with plausible materials, lighting, and the described style. No labels, diagrams, or text overlays. User request: ${String(earlier?.content || project?.name || "Home project").slice(0,700)}. Proposed idea: ${reply.content.slice(0,1600)}`;
+  aiImageBusy = true;
+  status.textContent = "Creating a visual idea…";
+  try{
+    const image = await requestProjectImage(prompt,project?.roomPhotos || []);
+    const compact = image.startsWith("data:image/")
+      ? await photoToJpeg(await (await fetch(image)).blob(),850,0.72)
+      : image;
+    reply.images = [...(reply.images || []),compact].slice(-3);
+    saveData();
+    status.textContent = "Visual idea ready. Tap Another idea to see a different example.";
+    if(aiThreadKey() === key) renderAIChat();
+  }catch(err){status.textContent = `Could not create an image. ${err.message || "Try again."}`;}
+  finally{aiImageBusy = false;}
+}
+let aiSuggestions = [];
+function renderAISuggestions(hasMessages,hasProject){
+  aiSuggestions = hasMessages
+    ? ["Can you explain that further?","What should I do first?","What materials and tools will I need?","What should I watch out for?"]
+    : hasProject
+    ? ["Help me plan the next steps","What should I buy?","What measurements do you need?"]
+    : ["Help me plan a project","What should I do around the house this month?","Help me compare options"];
+  document.getElementById("aiSuggestions").innerHTML = aiSuggestions.map((prompt,index) =>
+    `<button type="button" onclick="useAISuggestion(${index})">${escapeHTML(prompt)}</button>`).join("");
+}
+function useAISuggestion(index){
+  const input = document.getElementById("aiMessageInput");
+  if(!aiSuggestions[index] || aiBusy) return;
+  input.value = aiSuggestions[index];
+  input.focus();
+  input.setSelectionRange(input.value.length,input.value.length);
+}
 function renderAIChat(){
   const select = document.getElementById("aiProjectSelect");
   const previous = select.dataset.pendingProjectId || select.value;
@@ -8843,9 +9071,11 @@ function renderAIChat(){
   if([...select.options].some(o => o.value === previous)) select.value = previous;
   const box = document.getElementById("aiMessages");
   const messages = aiThread();
-  box.innerHTML = messages.length ? messages.map(m =>
-    `<div class="aiBubble ${m.role === "user" ? "mine" : ""}"><strong>${m.role === "user" ? "You" : "The List AI"}</strong><br>${escapeHTML(m.content)}</div>`
-  ).join("") : '<p class="aiNote">Ask a question to start planning.</p>';
+  const project = selectedAIProject();
+  document.getElementById("aiConversationLabel").textContent = project ? project.name : "Your home and ideas";
+  box.innerHTML = messages.length ? messages.map(renderAIMessage).join("")
+    : `<div class="aiWelcome"><span aria-hidden="true" style="font-size:29px">✦</span><strong>What can I help you with?</strong><p>Ask about a project, materials, maintenance, or a decision you're weighing.</p></div>`;
+  renderAISuggestions(messages.length > 0,Boolean(project));
   box.scrollTop = box.scrollHeight;
   setAIMode(aiMode);
 }
@@ -8860,7 +9090,14 @@ async function sendAIChat(){
   const status = document.getElementById("aiChatStatus");
   aiBusy = true;
   document.getElementById("aiSendButton").disabled = true;
-  status.textContent = "Thinking...";
+  document.getElementById("aiProjectSelect").disabled = true;
+  input.disabled = true;
+  const box = document.getElementById("aiMessages");
+  if(!history.length) box.innerHTML = "";
+  box.insertAdjacentHTML("beforeend",renderAIMessage({role:"user",content:message},-1)
+    + `<div class="aiEntry"><div class="aiSender">✦ The List AI</div><div class="aiThinking">Thinking…</div></div>`);
+  box.scrollTop = box.scrollHeight;
+  status.textContent = "";
   try{
     const response = await fetch(AI_BACKEND_URL.replace(/\/$/,"") + "/chat", {
       method:"POST", headers:{"Content-Type":"application/json"},
@@ -8878,10 +9115,29 @@ async function sendAIChat(){
     saveData(); input.value = ""; status.textContent = ""; renderAIChat();
   }catch(err){
     status.textContent = `${err.message || "The chat service is unavailable."} Your message was not sent.`;
+    renderAIChat();
   }finally{
     aiBusy = false;
     document.getElementById("aiSendButton").disabled = false;
+    document.getElementById("aiProjectSelect").disabled = false;
+    input.disabled = false;
+    input.focus();
   }
+}
+async function copyAIReply(index){
+  const reply = aiThread()[index];
+  if(!reply || reply.role !== "assistant") return;
+  const status = document.getElementById("aiChatStatus");
+  try{await navigator.clipboard.writeText(reply.content);status.textContent = "Reply copied.";}
+  catch{status.textContent = "Could not copy this reply on this device.";}
+}
+function saveAIReplyAt(index){
+  const project = selectedAIProject();
+  const reply = aiThread()[index];
+  const status = document.getElementById("aiChatStatus");
+  if(!project || !reply || reply.role !== "assistant") return;
+  project.notes = (project.notes || "") + `\n\nAI Chat (${new Date().toLocaleDateString()}):\n${reply.content}`;
+  saveData();status.textContent = `Saved to ${project.name} notes.`;
 }
 function saveLastAIReply(){
   const project = selectedAIProject();
