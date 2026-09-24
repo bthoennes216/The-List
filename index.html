@@ -730,9 +730,9 @@ input,textarea,select{
   min-height:56px;
   margin:0;
 }
-.shoppingTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
-.shoppingTabs button{background:#f8f5ed;color:#314d3a;border:1px solid #c9d1c3;min-height:52px}
-.shoppingTabs button.active{background:#344e3d;color:#fff;border-color:#344e3d}
+.homeInfoTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.homeInfoTabs button{background:#f8f5ed;color:#314d3a;border:1px solid #c9d1c3;min-height:52px}
+.homeInfoTabs button.active{background:#344e3d;color:#fff;border-color:#344e3d}
 .toolRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #e8e4d8}
 .toolRow:last-child{border:0}
 .toolRow button{flex:0 0 auto}
@@ -1167,13 +1167,6 @@ body{padding-bottom:152px}
 </section>
 
 <section id="shoppingPage" class="hidden">
-
-  <div class="shoppingTabs" role="group" aria-label="Shopping sections">
-    <button type="button" id="shoppingListTab" onclick="showShoppingSection('list')">🛒 Shopping List</button>
-    <button type="button" id="toolInventoryTab" onclick="showShoppingSection('tools')">🧰 Tool Inventory</button>
-  </div>
-
-  <div id="shoppingListSection">
   <div class="card">
     <h2>🛒 Shopping List</h2>
 
@@ -1185,25 +1178,6 @@ body{padding-bottom:152px}
   </div>
 
   <div id="shoppingList"></div>
-  </div>
-
-  <div id="toolInventorySection" class="hidden">
-    <div class="card">
-      <h2>🧰 My Tools</h2>
-      <p class="smallText">Add tools you already own. The AI planner will use this list when suggesting what to buy.</p>
-      <label for="toolNameInput">Tool name</label>
-      <input id="toolNameInput" maxlength="100" placeholder="Example: cordless drill" onkeydown="if(event.key==='Enter') addTool()">
-      <button type="button" onclick="addTool()">＋ Add Tool</button>
-    </div>
-    <div class="card">
-      <h3>Add tools from a photo</h3>
-      <p class="smallText">Choose a photo with several tools, then review the names before saving.</p>
-      <input id="toolPhotoInput" type="file" accept="image/*" aria-label="Choose a photo of tools" onchange="scanToolPhoto()">
-      <p id="toolPhotoStatus" class="smallText toolPhotoStatus" role="status"></p>
-      <div id="toolPhotoSuggestions"></div>
-    </div>
-    <div class="card"><h3>Owned tools <span id="toolCount"></span></h3><div id="toolInventoryList"></div></div>
-  </div>
 
 </section>
 
@@ -1327,6 +1301,13 @@ body{padding-bottom:152px}
 
 <section id="homeInfoPage" class="hidden">
 
+  <div class="homeInfoTabs" role="group" aria-label="Home information sections">
+    <button type="button" id="homeDetailsTab" onclick="showHomeInfoSection('details')">🏡 Home Info</button>
+    <button type="button" id="homeToolsTab" onclick="showHomeInfoSection('tools')">🧰 Tool Inventory</button>
+  </div>
+
+  <div id="homeDetailsSection">
+
   <div class="card">
 
     <h2>🏡 Home Information</h2>
@@ -1382,6 +1363,35 @@ body{padding-bottom:152px}
 
     <p id="homeInfoSaved"></p>
 
+  </div>
+
+  </div>
+
+  <div id="toolInventorySection" class="hidden">
+    <div class="card">
+      <h2>🧰 My Tools</h2>
+      <p class="smallText">Keep track of what you own so the AI planner can suggest only what you still need.</p>
+      <label for="toolNameInput">Tool you own</label>
+      <input id="toolNameInput" maxlength="100" placeholder="Example: cordless drill" onkeydown="if(event.key==='Enter') addTool()">
+      <button type="button" onclick="addTool()">＋ Add to Inventory</button>
+    </div>
+    <div class="card">
+      <h3>Add tools from a photo</h3>
+      <p class="smallText">Choose a photo with several tools, then review the names before saving.</p>
+      <input id="toolPhotoInput" type="file" accept="image/*" aria-label="Choose a photo of tools" onchange="scanToolPhoto()">
+      <p id="toolPhotoStatus" class="smallText toolPhotoStatus" role="status"></p>
+      <div id="toolPhotoSuggestions"></div>
+    </div>
+    <div class="card"><h3>Owned tools <span id="toolCount"></span></h3><div id="toolInventoryList"></div></div>
+    <div class="card">
+      <h3>Tools to buy</h3>
+      <p class="smallText">Need a tool you don't own yet? Add it to Shopping here.</p>
+      <label for="toolNeededInput">Tool needed</label>
+      <input id="toolNeededInput" maxlength="100" placeholder="Example: stud finder" onkeydown="if(event.key==='Enter') addNeededTool()">
+      <button type="button" onclick="addNeededTool()">🛒 Add to Shopping List</button>
+      <p id="toolNeededStatus" class="smallText" role="status"></p>
+      <div id="toolsToBuyList"></div>
+    </div>
   </div>
 
 </section>
@@ -1752,7 +1762,6 @@ function showPage(pageId){
 
   if(pageId === "shoppingPage"){
     renderShopping();
-    showShoppingSection(shoppingSection);
   }
 
   if(pageId === "calendarPage"){
@@ -1766,6 +1775,7 @@ function showPage(pageId){
 
   if(pageId === "homeInfoPage"){
     renderHomeInfo();
+    showHomeInfoSection(homeInfoSection);
   }
 
   if(pageId === "familyPage"){
@@ -3513,19 +3523,19 @@ function renderShopping(){
 
 }
 
-let shoppingSection = "list";
+let homeInfoSection = "details";
 let scannedToolNames = [];
 
-function showShoppingSection(section){
-  shoppingSection = section === "tools" ? "tools" : "list";
-  document.getElementById("shoppingListSection").classList.toggle("hidden", shoppingSection !== "list");
-  document.getElementById("toolInventorySection").classList.toggle("hidden", shoppingSection !== "tools");
-  ["shoppingListTab","toolInventoryTab"].forEach((id,index) => {
-    const active = (index === 0) === (shoppingSection === "list");
+function showHomeInfoSection(section){
+  homeInfoSection = section === "tools" ? "tools" : "details";
+  document.getElementById("homeDetailsSection").classList.toggle("hidden",homeInfoSection !== "details");
+  document.getElementById("toolInventorySection").classList.toggle("hidden",homeInfoSection !== "tools");
+  ["homeDetailsTab","homeToolsTab"].forEach((id,index) => {
+    const active = (index === 0) === (homeInfoSection === "details");
     document.getElementById(id).classList.toggle("active",active);
     document.getElementById(id).setAttribute("aria-pressed",String(active));
   });
-  if(shoppingSection === "tools") renderToolInventory();
+  if(homeInfoSection === "tools") renderToolInventory();
 }
 
 function toolKey(name){
@@ -3559,6 +3569,45 @@ function renderToolInventory(){
   list.innerHTML = data.tools.length
     ? data.tools.map(tool => `<div class="toolRow"><span>${escapeHTML(tool.name)}</span><button class="small secondary" type="button" onclick="removeTool('${escapeAttribute(tool.id)}')" aria-label="Remove ${escapeAttribute(tool.name)}">Remove</button></div>`).join("")
     : `<p class="smallText">No tools added yet.</p>`;
+  renderToolsToBuy();
+}
+
+function renderToolsToBuy(){
+  const box = document.getElementById("toolsToBuyList");
+  const tools = data.shopping.filter(item => item.kind === "tool" &&
+    !data.tools.some(tool => toolKey(tool.name) === toolKey(item.name)));
+  box.innerHTML = tools.length
+    ? tools.map(item => `<div class="toolRow"><span class="${item.done ? "done" : ""}">${escapeHTML(item.name)}${item.project ? `<small class="smallText"> · ${escapeHTML(item.project)}</small>` : ""}</span>
+      ${item.done ? `<button type="button" class="small secondary" onclick="moveToolToInventory('${escapeAttribute(item.id)}')">Add to Inventory</button>`
+        : `<button type="button" class="small secondary" onclick="moveToolToInventory('${escapeAttribute(item.id)}')">I bought this</button>`}
+    </div>`).join("")
+    : `<p class="smallText">No tools on your shopping list yet.</p>`;
+}
+
+function addNeededTool(){
+  const input = document.getElementById("toolNeededInput");
+  const status = document.getElementById("toolNeededStatus");
+  const name = input.value.trim().replace(/\s+/g," ").slice(0,100);
+  if(!name) return;
+  if(data.tools.some(tool => toolKey(tool.name) === toolKey(name))){
+    status.textContent = "This tool is already in your inventory.";return;
+  }
+  if(data.shopping.some(item => !item.done && toolKey(item.name) === toolKey(name))){
+    status.textContent = "This tool is already on your shopping list.";return;
+  }
+  data.shopping.push({id:String(Date.now()+Math.random()),name,quantity:"1",project:"",done:false,kind:"tool"});
+  input.value = "";
+  saveData();renderToolsToBuy();
+  status.textContent = `${name} added to Shopping.`;
+}
+
+function moveToolToInventory(id){
+  const item = data.shopping.find(row => String(row.id) === String(id) && row.kind === "tool");
+  if(!item) return;
+  item.done = true;
+  addTool(item.name);
+  saveData();renderToolInventory();
+  document.getElementById("toolNeededStatus").textContent = `${item.name} is now in your inventory.`;
 }
 
 function showScannedTools(){
@@ -3616,7 +3665,7 @@ function addMissingToolsToShopping(projectId){
     const key = toolKey(item.tool);
     if(data.tools.some(tool => toolKey(tool.name) === key)) return;
     if(data.shopping.some(row => !row.done && toolKey(row.name) === key && row.project === project.name)) return;
-    data.shopping.push({id:String(Date.now()+Math.random()),name:item.tool,quantity:"1",project:project.name,done:false});
+    data.shopping.push({id:String(Date.now()+Math.random()),name:item.tool,quantity:"1",project:project.name,done:false,kind:"tool"});
     added++;
   });
   if(added) saveData();
