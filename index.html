@@ -735,6 +735,14 @@ input,textarea,select{
 .quickProjectCard .quickProjectSubmit{width:100%;min-height:52px;background:#344f3d}
 .quickProjectCard details{margin-top:17px;border-top:1px solid #e4e5dc;padding-top:13px}
 .quickProjectCard summary{cursor:pointer;color:#3d5943;font-weight:700}
+.quickProjectPreview{margin-top:18px;border-top:1px solid #dedfd2;padding-top:14px}
+.quickProjectPreview[hidden]{display:none}
+.quickProjectPreview h3{margin:19px 0 8px;font-size:17px}
+.quickProjectPreview ul{margin:7px 0 14px;padding-left:23px;line-height:1.5}
+.quickProjectPreview li{margin:5px 0}
+.quickProjectPreview .row{display:flex;gap:8px;flex-wrap:wrap}
+.quickProjectPreview .row button{flex:1 1 145px;margin:0}
+.quickProjectPreview .quickDraftNote{padding:11px;border-radius:10px;background:#f1f4eb;color:#314d3a}
 .homeInfoTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
 .homeInfoTabs button{background:#f8f5ed;color:#314d3a;border:1px solid #c9d1c3;min-height:52px}
 .homeInfoTabs button.active{background:#344e3d;color:#fff;border-color:#344e3d}
@@ -1119,10 +1127,11 @@ body{padding-bottom:152px}
       <label for="quickProjectPhotos">Photos of the space (optional)</label>
       <input id="quickProjectPhotos" type="file" accept="image/*" multiple onchange="updateQuickProjectPhotos()">
       <p id="quickProjectPhotoCount" class="smallText"></p>
-      <button type="submit" class="quickProjectSubmit" id="quickProjectButton">✨ Create My Project</button>
+      <button type="submit" class="quickProjectSubmit" id="quickProjectButton">✨ Preview My Project</button>
       <p id="quickProjectStatus" class="smallText" role="status"></p>
     </form>
-    <details>
+    <div id="quickProjectPreview" class="quickProjectPreview" hidden></div>
+    <details id="emptyProjectOption">
       <summary>I'd rather start with an empty project</summary>
       <form id="newProjectForm" onsubmit="saveNewProject(event)">
         <label for="newProjectName">Project name</label>
@@ -2265,9 +2274,47 @@ function updateQuickProjectPhotos(){
     : "";
 }
 
+let quickProjectDraft = null;
+
+function renderQuickProjectPreview(){
+  const box = document.getElementById("quickProjectPreview");
+  const draft = quickProjectDraft;
+  if(!draft){box.hidden = true;box.innerHTML = "";return;}
+  const {plan,tasks,materials} = draft;
+  const list = (rows,makeText) => rows.length
+    ? `<ul>${rows.map(row => `<li>${escapeHTML(makeText(row))}</li>`).join("")}</ul>`
+    : '<p class="smallText">Nothing listed yet. Ask the AI to add it if this project needs it.</p>';
+  box.hidden = false;
+  box.innerHTML = `
+    <h2>Review your project</h2>
+    <p class="quickDraftNote">This is a draft. You can ask for changes before saving it to Projects.</p>
+    <label for="quickDraftName">Project name</label>
+    <input id="quickDraftName" maxlength="100" value="${escapeAttribute(plan.projectName || draft.prompt.slice(0,100))}">
+    <label for="quickDraftSummary">Project description</label>
+    <textarea id="quickDraftSummary" maxlength="4000">${escapeHTML(plan.summary || draft.prompt)}</textarea>
+    <h3>Tasks (${tasks.length})</h3>${list(tasks,row => row.text)}
+    <h3>Materials (${materials.length})</h3>${list(materials,row => `${row.name} — ${row.quantity}`)}
+    <h3>Tools</h3>
+    ${(plan.toolsAlreadyHave || []).length ? `<p class="smallText">Already have: ${escapeHTML(plan.toolsAlreadyHave.join(", "))}</p>` : ""}
+    ${list(plan.toolsNeeded || [],row => `${row.tool}${row.required ? " (required)" : " (optional)"}`)}
+    <h3>DIY steps (${(plan.buildSteps || []).length})</h3>
+    ${list(plan.buildSteps || [],row => `${row.title}: ${row.instructions}`)}
+    ${(plan.measurementsNeeded || []).length ? `<h3>Measurements to check</h3>${list(plan.measurementsNeeded,row => `${row.name}${row.whyNeeded ? ` — ${row.whyNeeded}` : ""}`)}` : ""}
+    ${(plan.warnings || []).length ? `<h3>Before you begin</h3>${list(plan.warnings,row => row)}` : ""}
+    <label for="quickDraftChanges">Want anything changed?</label>
+    <textarea id="quickDraftChanges" maxlength="2000" placeholder="Example: Make it less expensive, add painting steps, or use the tools I already have."></textarea>
+    <div class="row">
+      <button type="button" class="secondary" id="quickDraftRevise" onclick="reviseQuickProject()">✨ Update Plan</button>
+      <button type="button" class="quickProjectSubmit" id="quickDraftSave" onclick="saveQuickProjectDraft()">Save Project</button>
+      <button type="button" class="secondary" id="quickDraftDiscard" onclick="discardQuickProjectDraft()">Start Over</button>
+    </div>
+    <p id="quickDraftStatus" class="smallText" role="status"></p>`;
+  box.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 async function createQuickProject(event){
   event.preventDefault();
-  if(aiPlanningBusy) return;
+  if(aiPlanningBusy || quickProjectDraft) return;
   const input = document.getElementById("quickProjectPrompt");
   const prompt = input.value.trim();
   if(!prompt) return;
@@ -2276,33 +2323,90 @@ async function createQuickProject(event){
   const button = document.getElementById("quickProjectButton");
   aiPlanningBusy = true;
   button.disabled = true;
-  button.textContent = "✨ Making your project…";
+  button.textContent = "✨ Making your preview…";
   status.textContent = "Organizing your tasks, materials, tools, and DIY steps…";
   try{
     const photos = await Promise.all([...photosInput.files].slice(0,3).map(compressProjectPhoto));
-    const {plan,tasks,materials} = await buildStructuredChatPlan(prompt.slice(0,100),[{role:"user",content:prompt}],photos);
-    const name = String(plan.projectName || prompt).trim().slice(0,100) || "New home project";
-    const id = `project-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-    const project = {id,name,category:"Home",status:"planned",startedAt:"",completedAt:"",
-      description:plan.summary || prompt,tasks,materials,records:[],notes:"",
-      roomPhotos:photos,aiPlan:plan,aiImage:""};
-    data.projects.push(project);
-    data.aiChats[id] = [{role:"user",content:prompt},{role:"assistant",content:plan.summary || name}];
-    try{saveData();}
-    catch(err){data.projects.pop();delete data.aiChats[id];throw err;}
-    input.value = "";
-    photosInput.value = "";
-    updateQuickProjectPhotos();
+    const result = await buildStructuredChatPlan(prompt.slice(0,100),[{role:"user",content:prompt}],photos);
+    quickProjectDraft = {...result,prompt,photos};
+    document.getElementById("quickProjectForm").hidden = true;
+    document.getElementById("emptyProjectOption").hidden = true;
     status.textContent = "";
-    renderProjects();
-    openProject(id);
+    renderQuickProjectPreview();
   }catch(err){
-    status.textContent = `Could not make this project yet. ${err.message || "Please try again."}`;
+    status.textContent = `Could not make a preview yet. ${err.message || "Please try again."}`;
   }finally{
     aiPlanningBusy = false;
     button.disabled = false;
-    button.textContent = "✨ Create My Project";
+    button.textContent = "✨ Preview My Project";
   }
+}
+
+async function reviseQuickProject(){
+  if(!quickProjectDraft || aiPlanningBusy) return;
+  const feedback = document.getElementById("quickDraftChanges").value.trim();
+  const status = document.getElementById("quickDraftStatus");
+  if(!feedback){status.textContent = "Tell me what you would like to change first.";return;}
+  const draft = quickProjectDraft;
+  const title = document.getElementById("quickDraftName").value.trim();
+  const summary = document.getElementById("quickDraftSummary").value.trim();
+  aiPlanningBusy = true;
+  ["quickDraftRevise","quickDraftSave","quickDraftDiscard"].forEach(id => document.getElementById(id).disabled = true);
+  status.textContent = "Updating your project preview…";
+  try{
+    const context = [{role:"user",content:draft.prompt},{role:"assistant",content:JSON.stringify(draft.plan)},
+      {role:"user",content:`Please revise the draft. ${feedback}\nPreferred project name: ${title}\nPreferred description: ${summary}`}];
+    const result = await buildStructuredChatPlan(title || draft.prompt.slice(0,100),context,draft.photos,draft.plan,feedback);
+    quickProjectDraft = {...draft,...result};
+    renderQuickProjectPreview();
+    document.getElementById("quickDraftStatus").textContent = "Updated. Review the plan and save when you're ready.";
+  }catch(err){
+    status.textContent = `Could not update the preview. ${err.message || "Please try again."}`;
+  }finally{
+    aiPlanningBusy = false;
+    ["quickDraftRevise","quickDraftSave","quickDraftDiscard"].forEach(id => {
+      const control = document.getElementById(id);
+      if(control) control.disabled = false;
+    });
+  }
+}
+
+function saveQuickProjectDraft(){
+  if(!quickProjectDraft || aiPlanningBusy) return;
+  const draft = quickProjectDraft;
+  const status = document.getElementById("quickDraftStatus");
+  const name = document.getElementById("quickDraftName").value.trim().slice(0,100);
+  if(!name){status.textContent = "Enter a project name before saving.";return;}
+  const description = document.getElementById("quickDraftSummary").value.trim();
+  draft.plan.projectName = name;
+  draft.plan.summary = description;
+    const id = `project-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    const project = {id,name,category:"Home",status:"planned",startedAt:"",completedAt:"",
+      description:description || draft.prompt,tasks:draft.tasks,materials:draft.materials,records:[],notes:"",
+      roomPhotos:draft.photos,aiPlan:draft.plan,aiImage:""};
+    data.projects.push(project);
+    data.aiChats[id] = [{role:"user",content:draft.prompt},{role:"assistant",content:description || name}];
+    try{saveData();}
+    catch(err){data.projects.pop();delete data.aiChats[id];status.textContent = `Could not save this project. ${err.message || "Please try again."}`;return;}
+    quickProjectDraft = null;
+    document.getElementById("quickProjectPrompt").value = "";
+    document.getElementById("quickProjectPhotos").value = "";
+    updateQuickProjectPhotos();
+    renderQuickProjectPreview();
+    document.getElementById("quickProjectForm").hidden = false;
+    document.getElementById("emptyProjectOption").hidden = false;
+    renderProjects();
+    openProject(id);
+}
+
+function discardQuickProjectDraft(){
+  if(aiPlanningBusy) return;
+  quickProjectDraft = null;
+  renderQuickProjectPreview();
+  document.getElementById("quickProjectForm").hidden = false;
+  document.getElementById("emptyProjectOption").hidden = false;
+  document.getElementById("quickProjectStatus").textContent = "";
+  document.getElementById("quickProjectPrompt").focus();
 }
 
 function saveNewProject(event){
@@ -9123,14 +9227,14 @@ function dismissAIProjectPrompt(index){
   saveData();renderAIChat();
 }
 let aiPlanningBusy = false;
-async function buildStructuredChatPlan(name,context,roomPhotos=[]){
+async function buildStructuredChatPlan(name,context,roomPhotos=[],existingPlan=null,feedback=""){
   const conversation = context.map(item => `${item.role === "user" ? "Homeowner" : "AI"}: ${item.content}`)
     .join("\n\n").slice(-9000);
   const plan = await requestTheListAI({
     projectDescription:`${name}\n\nProject discussion:\n${conversation}`,
     measurements:{},style:"",
-    refinement:"Turn this discussion into a practical project record. Separate actionable project tasks, a material takeoff with quantities or clearly labeled estimates, tools needed versus tools already owned, and numbered DIY build instructions. Use the homeowner's actual request as the project scope. Identify unknown measurements rather than inventing them.",
-    existingPlan:null,toolsOwned:data.tools.map(tool => tool.name),
+    refinement:`Turn this discussion into a practical project record. Separate actionable project tasks, a material takeoff with quantities or clearly labeled estimates, tools needed versus tools already owned, and numbered DIY build instructions. Use the homeowner's actual request as the project scope. Identify unknown measurements rather than inventing them.${feedback ? ` Revise the existing plan based on this feedback: ${feedback}` : ""}`,
+    existingPlan,toolsOwned:data.tools.map(tool => tool.name),
     roomPhotos,homeContext:data.home || {}
   });
   const taskRows = (plan.projectTasks || []).length ? plan.projectTasks
