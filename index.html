@@ -2513,14 +2513,30 @@ function openProject(id){
 
 }
 async function compressProjectPhoto(file){
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1,960 / Math.max(bitmap.width,bitmap.height));
+  return photoToJpeg(file,960,0.65);
+}
+
+async function photoToJpeg(file,maxSide,quality){
+  let source;
+  let objectURL;
+  try{
+    source = await createImageBitmap(file);
+  }catch{
+    objectURL = URL.createObjectURL(file);
+    source = new Image();
+    source.src = objectURL;
+    await source.decode();
+  }
+  const width = source.width || source.naturalWidth;
+  const height = source.height || source.naturalHeight;
+  const scale = Math.min(1,maxSide / Math.max(width,height));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);
-  bitmap.close();
-  return canvas.toDataURL("image/jpeg",0.65);
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
+  canvas.getContext("2d").drawImage(source,0,0,canvas.width,canvas.height);
+  if(source.close) source.close();
+  if(objectURL) URL.revokeObjectURL(objectURL);
+  return canvas.toDataURL("image/jpeg",quality);
 }
 
 function renderProjectPhotos(project){
@@ -3520,14 +3536,7 @@ async function scanToolPhoto(){
   showScannedTools();
   status.textContent = "Finding tools in photo…";
   try{
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1,1280 / Math.max(bitmap.width,bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);
-    bitmap.close();
-    const image = canvas.toDataURL("image/jpeg",0.75);
+    const image = await photoToJpeg(file,1280,0.75);
     const response = await fetch(AI_BACKEND_URL.replace(/\/$/,"") + "/tools",{
       method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image})
     });
