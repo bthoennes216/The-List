@@ -1005,6 +1005,22 @@ header.isCompact .appLogo{width:34px;height:34px}
 header.isCompact h1{font-size:21px}
 header.isCompact p,header.isCompact .homeMeta,header.isCompact::after{display:none}
 .projectCard .projectSwipeHint{font-size:11px;color:#758173;margin-top:8px}
+body.calendarDayOpen{overflow:hidden}
+#selectedDateCard[hidden]{display:none}
+#selectedDateCard{position:fixed;inset:0;z-index:150;background:#f8f5ed;overflow-y:auto;overscroll-behavior:contain;padding:calc(18px + env(safe-area-inset-top)) max(18px,calc((100vw - 700px)/2)) calc(24px + env(safe-area-inset-bottom))}
+.dayViewTop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dayViewTop button,.dayViewMove button{width:auto;margin:0;padding:9px 13px;background:#e9eee5;color:#294734;border:1px solid #cbd8c9;box-shadow:none}
+.dayViewTop strong{font-size:17px;color:#294734}
+.dayViewDate{margin:28px 0 5px;font-size:34px;line-height:1.1;color:#294734}
+.dayViewSubtitle{margin:0 0 20px;color:#777267}
+.dayViewMove{display:flex;justify-content:space-between;gap:12px;margin:14px 0 20px}
+.dayAgenda{background:#fffdf8;border:1px solid #ded7c9;border-radius:17px;padding:18px}
+.dayAgenda h3{margin:0 0 14px}
+.dayAgendaItem{padding:14px 0;border-top:1px solid #e9e3d8}
+.dayAgendaItem strong,.dayAgendaItem small{display:block}
+.dayAgendaItem small{margin-top:5px;color:#777267}
+.dayViewAdd{width:100%;margin-top:18px}
+.calendarDay{width:100%;font-family:inherit;color:inherit;text-align:left;font-size:inherit;font-weight:inherit;box-shadow:none}
 </style>
 </head>
 
@@ -1332,7 +1348,7 @@ header.isCompact p,header.isCompact .homeMeta,header.isCompact::after{display:no
 
   </div>
 
-  <div id="selectedDateCard"></div>
+  <div id="selectedDateCard" role="dialog" aria-modal="true" aria-label="Calendar day" hidden></div>
 
   <div class="card">
 
@@ -1954,6 +1970,12 @@ const pageIds = [
 ];
 
 function showPage(pageId){
+
+  if(pageId !== "calendarPage"){
+    document.getElementById("selectedDateCard").hidden = true;
+    document.body.classList.remove("calendarDayOpen");
+    selectedCalendarDate = null;
+  }
 
   pageIds.forEach(id => {
 
@@ -4307,7 +4329,11 @@ function renderCalendar(){
       dateKey(date);
 
     const cell =
-      document.createElement("div");
+      document.createElement("button");
+
+    cell.type = "button";
+    cell.dataset.date = key;
+    cell.setAttribute("aria-label",`Open ${date.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}`);
 
     cell.className =
       "calendarDay";
@@ -4377,10 +4403,43 @@ function selectCalendarDate(key){
   document.getElementById("calendarDate").value = key;
 
   renderCalendar();
-
-  renderSelectedDate();
+  const box = document.getElementById("selectedDateCard");
+  box.hidden = false;
+  document.body.classList.add("calendarDayOpen");
+  box.scrollTop = 0;
+  box.querySelector(".dayViewBack")?.focus();
 
 }
+
+function closeCalendarDay(){
+  const box = document.getElementById("selectedDateCard");
+  box.hidden = true;
+  document.body.classList.remove("calendarDayOpen");
+  const previousDate = selectedCalendarDate;
+  selectedCalendarDate = null;
+  renderCalendar();
+  document.querySelector(`#calendarGrid .calendarDay[data-date="${previousDate}"]`)?.focus();
+}
+
+function moveCalendarDay(offset){
+  const [year,month,day] = selectedCalendarDate.split("-").map(Number);
+  const target = new Date(year,month-1,day+offset);
+  currentCalendarDate = new Date(target.getFullYear(),target.getMonth(),1);
+  selectCalendarDate(dateKey(target));
+}
+
+function addToSelectedDay(){
+  const date = selectedCalendarDate;
+  closeCalendarDay();
+  document.getElementById("calendarDate").value = date;
+  document.getElementById("calendarTitle").focus();
+}
+
+document.addEventListener("keydown",event => {
+  if(event.key === "Escape" && !document.getElementById("selectedDateCard").hidden){
+    closeCalendarDay();
+  }
+});
 
 function renderSelectedDate(){
 
@@ -4407,42 +4466,27 @@ function renderSelectedDate(){
   const items =
     [...tasks,...events,...maintenance];
 
+  const [year,month,day] = selectedCalendarDate.split("-").map(Number);
+  const date = new Date(year,month-1,day);
   box.innerHTML = `
-
-    <div class="card">
-
-      <h2>
-        📅 ${formatDate(selectedCalendarDate)}
-      </h2>
-
-      ${
-        items.length
-        ? items.map(item => `
-
-            <div class="task">
-
-              <div class="taskText">
-
-                <strong>
-                  ${escapeHTML(item.title)}
-                </strong>
-
-                <div class="smallText">
-                  ${escapeHTML(item.project)}
-                </div>
-
-              </div>
-
-            </div>
-
-          `).join("")
-        : `<div class="empty">
-             Nothing scheduled for this day.
-           </div>`
-      }
-
+    <div class="dayViewTop">
+      <button type="button" class="dayViewBack" onclick="closeCalendarDay()" aria-label="Back to month">‹ Month</button>
+      <strong>The List</strong>
     </div>
-
+    <h2 class="dayViewDate">${date.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}</h2>
+    <p class="dayViewSubtitle">${date.getFullYear()} · ${items.length} ${items.length === 1 ? "item" : "items"}</p>
+    <div class="dayViewMove">
+      <button type="button" onclick="moveCalendarDay(-1)" aria-label="Previous day">‹ Previous</button>
+      <button type="button" onclick="moveCalendarDay(1)" aria-label="Next day">Next ›</button>
+    </div>
+    <div class="dayAgenda">
+      <h3>Schedule</h3>
+      ${items.length ? items.map(item => `
+        <div class="dayAgendaItem"><strong>${escapeHTML(item.title)}</strong>
+          <small>${escapeHTML(item.project)}</small></div>
+      `).join("") : '<p class="smallText">Nothing scheduled for this day.</p>'}
+    </div>
+    <button type="button" class="dayViewAdd" onclick="addToSelectedDay()">＋ Add calendar item</button>
   `;
 
 }
