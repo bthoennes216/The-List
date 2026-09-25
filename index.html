@@ -961,6 +961,26 @@ input,textarea,select{
 .aiComposer button:disabled{opacity:.55}
 .aiComposerHint{font-size:11px;color:#788074;margin:7px 3px 0}
 .aiNote{font-size:13px;color:#5e6058;line-height:1.45}
+.sageIntro{background:#fbf8f0;border:1px solid #e2dbcd;padding:20px}
+.sageIdentity{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.sageAvatar{width:62px;height:62px;flex:none;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#526a46,#263d2e);color:#fff8e7;font-family:Georgia,serif;font-size:34px;box-shadow:0 4px 13px rgba(37,60,42,.18)}
+.sageIdentity h2{margin:0 0 3px;font-family:Georgia,serif;font-size:28px;color:#2e4433}
+.sageIdentity p{margin:0;color:#696d61;font-size:14px}
+.sageGreeting{background:#fffdf8;border:1px solid #ebe3d5;border-radius:16px;padding:14px 16px;margin:0 0 15px;line-height:1.45}
+.sageGreeting strong{display:block;margin-bottom:4px}
+.sageActions{display:grid;gap:8px;margin-bottom:18px}
+.sageActions button{width:100%;display:flex;align-items:center;gap:12px;min-height:54px;text-align:left;background:#fffdf9;border:1px solid #e6e0d5;border-radius:14px;padding:10px 14px;color:#253c2d;box-shadow:0 2px 7px rgba(55,51,35,.04)}
+.sageActions button span:first-child{font-size:22px;width:30px;text-align:center}
+.sageActions button span:nth-child(2){flex:1}
+.sageActions button span:last-child{color:#8b9182}
+.sagePopular{font-weight:700;color:#303b30;margin:0 0 9px}
+.sagePopularOptions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.sagePopularOptions button{width:auto;margin:0;background:#fffdf8;border:1px solid #ddd9cf;color:#344d3b;border-radius:22px;padding:8px 12px;box-shadow:none;font-size:13px}
+.sageIntro.hasMessages .sageGreeting,.sageIntro.hasMessages .sageActions,.sageIntro.hasMessages .sagePopular,.sageIntro.hasMessages .sagePopularOptions{display:none}
+.sageIntro.hasMessages .sageIdentity{margin-bottom:10px}
+.sageIntro.hasMessages .sageAvatar{width:42px;height:42px;font-size:24px}
+.sageIntro.hasMessages .sageIdentity h2{font-size:21px}
+.sageIntro.hasMessages{padding:14px 16px}
 
 /* Shopping groups */
 .shoppingGroup h3{margin:0 0 8px;font-size:17px}
@@ -1238,9 +1258,24 @@ body.calendarDayOpen{overflow:hidden}
 
 
 <section id="aiChatPage" class="hidden">
-  <div class="card aiChatIntro">
-    <h2>✨ Ask Sage</h2>
-    <p class="aiNote">Talk through a project, ask follow-up questions, and keep the conversation together.</p>
+  <div class="card aiChatIntro sageIntro">
+    <div class="sageIdentity"><span class="sageAvatar" aria-hidden="true">S</span><div><h2>Meet Sage</h2><p>Your home project assistant</p></div></div>
+    <div class="sageGreeting"><strong>Hi, I'm Sage.</strong> Tell me what you want to plan, design, or build. We can keep the steps, tools, and shopping list together in The List.</div>
+    <div class="sageActions" aria-label="Ways Sage can help">
+      <button type="button" onclick="focusSageChat()"><span aria-hidden="true">☏</span><span>Chat with Sage</span><span aria-hidden="true">›</span></button>
+      <button type="button" onclick="startSageProject()"><span aria-hidden="true">✦</span><span>Get a project plan</span><span aria-hidden="true">›</span></button>
+      <button type="button" onclick="focusSageChat('Help me picture a finished design for my project.')"><span aria-hidden="true">▧</span><span>Generate design ideas</span><span aria-hidden="true">›</span></button>
+      <button type="button" onclick="focusSageChat('What tools and materials will I need for my project?')"><span aria-hidden="true">⚒</span><span>Tools and materials</span><span aria-hidden="true">›</span></button>
+      <button type="button" onclick="showPage('calendarPage')"><span aria-hidden="true">▦</span><span>Open calendar</span><span aria-hidden="true">›</span></button>
+    </div>
+    <p class="sagePopular">Popular with Sage</p>
+    <div class="sagePopularOptions">
+      <button type="button" onclick="focusSageChat('Help me plan a backyard fire pit.')">Plan a project</button>
+      <button type="button" onclick="focusSageChat('Help me design my yard.')">Design my yard</button>
+      <button type="button" onclick="focusSageChat('Help me make a shopping list.')">Shopping list</button>
+      <button type="button" onclick="focusSageChat('What tools do I need?')">What tools do I need?</button>
+      <button type="button" onclick="focusSageChat('Help me plan my garden.')">Garden plan</button>
+    </div>
     <label for="aiProjectSelect">Conversation about</label>
     <select id="aiProjectSelect" onchange="this.dataset.pendingProjectId=''; renderAIChat()"></select>
     <div class="aiTabs">
@@ -9398,6 +9433,17 @@ function escapeAttribute(value){
    ========================================================= */
 let aiMode = "list";
 let aiBusy = false;
+function focusSageChat(prompt){
+  setAIMode("list");
+  const input = document.getElementById("aiMessageInput");
+  if(prompt) input.value = prompt;
+  input.scrollIntoView({behavior:"smooth",block:"center"});
+  input.focus({preventScroll:true});
+}
+function startSageProject(){
+  showPage("projectsPage");
+  document.getElementById("quickProjectPrompt").focus();
+}
 function setAIMode(mode){
   aiMode = mode === "chatgpt" ? "chatgpt" : "list";
   document.getElementById("aiListPanel").hidden = aiMode !== "list";
@@ -9679,6 +9725,7 @@ function renderAIChat(){
   const box = document.getElementById("aiMessages");
   const messages = aiThread();
   const project = selectedAIProject();
+  document.querySelector(".sageIntro").classList.toggle("hasMessages",messages.length > 0);
   if(sageReview && sageReview.projectId !== aiThreadKey()) closeSageReview();
   document.getElementById("aiConversationLabel").textContent = project ? project.name : "Your home and ideas";
   box.innerHTML = messages.length ? messages.map(renderAIMessage).join("")
