@@ -968,13 +968,7 @@ input,textarea,select{
 .shoppingRow .shoppingName{flex:1;min-width:0;overflow-wrap:anywhere}
 .shoppingRow .shoppingName small{display:block;color:#756f65;margin-top:3px}
 .shoppingRow button{flex:none;margin:0}
-/* Next Up and Sage review */
-.nextUpRows{display:grid;gap:9px}
-.nextUpItem{width:100%;margin:0;display:flex;align-items:center;gap:12px;text-align:left;padding:13px;background:#fffdf8;color:#283e30;border:1px solid #dfd9cc;border-radius:13px;box-shadow:none}
-.nextUpItem:active{background:#f0eee4}
-.nextUpIcon{font-size:22px;flex:0 0 28px;text-align:center}
-.nextUpItem strong,.nextUpItem small{display:block;line-height:1.35}
-.nextUpItem small{color:#6d6d60;font-size:12px;margin-top:3px}
+/* Sage review */
 .aiReviewPanel[hidden]{display:none}
 .aiReviewPanel h3{margin:0 0 8px}
 .aiReviewRow{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid #e5dfd3}
@@ -1148,11 +1142,6 @@ header.isCompact p,header.isCompact .homeMeta,header.isCompact::after{display:no
       </span>
     </button>
   </div>
-</div>
-
-<div class="card">
-  <h2>✦ Next Up</h2>
-  <div id="homeNextUp" class="nextUpRows"></div>
 </div>
 
 <div class="card upcomingCard" style="
@@ -2103,45 +2092,7 @@ data.projects.forEach(project => {
   }
 
   renderHomeUpcoming();
-  renderNextUp();
 
-}
-
-function renderNextUp(){
-  const box = document.getElementById("homeNextUp");
-  const today = dateKey(new Date());
-  const tasks = data.projects
-    .filter(project => project.status === "active")
-    .flatMap(project => (project.tasks || []).filter(task => !task.done)
-      .map(task => ({project,task})));
-  tasks.sort((a,b) => {
-    const ad = a.task.dueDate || "9999-12-31";
-    const bd = b.task.dueDate || "9999-12-31";
-    return ad.localeCompare(bd);
-  });
-  const task = tasks[0];
-  const event = data.calendar.filter(item => item.date && item.date >= today)
-    .sort((a,b) => a.date.localeCompare(b.date))[0];
-  const maintenance = data.maintenance.map(item => ({
-    item,date:item.dueDate && item.dueDate < today && (!item.repeat || item.repeat === "none")
-      ? item.dueDate : nextMaintenanceDate(item,today)
-  })).filter(entry => entry.date).sort((a,b) => a.date.localeCompare(b.date))[0];
-  const rows = [];
-  if(task) rows.push(`<button type="button" class="nextUpItem" data-next-page="project" data-next-id="${escapeAttribute(task.project.id)}">
-    <span class="nextUpIcon" aria-hidden="true">✓</span><span><strong>${escapeHTML(task.task.text)}</strong>
-    <small>${escapeHTML(task.project.name)} · ${task.task.dueDate ? formatDate(task.task.dueDate) : "No due date"}</small></span></button>`);
-  if(event) rows.push(`<button type="button" class="nextUpItem" data-next-page="calendarPage">
-    <span class="nextUpIcon" aria-hidden="true">▦</span><span><strong>${escapeHTML(event.title)}</strong>
-    <small>Calendar · ${formatDate(event.date)}</small></span></button>`);
-  if(maintenance) rows.push(`<button type="button" class="nextUpItem" data-next-page="maintenancePage">
-    <span class="nextUpIcon" aria-hidden="true">🔧</span><span><strong>${escapeHTML(maintenance.item.name)}</strong>
-    <small>Maintenance · ${formatDate(maintenance.date)}</small></span></button>`);
-  box.innerHTML = rows.length ? rows.join("") :
-    '<p class="smallText">Nothing to do yet. Start a project or add something to the calendar.</p>';
-  box.querySelectorAll("[data-next-page]").forEach(button => button.addEventListener("click",() => {
-    if(button.dataset.nextPage === "project") openProject(button.dataset.nextId);
-    else showPage(button.dataset.nextPage);
-  }));
 }
 
 function renderHomeUpcoming(){
