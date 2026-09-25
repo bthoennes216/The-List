@@ -1105,7 +1105,7 @@ main{max-width:760px;padding:16px}
 /* Saved Sage conversations */
 .sageChatToolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
 .sageChatToolbar button{width:auto;margin:0;padding:10px;font-size:14px}
-#aiProjectSelect[hidden]{display:none}
+#aiProjectSelect[hidden],label[for="aiProjectSelect"][hidden]{display:none}
 #sageHistory{position:fixed;inset:0 auto 0 0;margin:0;width:min(88vw,380px);height:100dvh;max-height:100dvh;max-width:100vw;border:0;border-radius:0 24px 24px 0;background:#faf8f0;color:#293e30;padding:24px 18px;overflow-y:auto;box-shadow:12px 0 45px #19291f26}
 #sageHistory::backdrop{background:#17251c66}
 .sageHistoryHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -1305,7 +1305,7 @@ main{max-width:760px;padding:16px}
     <label for="chatGPTResult">Paste a plan or answer from ChatGPT</label>
     <textarea id="chatGPTResult" placeholder="Paste the answer here to save it in The List"></textarea>
     <button type="button" onclick="importChatGPTAnswer()">Save in The List</button>
-    <p class="aiNote">Select a project above to save the ChatGPT answer to its notes.</p>
+    <p class="aiNote">Choose a project in Saved chats to save the ChatGPT answer to its notes.</p>
   </div>
 </section>
 
