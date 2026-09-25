@@ -1004,6 +1004,21 @@ input,textarea,select{
 .moreNavGrid button span{font-size:24px}.moreNavGrid button strong{font-size:16px}.moreNavGrid button small{font-size:12px;color:#667065}
 body{padding-bottom:80px}
 @supports(padding:max(0px)){body{padding-bottom:max(80px,calc(72px + env(safe-area-inset-bottom)))}}
+/* Keep the title and navigation visible without covering the content. */
+header{transition:padding .18s ease}
+header.isCompact{padding:7px 16px}
+header.isCompact .appLogo{width:34px;height:34px}
+header.isCompact h1{font-size:21px}
+header.isCompact p,header.isCompact .homeMeta,header.isCompact::after{display:none}
+.headerMore{position:absolute;right:16px;top:19px;width:42px;height:42px;padding:0;border-radius:12px;background:#e9eee5;color:#294734;border:1px solid #cbd8c9;box-shadow:none;font-size:24px;line-height:1}
+header.isCompact .headerMore{top:5px}
+header h1{padding-right:50px}
+.upcomingCard.isEmpty .upcomingActions{display:none}
+.upcomingCard.isEmpty #homeUpcomingItems .empty{padding:0;margin:0;text-align:left}
+.upcomingCard.isEmpty{padding-bottom:18px!important}
+.upcomingCard.isEmpty h2{margin-bottom:8px}
+.upcomingCard.isEmpty .empty{font-size:14px;color:#6f756b}
+.projectCard .projectSwipeHint{font-size:11px;color:#758173;margin-top:8px}
 </style>
 </head>
 
@@ -1013,14 +1028,15 @@ body{padding-bottom:80px}
   <h1><img class="appLogo" src="the-list-icon.png" alt="" width="44" height="44">The List</h1>
   <p>Your home. Your projects. All in one place.</p>
   <div id="homeHeaderMeta" class="homeMeta"></div>
+  <button type="button" class="headerMore" id="headerMore" aria-label="More sections" onclick="showPage('morePage')">⋯</button>
 </header>
 
 <nav id="mainNav" aria-label="Main navigation">
   <button type="button" data-page="homePage" id="navHome"><span class="navIcon" aria-hidden="true">⌂</span><span>Home</span></button>
   <button type="button" data-page="projectsPage" id="navProjects"><span class="navIcon" aria-hidden="true">▣</span><span>Projects</span></button>
-  <button type="button" data-page="aiChatPage" id="navAIChat"><span class="navIcon" aria-hidden="true">✦</span><span>Sage</span></button>
+  <button type="button" data-page="shoppingPage" id="navShopping"><span class="navIcon" aria-hidden="true">🛒</span><span>Shopping</span></button>
   <button type="button" data-page="calendarPage" id="navCalendar"><span class="navIcon" aria-hidden="true">▦</span><span>Calendar</span></button>
-  <button type="button" data-page="morePage" id="navMore"><span class="navIcon" aria-hidden="true">•••</span><span>More</span></button>
+  <button type="button" data-page="aiChatPage" id="navAIChat"><span class="navIcon" aria-hidden="true">✦</span><span>Sage</span></button>
 </nav>
 
 <main>
@@ -1421,7 +1437,6 @@ body{padding-bottom:80px}
     <h2>More in The List</h2>
     <p class="smallText">Your lists and home details, all in one place.</p>
     <div class="moreNavGrid">
-      <button type="button" onclick="showPage('shoppingPage')"><span aria-hidden="true">🛒</span><strong>Shopping</strong><small>Items and materials</small></button>
       <button type="button" onclick="showPage('maintenancePage')"><span aria-hidden="true">🔧</span><strong>Maintenance</strong><small>Keep things on track</small></button>
       <button type="button" onclick="openHomeInfo('details')"><span aria-hidden="true">⌂</span><strong>Home Info</strong><small>House and yard details</small></button>
       <button type="button" onclick="openHomeInfo('tools')"><span aria-hidden="true">🧰</span><strong>My Tools</strong><small>Inventory and tools to buy</small></button>
@@ -1978,13 +1993,13 @@ function showPage(pageId){
   const map = {
     homePage:"navHome",
     projectsPage:"navProjects",
-    shoppingPage:"navMore",
+    shoppingPage:"navShopping",
     aiChatPage:"navAIChat",
-    morePage:"navMore",
+    morePage:null,
     calendarPage:"navCalendar",
-    maintenancePage:"navMore",
-    homeInfoPage:"navMore",
-    familyPage:"navMore"
+    maintenancePage:null,
+    homeInfoPage:null,
+    familyPage:null
   };
 
   if(map[pageId]){
@@ -1997,6 +2012,13 @@ function showPage(pageId){
       navButton.setAttribute("aria-current", "page");
     }
 
+  }
+
+  const moreButton = document.getElementById("headerMore");
+  if(moreButton){
+    const isMoreSection = ["morePage","maintenancePage","homeInfoPage","familyPage"].includes(pageId);
+    moreButton.setAttribute("aria-label",isMoreSection ? "More sections, current area" : "More sections");
+    moreButton.setAttribute("aria-expanded",String(isMoreSection));
   }
 
   window.scrollTo(0,0);
@@ -2219,12 +2241,16 @@ function renderHomeUpcoming(){
 
   if(!upcoming.length){
 
+    document.querySelector(".upcomingCard")?.classList.add("isEmpty");
+
     box.innerHTML =
       `<div class="empty">Nothing scheduled yet.</div>`;
 
     return;
 
   }
+
+  document.querySelector(".upcomingCard")?.classList.remove("isEmpty");
 
   box.innerHTML = upcoming
     .slice(0,6)
@@ -9895,6 +9921,13 @@ document.querySelectorAll("#mainNav button[data-page]").forEach(button => {
   });
 
 });
+
+const appHeader = document.querySelector("header");
+function updateHeaderSize(){
+  appHeader.classList.toggle("isCompact",window.scrollY > 64);
+}
+window.addEventListener("scroll",updateHeaderSize,{passive:true});
+updateHeaderSize();
 
 showPage("homePage");
 
