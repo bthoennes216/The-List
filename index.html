@@ -962,23 +962,26 @@ input,textarea,select{
 .aiComposerHint{font-size:11px;color:#788074;margin:7px 3px 0}
 .aiNote{font-size:13px;color:#5e6058;line-height:1.45}
 
-/* Soft two-row bottom navigation */
+/* Five-item bottom navigation */
 #mainNav{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:3px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:3px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
   overflow:visible;background:#f8f5ed;
 }
 #mainNav button,#mainNav button.active{
-  display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;
-  min-width:0;min-height:56px;padding:5px 1px;margin:0;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;
+  min-width:0;min-height:58px;padding:6px 1px;margin:0;
   background:transparent;color:#243e2d;border:0;border-radius:16px;
   box-shadow:none;font-size:11px;line-height:1.1;white-space:nowrap;
 }
 #mainNav button.active{background:#edf2e8;color:#294734;box-shadow:inset 0 0 0 1px #b9cbb8}
-#mainNav .navIcon{font-size:23px;font-weight:700;line-height:1}
+#mainNav .navIcon{font-size:22px;font-weight:700;line-height:1}
 #mainNav button:focus-visible{outline:2px solid #31543d;outline-offset:-2px}
-body{padding-bottom:152px}
-@supports(padding:max(0px)){body{padding-bottom:max(152px,calc(142px + env(safe-area-inset-bottom)))}}
+.moreNavGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:14px}
+.moreNavGrid button{min-height:106px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;text-align:left;padding:15px;background:#fffdf8;color:#294734;border:1px solid #d8d4c5;border-radius:15px;box-shadow:0 2px 7px rgba(73,58,36,.06)}
+.moreNavGrid button span{font-size:24px}.moreNavGrid button strong{font-size:16px}.moreNavGrid button small{font-size:12px;color:#667065}
+body{padding-bottom:80px}
+@supports(padding:max(0px)){body{padding-bottom:max(80px,calc(72px + env(safe-area-inset-bottom)))}}
 </style>
 </head>
 
@@ -993,12 +996,9 @@ body{padding-bottom:152px}
 <nav id="mainNav" aria-label="Main navigation">
   <button type="button" data-page="homePage" id="navHome"><span class="navIcon" aria-hidden="true">⌂</span><span>Home</span></button>
   <button type="button" data-page="projectsPage" id="navProjects"><span class="navIcon" aria-hidden="true">▣</span><span>Projects</span></button>
-  <button type="button" data-page="shoppingPage" id="navShopping"><span class="navIcon" aria-hidden="true">🛒</span><span>Shopping</span></button>
+  <button type="button" data-page="aiChatPage" id="navAIChat"><span class="navIcon" aria-hidden="true">✦</span><span>Scout</span></button>
   <button type="button" data-page="calendarPage" id="navCalendar"><span class="navIcon" aria-hidden="true">▦</span><span>Calendar</span></button>
-  <button type="button" data-page="maintenancePage" id="navMaintenance"><span class="navIcon" aria-hidden="true">🔧</span><span>Maintenance</span></button>
-  <button type="button" data-page="homeInfoPage" id="navHomeInfo"><span class="navIcon" aria-hidden="true">⌂</span><span>Home Info</span></button>
-  <button type="button" data-page="familyPage" id="navFamily"><span class="navIcon" aria-hidden="true">♧</span><span>Family</span></button>
-  <button type="button" data-page="aiChatPage" id="navAIChat"><span class="navIcon" aria-hidden="true">✦</span><span>AI Chat</span></button>
+  <button type="button" data-page="morePage" id="navMore"><span class="navIcon" aria-hidden="true">•••</span><span>More</span></button>
 </nav>
 
 <main>
@@ -1200,12 +1200,12 @@ body{padding-bottom:152px}
 
 <section id="aiChatPage" class="hidden">
   <div class="card aiChatIntro">
-    <h2>✨ Ask The List</h2>
+    <h2>✨ Ask Scout</h2>
     <p class="aiNote">Talk through a project, ask follow-up questions, and keep the conversation together.</p>
     <label for="aiProjectSelect">Conversation about</label>
     <select id="aiProjectSelect" onchange="this.dataset.pendingProjectId=''; renderAIChat()"></select>
     <div class="aiTabs">
-      <button type="button" id="modeList" onclick="setAIMode('list')">The List AI</button>
+      <button type="button" id="modeList" onclick="setAIMode('list')">Chat with Scout</button>
       <button type="button" id="modeChatGPT" onclick="setAIMode('chatgpt')">Open ChatGPT ↗</button>
     </div>
   </div>
@@ -1218,7 +1218,7 @@ body{padding-bottom:152px}
     <div class="aiComposerWrap">
       <div id="aiSuggestions" class="aiSuggestions" aria-label="Suggested follow-up questions"></div>
       <div class="aiComposer">
-        <textarea id="aiMessageInput" maxlength="4000" rows="1" aria-label="Message The List AI" placeholder="Ask anything about your home or project..." onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendAIChat()}"></textarea>
+        <textarea id="aiMessageInput" maxlength="4000" rows="1" aria-label="Message Scout" placeholder="Ask anything about your home or project..." onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendAIChat()}"></textarea>
         <button type="button" id="aiSendButton" onclick="sendAIChat()" aria-label="Send message">➤</button>
       </div>
       <p class="aiComposerHint">Enter to send · Shift + Enter for a new line</p>
@@ -1373,6 +1373,21 @@ body{padding-bottom:152px}
 
 </section>
 
+<section id="morePage" class="hidden">
+  <div class="card">
+    <h2>More in The List</h2>
+    <p class="smallText">Your lists and home details, all in one place.</p>
+    <div class="moreNavGrid">
+      <button type="button" onclick="showPage('shoppingPage')"><span aria-hidden="true">🛒</span><strong>Shopping</strong><small>Items and materials</small></button>
+      <button type="button" onclick="showPage('maintenancePage')"><span aria-hidden="true">🔧</span><strong>Maintenance</strong><small>Keep things on track</small></button>
+      <button type="button" onclick="openHomeInfo('details')"><span aria-hidden="true">⌂</span><strong>Home Info</strong><small>House and yard details</small></button>
+      <button type="button" onclick="openHomeInfo('tools')"><span aria-hidden="true">🧰</span><strong>My Tools</strong><small>Inventory and tools to buy</small></button>
+      <button type="button" onclick="showPage('familyPage')"><span aria-hidden="true">♧</span><strong>Family</strong><small>Shared home notes</small></button>
+      <button type="button" onclick="openHomeInfo('backup')"><span aria-hidden="true">↧</span><strong>Backup</strong><small>Download or restore data</small></button>
+    </div>
+  </div>
+</section>
+
 <section id="homeInfoPage" class="hidden">
 
   <div class="homeInfoTabs" role="group" aria-label="Home information sections">
@@ -1472,7 +1487,7 @@ body{padding-bottom:152px}
   <div id="homeBackupSection" class="hidden">
     <div class="card">
       <h2>Keep a copy of The List</h2>
-      <p>Download a backup of your projects, photos, shopping list, tools, calendar, maintenance, home information, and Maya chats. Save it in Files or iCloud Drive.</p>
+      <p>Download a backup of your projects, photos, shopping list, tools, calendar, maintenance, home information, and AI conversations. Save it in Files or iCloud Drive.</p>
       <div class="backupActions"><button type="button" onclick="downloadBackup()">↓ Download backup</button></div>
       <p id="backupDownloadStatus" class="smallText" role="status"></p>
     </div>
@@ -1891,6 +1906,7 @@ const pageIds = [
   "projectsPage",
   "shoppingPage",
   "aiChatPage",
+  "morePage",
   "calendarPage",
   "maintenancePage",
   "homeInfoPage",
@@ -1919,12 +1935,13 @@ function showPage(pageId){
   const map = {
     homePage:"navHome",
     projectsPage:"navProjects",
-    shoppingPage:"navShopping",
+    shoppingPage:"navMore",
     aiChatPage:"navAIChat",
+    morePage:"navMore",
     calendarPage:"navCalendar",
-    maintenancePage:"navMaintenance",
-    homeInfoPage:"navHomeInfo",
-    familyPage:"navFamily"
+    maintenancePage:"navMore",
+    homeInfoPage:"navMore",
+    familyPage:"navMore"
   };
 
   if(map[pageId]){
@@ -1977,6 +1994,11 @@ function showPage(pageId){
 
 }
 
+
+function openHomeInfo(section){
+  homeInfoSection = section;
+  showPage("homeInfoPage");
+}
 
 /* =========================================================
    HOME
@@ -9416,7 +9438,7 @@ function renderAIMessage(message,index){
   const showVisualPrompt = !mine && index === aiThread().length-1 && !message.imagePromptDismissed && !images.length;
   const showProjectPrompt = !mine && index === aiThread().length-1 && !selectedAIProject() && !message.projectPromptDismissed;
   return `<div class="aiEntry ${mine ? "mine" : ""}">
-    <div class="aiSender">${mine ? "You" : "✦ The List AI"}</div>
+    <div class="aiSender">${mine ? "You" : "✦ Scout"}</div>
     <div class="aiBubble">${mine ? escapeHTML(message.content) : renderChatMarkdown(message.content)}
       ${images.length ? `<div class="aiImageGallery">${images.map((src,i) => `<button type="button" class="imageOpen" onclick="openImageViewer(this.querySelector('img'))" aria-label="Open visual project idea ${i+1}"><img src="${escapeAttribute(src)}" alt="Visual project idea ${i+1}" loading="lazy"></button>`).join("")}<p>Visual ideas are examples. Review dimensions and details before building.</p></div>` : ""}
     </div>
@@ -9625,7 +9647,7 @@ async function sendAIChat(){
   const box = document.getElementById("aiMessages");
   if(!history.length) box.innerHTML = "";
   box.insertAdjacentHTML("beforeend",renderAIMessage({role:"user",content:message},-1)
-    + `<div class="aiEntry"><div class="aiSender">✦ The List AI</div><div class="aiThinking">Thinking…</div></div>`);
+    + `<div class="aiEntry"><div class="aiSender">✦ Scout</div><div class="aiThinking">Thinking…</div></div>`);
   box.scrollTop = box.scrollHeight;
   status.textContent = "";
   try{
