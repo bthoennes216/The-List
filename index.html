@@ -962,6 +962,12 @@ input,textarea,select{
 .aiComposerHint{font-size:11px;color:#788074;margin:7px 3px 0}
 .aiNote{font-size:13px;color:#5e6058;line-height:1.45}
 
+/* Shopping groups */
+.shoppingGroup h3{margin:0 0 8px;font-size:17px}
+.shoppingRow{display:flex;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #e7e0d4}
+.shoppingRow .shoppingName{flex:1;min-width:0;overflow-wrap:anywhere}
+.shoppingRow .shoppingName small{display:block;color:#756f65;margin-top:3px}
+.shoppingRow button{flex:none;margin:0}
 /* Next Up and Sage review */
 .nextUpRows{display:grid;gap:9px}
 .nextUpItem{width:100%;margin:0;display:flex;align-items:center;gap:12px;text-align:left;padding:13px;background:#fffdf8;color:#283e30;border:1px solid #dfd9cc;border-radius:13px;box-shadow:none}
@@ -1280,6 +1286,8 @@ body{padding-bottom:80px}
     <h2>🛒 Shopping List</h2>
 
     <input id="shoppingInput" placeholder="Add an item">
+    <label for="shoppingProject">Project (optional)</label>
+    <select id="shoppingProject"><option value="">General</option></select>
 
     <button onclick="addShoppingItem()">
       ＋ Add Item
@@ -3962,69 +3970,39 @@ function deleteProject(projectId){
    ========================================================= */
 
 function renderShopping(){
-
-  const box =
-    document.getElementById("shoppingList");
+  const box = document.getElementById("shoppingList");
+  const select = document.getElementById("shoppingProject");
+  const previous = select.value;
+  select.innerHTML = '<option value="">General</option>' +
+    data.projects.map(project => `<option value="${escapeAttribute(project.name)}">${escapeHTML(project.name)}</option>`).join("");
+  if([...select.options].some(option => option.value === previous)) select.value = previous;
 
   if(!data.shopping.length){
-
-    box.innerHTML =
-      `<div class="card empty">
-        Shopping list is empty.
-      </div>`;
-
+    box.innerHTML = '<div class="card empty">Shopping list is empty.</div>';
     return;
-
   }
 
-  box.innerHTML = data.shopping.map((item,index) => `
-
-    <div class="card">
-
-      <div class="row">
-
-        <div style="flex:1;">
-
-          <strong class="${item.done ? "done" : ""}">
-            ${escapeHTML(item.name)}
-          </strong>
-
-          ${
-            item.quantity
-            ? `<div class="smallText">
-                ${escapeHTML(item.quantity)}
-               </div>`
-            : ""
-          }
-
-          ${
-            item.project
-            ? `<div class="smallText">
-                From: ${escapeHTML(item.project)}
-               </div>`
-            : ""
-          }
-
-        </div>
-
-        <button
-          class="small secondary"
-          onclick="toggleShopping(${index})">
-          ${item.done ? "Undo" : "Done"}
-        </button>
-
-        <button
-          class="small secondary"
-          onclick="deleteShopping(${index})">
-          ×
-        </button>
-
-      </div>
-
-    </div>
-
-  `).join("");
-
+  const groups = new Map();
+  data.shopping.forEach((item,index) => {
+    const status = item.done ? "Bought" : "Still to buy";
+    const project = String(item.project || "").trim() || "General";
+    const key = status + "\u0000" + project;
+    if(!groups.has(key)) groups.set(key,{status,project,items:[]});
+    groups.get(key).items.push({item,index});
+  });
+  const sorted = [...groups.values()].sort((a,b) =>
+    Number(a.status === "Bought") - Number(b.status === "Bought") ||
+    (a.project === "General" ? -1 : b.project === "General" ? 1 :
+      a.project.localeCompare(b.project)));
+  box.innerHTML = sorted.map(group => `<div class="card shoppingGroup">
+    <h3>${group.status === "Bought" ? "✓" : "🛒"} ${escapeHTML(group.status)} · ${escapeHTML(group.project)}</h3>
+    ${group.items.map(({item,index}) => `<div class="shoppingRow">
+      <div class="shoppingName"><strong class="${item.done ? "done" : ""}">${escapeHTML(item.name)}</strong>
+      ${item.quantity ? `<small>${escapeHTML(item.quantity)}</small>` : ""}</div>
+      <button type="button" class="small secondary" onclick="toggleShopping(${index})">${item.done ? "Undo" : "Done"}</button>
+      <button type="button" class="small secondary" onclick="deleteShopping(${index})" aria-label="Remove ${escapeAttribute(item.name)}">×</button>
+    </div>`).join("")}
+  </div>`).join("");
 }
 
 let homeInfoSection = "details";
@@ -4193,7 +4171,7 @@ function addShoppingItem(){
     id:Date.now().toString(),
     name:name,
     quantity:"",
-    project:"",
+    project:document.getElementById("shoppingProject").value,
     done:false
 
   });
