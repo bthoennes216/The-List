@@ -963,7 +963,7 @@ input,textarea,select{
 .aiNote{font-size:13px;color:#5e6058;line-height:1.45}
 .sageIntro{background:#fbf8f0;border:1px solid #e2dbcd;padding:20px}
 .sageIdentity{display:flex;align-items:center;gap:14px;margin-bottom:16px}
-.sageAvatar{width:62px;height:62px;flex:none;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#526a46,#263d2e);color:#fff8e7;font-family:Georgia,serif;font-size:34px;box-shadow:0 4px 13px rgba(37,60,42,.18)}
+.sageAvatar{width:62px;height:62px;flex:none;border-radius:50%;display:block;object-fit:cover;background:#e9e5d9;box-shadow:0 4px 13px rgba(37,60,42,.18)}
 .sageIdentity h2{margin:0 0 3px;font-family:Georgia,serif;font-size:28px;color:#2e4433}
 .sageIdentity p{margin:0;color:#696d61;font-size:14px}
 .sageGreeting{background:#fffdf8;border:1px solid #ebe3d5;border-radius:16px;padding:14px 16px;margin:0 0 15px;line-height:1.45}
@@ -1045,6 +1045,62 @@ body.calendarDayOpen{overflow:hidden}
 .dayAgendaItem small{margin-top:5px;color:#777267}
 .dayViewAdd{width:100%;margin-top:18px}
 .calendarDay{width:100%;font-family:inherit;color:inherit;text-align:left;font-size:inherit;font-weight:inherit;box-shadow:none}
+/* Focused home, projects, and calendar layout */
+body{background:#f8f5ed;color:#282e29}
+header{background:#303d25;color:#fff;padding:13px 16px;min-height:62px;border:0;box-shadow:0 2px 12px rgba(32,44,30,.13)}
+header h1{justify-content:center;font-family:Georgia,serif;font-size:25px;min-height:36px}
+header .appLogo{position:absolute;left:16px;top:10px;width:39px;height:39px}
+header p,header .homeMeta,header::after{display:none}
+header.isCompact{padding:10px 16px;min-height:54px}
+header.isCompact .appLogo{top:8px}
+.headerSage{position:absolute;right:16px;top:11px;width:38px;height:38px;border:1px solid #ced7c3;border-radius:50%;padding:0;background:#e3e8d8;color:#304a34;box-shadow:none;font-family:Georgia,serif;font-size:21px}
+.headerSage img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover}
+header.isCompact .headerSage{top:8px}
+main{max-width:760px;padding:16px}
+#mainNav{background:#fffcf6;border-color:#e8e3d8;box-shadow:0 -3px 16px rgba(32,44,30,.08)}
+#mainNav button.active{background:#304521;color:#fff;box-shadow:none}
+#mainNav .navIcon{font-size:23px}
+.homeSageHero{background:#fffdf8;border-radius:20px;padding:18px;margin-bottom:12px;box-shadow:0 2px 9px rgba(48,56,37,.06)}
+.homeSageHello{display:flex;gap:14px;align-items:center;margin-bottom:17px}
+.homeSageAvatar{width:72px;height:72px;flex:none;display:block;object-fit:cover;border-radius:50%;background:#e9e5d9}
+.homeSageHello h2{font:700 26px/1.1 Georgia,serif;margin:0 0 5px;color:#273a2d}
+.homeSageHello p{margin:0;color:#60685d;font-size:14px}
+.homeSageAsk{width:100%;margin:0;display:flex;align-items:center;gap:10px;min-height:55px;text-align:left;background:#304521;color:#fff;border-radius:14px;padding:10px 15px}
+.homeSageAsk span:nth-child(2){flex:1}.homeSageAsk span:first-child{font-size:21px}
+.homeHubGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:22px}
+.homeHubGrid button{min-width:0;min-height:116px;margin:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;background:#fffdfa;color:#26382b;border:1px solid #ebe8df;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(48,56,37,.04)}
+.homeHubGrid strong{font-size:17px;margin-top:5px}.homeHubGrid small{font-size:13px;color:#626d63;margin-top:2px}
+.hubIcon{display:grid;place-items:center;background:#eef2e8;border-radius:50%;width:39px;height:39px;color:#314e37;font-size:22px}
+.sectionHeading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 10px}
+.sectionHeading h2{font-size:19px;margin:0}.sectionHeading button{width:auto;background:transparent;color:#354c38;padding:6px;box-shadow:none;font-size:13px}
+.homeContinue{margin-bottom:20px}.homeContinue[hidden]{display:none}
+.continueProjectCard{display:flex;gap:13px;align-items:center;width:100%;text-align:left;margin:0;background:#fffdf8;color:#273b2d;border:1px solid #e8e4d9;border-radius:16px;padding:11px;box-shadow:none}
+.continueProjectIcon{display:grid;place-items:center;flex:none;width:65px;height:65px;border-radius:10px;background:#e6ebe0;font-size:32px;color:#31523a}
+.continueProjectDetails{flex:1;min-width:0}.continueProjectDetails strong,.continueProjectDetails small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.continueProjectDetails small{color:#687167;font-size:12px;margin-top:4px}
+.continueProjectProgress{display:block;height:7px;background:#e8e9e4;border-radius:8px;overflow:hidden;margin-top:9px}.continueProjectProgress span{display:block;height:100%;background:#627f55}
+.upcomingCard{border-radius:18px!important;box-shadow:none!important}
+#projectsPage{display:flex;flex-direction:column}#projectsPage.hidden{display:none!important}
+.projectsFocus{order:1}.projectsSageLink{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;margin:0 0 14px;background:#edf1e7;color:#304632;border:0;border-radius:16px;padding:16px;font-size:16px;box-shadow:none}
+.projectFilters{display:flex;gap:7px;overflow-x:auto;padding:0 0 13px;scrollbar-width:none}.projectFilters button{flex:none;width:auto;margin:0;border:1px solid #deded4;border-radius:24px;background:#fffdf8;color:#405244;padding:8px 12px;box-shadow:none;font-size:13px}.projectFilters button.selected{background:#304521;border-color:#304521;color:#fff}
+#projectsList{order:2}#quickProjectDetails{order:3}
+.quickProjectCard>summary{list-style:none;cursor:pointer;font-weight:700;color:#304632;padding:3px 0}.quickProjectCard>summary::-webkit-details-marker{display:none}
+.quickProjectCard:not([open]){background:#edf1e7;border-color:#e2e7dc;box-shadow:none}
+.quickProjectCard[open]>summary{border-bottom:1px solid #e4e5dc;padding-bottom:12px;margin-bottom:15px}
+.projectSwipe{margin-bottom:10px}.projectCard{display:flex;align-items:center;gap:12px;padding:10px!important;background:#fffdfa!important;border:1px solid #ece7dd!important;border-radius:17px;min-height:102px;box-shadow:0 2px 8px rgba(48,56,37,.04)}
+.projectThumb{display:grid;place-items:center;flex:none;width:82px;height:82px;overflow:hidden;border-radius:11px;background:#e8eddf;color:#34523c;font-size:36px}.projectThumb img{width:100%;height:100%;object-fit:cover}
+.projectCardBody{flex:1;min-width:0}.projectCardBody h3{font-size:16px;margin:0 0 8px;line-height:1.25;overflow-wrap:anywhere}.projectCardBody .progress{margin-top:0;height:7px}.projectCardBody .smallText{font-size:12px;margin-top:6px}.projectArrow{font-size:25px;color:#69766a}
+#calendarPage .calendarMonthCard{border:0;border-radius:19px;padding:16px 12px;background:#fffdf9;box-shadow:0 2px 9px rgba(48,56,37,.06)}
+#calendarPage .calendarHeader{margin-bottom:17px}#calendarPage .calendarHeader strong{font:700 21px Georgia,serif;color:#293d2e}
+#calendarPage .calendarHeader button{background:transparent;border:0;box-shadow:none;color:#334e38;font-size:26px;padding:2px 12px}
+#calendarPage .calendarGrid{gap:1px}.calendarWeekday{font-size:12px;color:#60675d;padding:5px 0 9px}
+#calendarPage .calendarDay{height:52px;min-height:52px;margin:0;padding:4px 1px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;border:0;border-radius:13px;color:#26372d}
+#calendarPage .calendarDay.today{border:1px solid #71845f}#calendarPage .calendarDay.selected{background:#304521;color:#fff}
+#calendarPage .calendarDay .dayNumber{font-size:15px;font-weight:600}.calendarDots{display:flex;gap:3px;height:8px;align-items:center;justify-content:center;margin-top:3px}.calendarDot{width:5px;height:5px;border-radius:50%;background:#5d8a61}.calendarDot.maintenance{background:#d18c37}.calendarDot.taskDot{background:#547394}
+.calendarAgenda{margin:16px 0 20px}.calendarAgendaHeading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}.calendarAgendaHeading h2{margin:0;font-size:19px}.calendarAgendaHeading span{color:#6b7168;font-size:13px}
+.calendarAgendaRow{display:flex;align-items:center;gap:12px;background:#fffdfa;border:1px solid #ebe7dd;border-radius:13px;margin-bottom:8px;padding:12px}.calendarAgendaRow span:nth-child(2){min-width:0}.calendarAgendaRow strong,.calendarAgendaRow small{display:block}.calendarAgendaRow strong{font-size:14px}.calendarAgendaRow small{color:#687167;font-size:12px;margin-top:3px}.agendaMark{width:4px;align-self:stretch;flex:none;border-radius:4px;background:#608365}.agendaMark.maintenance{background:#d18c37}
+.calendarAgendaAdd{width:100%;background:#edf1e7;color:#314a36;border-radius:13px;box-shadow:none;margin-top:10px}
+@media(max-width:360px){.homeSageHello h2{font-size:22px}.projectThumb{width:68px;height:68px}.projectCard{min-height:88px}}
 </style>
 </head>
 
@@ -1054,6 +1110,7 @@ body.calendarDayOpen{overflow:hidden}
   <h1><img class="appLogo" src="the-list-icon.png" alt="" width="44" height="44">The List</h1>
   <p>Your home. Your projects. All in one place.</p>
   <div id="homeHeaderMeta" class="homeMeta"></div>
+  <button type="button" class="headerSage" onclick="showPage('aiChatPage')" aria-label="Open Sage"><img src="sage-avatar.webp" alt=""></button>
 </header>
 
 <nav id="mainNav" aria-label="Main navigation">
@@ -1067,170 +1124,52 @@ body.calendarDayOpen{overflow:hidden}
 <main>
 
 <section id="homePage">
-
-<div class="card" style="
-  background:#f7f5ee;
-  border:2px solid #d6d2c4;
-  border-radius:14px;
-  padding:18px;
-">
-  <h2>📊 Home Overview</h2>
-  <div style="
-    display:grid;
-    grid-template-columns:repeat(2, 1fr);
-    gap:12px;
-    margin-top:15px;
-  ">
-    <button
-      class="stat"
-      onclick="showPage('projectsPage')"
-      style="
-        cursor:pointer;
-        background:#556B2F;
-        color:white;
-        border:none;
-        border-radius:10px;
-        width:100%;
-        height:85px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        padding:8px;
-      ">
-      <span style="font-size:25px;">🏠</span>
-      <strong id="homeProjectCount" style="color:white; font-size:22px;">
-        0
-      </strong>
-      <span style="color:white; font-size:14px;">
-        Projects
-      </span>
-    </button>
-    <button
-      class="stat"
-      onclick="showPage('projectsPage')"
-      style="
-        cursor:pointer;
-        background:#556B2F;
-        color:white;
-        border:none;
-        border-radius:10px;
-        width:100%;
-        height:85px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        padding:8px;
-      ">
-      <span style="font-size:25px;">✓</span>
-      <strong id="homeOpenTasks" style="color:white; font-size:22px;">
-        0
-      </strong>
-      <span style="color:white; font-size:14px;">
-        Open Tasks
-      </span>
-    </button>
-    <button
-      class="stat"
-      onclick="showPage('shoppingPage')"
-      style="
-        cursor:pointer;
-        background:#556B2F;
-        color:white;
-        border:none;
-        border-radius:10px;
-        width:100%;
-        height:85px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        padding:8px;
-      ">
-      <span style="font-size:25px;">🛒</span>
-      <strong id="homeShoppingCount" style="color:white; font-size:22px;">
-        0
-      </strong>
-      <span style="color:white; font-size:14px;">
-        Shopping
-      </span>
-    </button>
-    <button
-      class="stat"
-      onclick="showPage('maintenancePage')"
-      style="
-        cursor:pointer;
-        background:#556B2F;
-        color:white;
-        border:none;
-        border-radius:10px;
-        width:100%;
-        height:85px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        padding:8px;
-      ">
-      <span style="font-size:25px;">🔧</span>
-      <strong id="homeMaintenanceCount" style="color:white; font-size:22px;">
-        0
-      </strong>
-      <span style="color:white; font-size:14px;">
-        Maintenance
-      </span>
-    </button>
-  </div>
-</div>
-
-<div class="card upcomingCard" style="
-  background:#f7f5ee;
-  border:2px solid #d6d2c4;
-  border-radius:14px;
-  padding:18px;
-">
-
-  <h2>📅 Upcoming</h2>
-
-  <div class="upcomingActions">
-    <button type="button" data-range="thisWeek" aria-pressed="false" onclick="showCalendarRange('thisWeek')">
-      This Week
-    </button>
-    <button type="button" data-range="nextWeek" aria-pressed="false" onclick="showCalendarRange('nextWeek')">
-      Next Week
-    </button>
-    <button type="button" data-range="thisMonth" aria-pressed="false" onclick="showCalendarRange('thisMonth')">
-      This Month
-    </button>
-    <button type="button" class="viewCalendar" onclick="showPage('calendarPage'); clearCalendarRange()">
-      View Calendar →
-    </button>
+  <div class="homeSageHero">
+    <div class="homeSageHello"><img class="homeSageAvatar" src="sage-avatar.webp" alt=""><div>
+      <h2 id="homeGreeting">Welcome home</h2><p>What are we working on today?</p>
+    </div></div>
+    <button type="button" class="homeSageAsk" onclick="openSageFromHome()"><span aria-hidden="true">✦</span><span>Ask Sage about your home...</span><span aria-hidden="true">›</span></button>
   </div>
 
-<div id="homeUpcomingRange"></div>
+  <div class="homeHubGrid" aria-label="Your home at a glance">
+    <button type="button" onclick="showPage('projectsPage')"><span class="hubIcon" aria-hidden="true">▣</span><strong>Projects</strong><small><span id="homeProjectCount">0</span> active · <span id="homeOpenTasks">0</span> tasks</small></button>
+    <button type="button" onclick="showPage('calendarPage')"><span class="hubIcon" aria-hidden="true">▦</span><strong>Calendar</strong><small id="homeCalendarCount">Nothing this week</small></button>
+    <button type="button" onclick="showPage('shoppingPage')"><span class="hubIcon" aria-hidden="true">🛒</span><strong>Shopping</strong><small><span id="homeShoppingCount">0</span> items</small></button>
+    <button type="button" onclick="showPage('maintenancePage')"><span class="hubIcon" aria-hidden="true">⚒</span><strong>Maintenance</strong><small><span id="homeMaintenanceCount">0</span> to track</small></button>
+  </div>
 
-<div id="homeUpcomingItems"></div>
+  <div class="homeContinue" id="homeContinue" hidden>
+    <div class="sectionHeading"><h2>Continue your project</h2><button type="button" onclick="showPage('projectsPage')">View all ›</button></div>
+    <div id="homeContinueCard"></div>
+  </div>
 
-</div>
-
-  <div class="card startProjectCard" style="
-    background:#f7f5ee;
-    border:2px solid #d6d2c4;
-    border-radius:14px;
-    padding:18px;
-  ">
-    <div class="row">
-      <button style="background:#344f3d; color:white;" onclick="newProject()">＋ Start a Project</button>
+  <div class="card upcomingCard">
+    <h2>📅 Upcoming</h2>
+    <div class="upcomingActions">
+      <button type="button" data-range="thisWeek" aria-pressed="false" onclick="showCalendarRange('thisWeek')">This Week</button>
+      <button type="button" data-range="nextWeek" aria-pressed="false" onclick="showCalendarRange('nextWeek')">Next Week</button>
+      <button type="button" data-range="thisMonth" aria-pressed="false" onclick="showCalendarRange('thisMonth')">This Month</button>
+      <button type="button" class="viewCalendar" onclick="showPage('calendarPage'); clearCalendarRange()">View Calendar →</button>
     </div>
-
+    <div id="homeUpcomingRange"></div>
+    <div id="homeUpcomingItems"></div>
   </div>
-
 </section>
 
 <section id="projectsPage" class="hidden">
 
-  <div class="card quickProjectCard">
+  <div class="projectsFocus">
+    <button type="button" class="projectsSageLink" onclick="openSageFromProjects()">✦ &nbsp; Build with Sage <span aria-hidden="true">›</span></button>
+    <div class="projectFilters" aria-label="Filter projects">
+      <button type="button" data-project-filter="all" onclick="setProjectFilter('all')">All</button>
+      <button type="button" data-project-filter="active" onclick="setProjectFilter('active')">Active</button>
+      <button type="button" data-project-filter="planned" onclick="setProjectFilter('planned')">Planning</button>
+      <button type="button" data-project-filter="completed" onclick="setProjectFilter('completed')">Completed</button>
+    </div>
+  </div>
+
+  <details class="card quickProjectCard" id="quickProjectDetails">
+    <summary>＋ Start a new project</summary>
     <h2>✨ Start a Project</h2>
     <div class="projectBuildChoices" aria-label="Project building options">
       <button type="button" class="current" onclick="document.getElementById('quickProjectPrompt').focus()">Quick project</button>
@@ -1258,7 +1197,7 @@ body.calendarDayOpen{overflow:hidden}
         <button type="submit" class="secondary">Create Empty Project</button>
       </form>
     </details>
-  </div>
+  </details>
 
   <div id="projectsList"></div>
 
@@ -1267,7 +1206,7 @@ body.calendarDayOpen{overflow:hidden}
 
 <section id="aiChatPage" class="hidden">
   <div class="card aiChatIntro sageIntro">
-    <div class="sageIdentity"><span class="sageAvatar" aria-hidden="true">S</span><div><h2>Meet Sage</h2><p>Your home project assistant</p></div></div>
+    <div class="sageIdentity"><img class="sageAvatar" src="sage-avatar.webp" alt=""><div><h2>Meet Sage</h2><p>Your home project assistant</p></div></div>
     <div class="sageGreeting"><strong>Hi, I'm Sage.</strong> Tell me what you want to plan, design, or build. We can keep the steps, tools, and shopping list together in The List.</div>
     <div class="sageActions" aria-label="Start with Sage">
       <button type="button" onclick="focusSageChat()"><span aria-hidden="true">✦</span><span>Build a project with Sage</span><span aria-hidden="true">›</span></button>
@@ -1333,7 +1272,7 @@ body.calendarDayOpen{overflow:hidden}
 </section>
 
 <section id="shoppingPage" class="hidden">
-  <div class="card">
+  <div class="card calendarMonthCard">
     <h2>🛒 Shopping List</h2>
 
     <input id="shoppingInput" placeholder="Add an item">
@@ -1387,9 +1326,11 @@ body.calendarDayOpen{overflow:hidden}
 
   </div>
 
+  <div class="calendarAgenda" id="calendarAgenda"></div>
+
   <div id="selectedDateCard" role="dialog" aria-modal="true" aria-label="Calendar day" hidden></div>
 
-  <div class="card">
+  <div class="card calendarAddCard" id="calendarAddCard">
 
     <h2>＋ Add Calendar Item</h2>
 
@@ -1608,7 +1549,7 @@ body.calendarDayOpen{overflow:hidden}
     <h2>👨‍👩‍👧‍👦 Family</h2>
 
     <p>
-      Shared home workspace for you and your wife.
+      Shared home workspace for your household.
     </p>
 
     <input
@@ -1681,18 +1622,18 @@ function ensureProjectStatuses(){
 const defaultData = {
 
   home:{
-    location:"Palm Coast, Florida",
-    yearBuilt:2001,
-    builder:"Holiday Builders, Inc.",
-    squareFeet:1700,
-    exteriorColor:"Creamy white",
-    trimColor:"Dark brown",
-    roofColor:"Dark brown",
-    lawnArea:7000,
-    lawnGrass:"Approximately 50% Zoysia and 50% Bahia. Possible small St. Augustine section.",
-    lawnGoal:"Establish a dense Zoysia lawn with a carpet/golf-course appearance.",
-    gardenSize:"12' × 25'",
-    gardenNotes:"In-ground food garden with approximately 6 fruit trees planned.",
+    location:"",
+    yearBuilt:"",
+    builder:"",
+    squareFeet:"",
+    exteriorColor:"",
+    trimColor:"",
+    roofColor:"",
+    lawnArea:"",
+    lawnGrass:"",
+    lawnGoal:"",
+    gardenSize:"",
+    gardenNotes:"",
     irrigationNotes:"",
     drainageNotes:"",
     notes:""
@@ -2075,6 +2016,11 @@ function showPage(pageId){
   }
 
   if(pageId === "calendarPage"){
+    if(!selectedCalendarDate){
+      const today = new Date();
+      selectedCalendarDate = today.getFullYear() === currentCalendarDate.getFullYear() &&
+        today.getMonth() === currentCalendarDate.getMonth() ? dateKey(today) : dateKey(currentCalendarDate);
+    }
     renderCalendar();
     renderCalendarList();
   }
@@ -2105,6 +2051,10 @@ function openHomeInfo(section){
    ========================================================= */
 
 function renderHome(){
+
+  const hour = new Date().getHours();
+  document.getElementById("homeGreeting").textContent =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   const activeProjectCount =
   data.projects.filter(
@@ -2143,6 +2093,33 @@ data.projects.forEach(project => {
   document.getElementById("homeMaintenanceCount")
     .textContent = data.maintenance.length;
 
+  const weekEnd = new Date();
+  weekEnd.setDate(weekEnd.getDate()+6);
+  const todayKey = dateKey(new Date());
+  const weekEndKey = dateKey(weekEnd);
+  const weekCount = data.calendar.filter(item => item.date >= todayKey && item.date <= weekEndKey).length +
+    data.projects.flatMap(project => project.tasks || []).filter(task => !task.done && task.dueDate >= todayKey && task.dueDate <= weekEndKey).length;
+  document.getElementById("homeCalendarCount").textContent =
+    weekCount ? `${weekCount} this week` : "Nothing this week";
+
+  const continueProject = data.projects.find(project => project.status === "active") ||
+    data.projects.find(project => project.status === "planned");
+  const continueSection = document.getElementById("homeContinue");
+  continueSection.hidden = !continueProject;
+  if(continueProject){
+    const tasks = continueProject.tasks || [];
+    const done = tasks.filter(task => task.done).length;
+    const percent = tasks.length ? Math.round(done/tasks.length*100) : 0;
+    document.getElementById("homeContinueCard").innerHTML = `
+      <button type="button" class="continueProjectCard" onclick="openProject('${escapeAttribute(continueProject.id)}')">
+        <span class="continueProjectIcon" aria-hidden="true">⌂</span>
+        <span class="continueProjectDetails"><strong>${escapeHTML(continueProject.name)}</strong>
+          <span class="continueProjectProgress"><span style="width:${percent}%"></span></span>
+          <small>${done} of ${tasks.length} tasks complete</small></span>
+        <span aria-hidden="true">›</span>
+      </button>`;
+  }
+
   const meta = document.getElementById("homeHeaderMeta");
   if(meta){
     const location = data.home?.location || "";
@@ -2154,6 +2131,11 @@ data.projects.forEach(project => {
 
   renderHomeUpcoming();
 
+}
+
+function openSageFromHome(){
+  showPage("aiChatPage");
+  focusSageChat();
 }
 
 function renderHomeUpcoming(){
@@ -2274,17 +2256,34 @@ function renderHomeUpcoming(){
    PROJECTS
    ========================================================= */
 
+let projectFilter = "all";
+function setProjectFilter(filter){
+  projectFilter = ["all","active","planned","completed"].includes(filter) ? filter : "all";
+  renderProjects();
+}
+
 function renderProjects(){
 
   const box =
     document.getElementById("projectsList");
 
-  if(!data.projects.length){
+  document.querySelectorAll("[data-project-filter]").forEach(button => {
+    const selected = button.dataset.projectFilter === projectFilter;
+    button.classList.toggle("selected",selected);
+    button.setAttribute("aria-pressed",String(selected));
+    const count = button.dataset.projectFilter === "all" ? data.projects.length :
+      data.projects.filter(project => project.status === button.dataset.projectFilter).length;
+    button.textContent = `${{all:"All",active:"Active",planned:"Planning",completed:"Completed"}[button.dataset.projectFilter]} (${count})`;
+  });
+
+  const visibleProjects = projectFilter === "all" ? data.projects :
+    data.projects.filter(project => project.status === projectFilter);
+
+  if(!visibleProjects.length){
 
     box.innerHTML = `
       <div class="card empty">
-        No projects yet.<br><br>
-        Describe what you want to do above and The List will put your plan together.
+        ${data.projects.length ? "No projects in this group." : "No projects yet. Start one below or build with Sage."}
       </div>
     `;
 
@@ -2292,7 +2291,7 @@ function renderProjects(){
 
   }
 
-  box.innerHTML = data.projects.map(project => {
+  box.innerHTML = visibleProjects.map(project => {
 
     const total =
       Array.isArray(project.tasks)
@@ -2330,22 +2329,15 @@ function renderProjects(){
         <div
           class="card projectCard"
           data-project-id="${projectId}">
-
-          <h3>
-            ${escapeHTML(project.name)}
-          </h3>
-
-          <div class="smallText">
-            ${completed} of ${total} tasks complete
+          <span class="projectThumb" aria-hidden="true">${project.aiImage || project.roomPhotos?.[0]
+            ? `<img src="${escapeAttribute(project.aiImage || project.roomPhotos[0])}" alt="" loading="lazy">`
+            : "⌂"}</span>
+          <div class="projectCardBody">
+            <h3>${escapeHTML(project.name)}</h3>
+            <div class="progress"><div style="width:${percent}%"></div></div>
+            <div class="smallText">${completed} of ${total} tasks complete</div>
           </div>
-
-          <div class="progress">
-            <div style="width:${percent}%"></div>
-          </div>
-
-          <div class="projectSwipeHint">
-            ← Swipe left to delete
-          </div>
+          <span class="projectArrow" aria-hidden="true">›</span>
 
         </div>
 
@@ -2530,6 +2522,7 @@ function newProject(){
   editingPlan = null;
   planningProjectId = null;
   showPage("projectsPage");
+  document.getElementById("quickProjectDetails").open = true;
   const input = document.getElementById("quickProjectPrompt");
   input.scrollIntoView({behavior:"smooth",block:"center"});
   input.focus({preventScroll:true});
@@ -4397,27 +4390,17 @@ function renderCalendar(){
     const items =
       [...tasks,...events,...maintenance];
 
+    cell.setAttribute("aria-label",`${date.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}, ${items.length} ${items.length === 1 ? "item" : "items"}. Open day`);
+
     cell.innerHTML = `
 
       <div class="dayNumber">
         ${day}
       </div>
 
-      ${items.slice(0,2).map(item => `
-
-        <div class="calendarItem${item.type === "Maintenance" ? " maintenanceItem" : ""}">
-          ${escapeHTML(item.title)}
-        </div>
-
-      `).join("")}
-
-      ${
-        items.length > 2
-        ? `<div class="moreItems">
-             +${items.length - 2} more
-           </div>`
-        : ""
-      }
+      <span class="calendarDots" aria-hidden="true">${items.slice(0,3).map(item =>
+        `<span class="calendarDot ${item.type === "Maintenance" ? "maintenance" : item.type === "Task" ? "taskDot" : "event"}"></span>`
+      ).join("")}</span>
 
     `;
 
@@ -4432,6 +4415,7 @@ function renderCalendar(){
   }
 
   renderSelectedDate();
+  renderCalendarAgenda();
 
 }
 
@@ -4455,9 +4439,30 @@ function closeCalendarDay(){
   box.hidden = true;
   document.body.classList.remove("calendarDayOpen");
   const previousDate = selectedCalendarDate;
-  selectedCalendarDate = null;
   renderCalendar();
   document.querySelector(`#calendarGrid .calendarDay[data-date="${previousDate}"]`)?.focus();
+}
+
+function renderCalendarAgenda(){
+  const box = document.getElementById("calendarAgenda");
+  const today = new Date();
+  const sameMonth = today.getFullYear() === currentCalendarDate.getFullYear() &&
+    today.getMonth() === currentCalendarDate.getMonth();
+  const key = selectedCalendarDate && selectedCalendarDate.startsWith(
+    `${currentCalendarDate.getFullYear()}-${String(currentCalendarDate.getMonth()+1).padStart(2,"0")}`)
+    ? selectedCalendarDate : dateKey(sameMonth ? today : currentCalendarDate);
+  const items = [...getTasksForDate(key),...getEventsForDate(key),...getMaintenanceForDate(key)];
+  box.innerHTML = `<div class="calendarAgendaHeading"><h2>${formatDate(key)}</h2><span>${items.length} ${items.length === 1 ? "item" : "items"}</span></div>
+    ${items.length ? items.map(item => `<div class="calendarAgendaRow"><span class="agendaMark ${item.type === "Maintenance" ? "maintenance" : ""}"></span>
+      <span><strong>${escapeHTML(item.title)}</strong><small>${escapeHTML(item.project)}</small></span></div>`).join("")
+      : '<p class="smallText">Nothing scheduled for this day.</p>'}
+    <button type="button" class="calendarAgendaAdd" onclick="addCalendarFromAgenda('${key}')">＋ Add an item</button>`;
+}
+
+function addCalendarFromAgenda(key){
+  document.getElementById("calendarDate").value = key;
+  document.getElementById("calendarAddCard").scrollIntoView({behavior:"smooth",block:"start"});
+  document.getElementById("calendarTitle").focus({preventScroll:true});
 }
 
 function moveCalendarDay(offset){
@@ -4896,6 +4901,8 @@ function changeMonth(amount){
       currentCalendarDate.getMonth() + amount,
       1
     );
+
+  selectedCalendarDate = dateKey(currentCalendarDate);
 
   renderCalendar();
 
