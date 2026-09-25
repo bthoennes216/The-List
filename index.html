@@ -1076,6 +1076,7 @@ main{max-width:760px;padding:16px}
 .homeContinue{margin-bottom:20px}.homeContinue[hidden]{display:none}
 .continueProjectCard{display:flex;gap:13px;align-items:center;width:100%;text-align:left;margin:0;background:#fffdf8;color:#273b2d;border:1px solid #e8e4d9;border-radius:16px;padding:11px;box-shadow:none}
 .continueProjectIcon{display:grid;place-items:center;flex:none;width:65px;height:65px;border-radius:10px;background:#e6ebe0;font-size:32px;color:#31523a}
+.continueProjectIcon img{width:100%;height:100%;object-fit:cover;border-radius:10px}
 .continueProjectDetails{flex:1;min-width:0}.continueProjectDetails strong,.continueProjectDetails small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .continueProjectDetails small{color:#687167;font-size:12px;margin-top:4px}
 .continueProjectProgress{display:block;height:7px;background:#e8e9e4;border-radius:8px;overflow:hidden;margin-top:9px}.continueProjectProgress span{display:block;height:100%;background:#627f55}
@@ -1168,6 +1169,8 @@ main{max-width:760px;padding:16px}
     </div>
   </div>
 
+  <div id="projectsList"></div>
+
   <details class="card quickProjectCard" id="quickProjectDetails">
     <summary>＋ Start a new project</summary>
     <h2>✨ Start a Project</h2>
@@ -1198,8 +1201,6 @@ main{max-width:760px;padding:16px}
       </form>
     </details>
   </details>
-
-  <div id="projectsList"></div>
 
 </section>
 
@@ -2112,7 +2113,9 @@ data.projects.forEach(project => {
     const percent = tasks.length ? Math.round(done/tasks.length*100) : 0;
     document.getElementById("homeContinueCard").innerHTML = `
       <button type="button" class="continueProjectCard" onclick="openProject('${escapeAttribute(continueProject.id)}')">
-        <span class="continueProjectIcon" aria-hidden="true">⌂</span>
+        <span class="continueProjectIcon" aria-hidden="true">${continueProject.aiImage || continueProject.roomPhotos?.[0]
+          ? `<img src="${escapeAttribute(continueProject.aiImage || continueProject.roomPhotos[0])}" alt="" loading="lazy">`
+          : "⌂"}</span>
         <span class="continueProjectDetails"><strong>${escapeHTML(continueProject.name)}</strong>
           <span class="continueProjectProgress"><span style="width:${percent}%"></span></span>
           <small>${done} of ${tasks.length} tasks complete</small></span>
