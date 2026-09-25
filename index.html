@@ -1261,12 +1261,8 @@ body.calendarDayOpen{overflow:hidden}
   <div class="card aiChatIntro sageIntro">
     <div class="sageIdentity"><span class="sageAvatar" aria-hidden="true">S</span><div><h2>Meet Sage</h2><p>Your home project assistant</p></div></div>
     <div class="sageGreeting"><strong>Hi, I'm Sage.</strong> Tell me what you want to plan, design, or build. We can keep the steps, tools, and shopping list together in The List.</div>
-    <div class="sageActions" aria-label="Ways Sage can help">
-      <button type="button" onclick="focusSageChat()"><span aria-hidden="true">☏</span><span>Chat with Sage</span><span aria-hidden="true">›</span></button>
-      <button type="button" onclick="startSageProject()"><span aria-hidden="true">✦</span><span>Get a project plan</span><span aria-hidden="true">›</span></button>
-      <button type="button" onclick="focusSageChat('Help me picture a finished design for my project.')"><span aria-hidden="true">▧</span><span>Generate design ideas</span><span aria-hidden="true">›</span></button>
-      <button type="button" onclick="focusSageChat('What tools and materials will I need for my project?')"><span aria-hidden="true">⚒</span><span>Tools and materials</span><span aria-hidden="true">›</span></button>
-      <button type="button" onclick="showPage('calendarPage')"><span aria-hidden="true">▦</span><span>Open calendar</span><span aria-hidden="true">›</span></button>
+    <div class="sageActions" aria-label="Start with Sage">
+      <button type="button" onclick="focusSageChat()"><span aria-hidden="true">✦</span><span>Build a project with Sage</span><span aria-hidden="true">›</span></button>
     </div>
     <p class="sagePopular">Popular with Sage</p>
     <div class="sagePopularOptions">
@@ -9439,10 +9435,6 @@ function focusSageChat(prompt){
   if(prompt) input.value = prompt;
   input.scrollIntoView({behavior:"smooth",block:"center"});
   input.focus({preventScroll:true});
-}
-function startSageProject(){
-  showPage("projectsPage");
-  document.getElementById("quickProjectPrompt").focus();
 }
 function setAIMode(mode){
   aiMode = mode === "chatgpt" ? "chatgpt" : "list";
