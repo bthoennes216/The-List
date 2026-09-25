@@ -1132,6 +1132,24 @@ main{max-width:760px;padding:16px}
 #aiChatPage .aiComposer button{border-radius:50%}
 #aiChatPage .aiComposerHint{display:none}
 #aiChatPage #aiChatStatus:empty{display:none}
+/* Calendar: spacious month and focused day */
+.calendarToolbar{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px}.calendarToolbar h2{margin:0;font-size:30px;letter-spacing:-1px}.calendarToolbar>div{display:flex;gap:10px}.calendarToolbar button{width:auto;margin:0;padding:9px 14px}
+#calendarPage>.card:has(#calendarGrid){background:transparent;border:0;box-shadow:none;padding:0 0 18px;border-bottom:1px solid #deded4;border-radius:0}
+#calendarPage .calendarHeader strong{font:700 25px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.7px}
+#calendarPage .calendarDay{height:62px;min-height:62px;border-radius:0!important;background:transparent!important;color:#26372d!important}
+#calendarPage .calendarDay.today{border:0}
+#calendarPage .dayNumber{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-size:18px!important;font-weight:400!important}
+#calendarPage .calendarDay.today .dayNumber{color:#b64838;font-weight:700!important}
+#calendarPage .calendarDay.selected .dayNumber{background:#34503d;color:white}
+#calendarPage .calendarDay.today.selected .dayNumber{background:#b64838}
+.calendarLegend{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-size:11px;color:#6a6c63;margin-top:15px}.calendarLegend span{display:flex;align-items:center;gap:5px}.calendarLegend i{width:7px;height:7px;border-radius:50%;background:var(--item-color)}
+.taskColor{--item-color:#547394}.projectColor{--item-color:#5d8a61}.maintenanceColor{--item-color:#d18c37}
+.calendarWeekStrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin:22px 0;border-bottom:1px solid #deded4;padding-bottom:16px}
+.calendarWeekStrip button{display:flex;flex-direction:column;align-items:center;gap:9px;border:0;background:transparent;color:#344d3c;box-shadow:none;padding:4px 0;margin:0;font-weight:400}
+.calendarWeekStrip small{font-size:11px;color:#77796e}.calendarWeekStrip span{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-size:19px}.calendarWeekStrip [aria-pressed="true"] span{background:#34503d;color:white}
+.dayViewDate{font-size:29px;letter-spacing:-.8px}.dayViewTop button{background:transparent;border:0;padding:8px 4px}.dayViewTop .dayViewBack{margin-right:auto}.dayViewMove button{background:transparent;border:0;font-size:13px}
+.dayAgenda{border:0;border-radius:0;background:transparent;padding:16px 0}.dayAgenda h3{font-size:13px;color:#77796e;font-weight:500}.dayAgendaItem{display:flex;align-items:flex-start;gap:16px;padding:14px 0;border-top:1px solid #e0ded5}.dayAgendaItem>div{border-left:3px solid var(--item-color);padding:4px 12px;flex:1}.dayAllDay{font-size:12px;color:#77796e;padding-top:7px;white-space:nowrap}
+.calendarAddCard summary{font-weight:600;cursor:pointer}.calendarAddCard[open] summary{margin-bottom:20px}
 </style>
 </head>
 
@@ -1327,6 +1345,7 @@ main{max-width:760px;padding:16px}
 </section>
 
 <section id="calendarPage" class="hidden">
+  <div class="calendarToolbar"><h2>Calendar</h2><div><button type="button" class="secondary" onclick="calendarToday()">Today</button><button type="button" onclick="addCalendarFromAgenda(selectedCalendarDate || dateKey(new Date()))" aria-label="Add calendar item">＋</button></div></div>
 
   <!-- Schedule Range -->
   <div id="calendarRangeView"></div>
@@ -1336,13 +1355,13 @@ main{max-width:760px;padding:16px}
 
     <div class="calendarHeader">
 
-      <button class="secondary" onclick="changeMonth(-1)">
+      <button class="secondary" aria-label="Previous month" onclick="changeMonth(-1)">
         ‹
       </button>
 
       <strong id="calendarMonth"></strong>
 
-      <button class="secondary" onclick="changeMonth(1)">
+      <button class="secondary" aria-label="Next month" onclick="changeMonth(1)">
         ›
       </button>
 
@@ -1361,6 +1380,7 @@ main{max-width:760px;padding:16px}
     </div>
 
     <div id="calendarGrid" class="calendarGrid"></div>
+    <div class="calendarLegend"><span><i class="taskColor"></i>Tasks</span><span><i class="projectColor"></i>Projects & reminders</span><span><i class="maintenanceColor"></i>Maintenance</span></div>
 
   </div>
 
@@ -1368,9 +1388,9 @@ main{max-width:760px;padding:16px}
 
   <div id="selectedDateCard" role="dialog" aria-modal="true" aria-label="Calendar day" hidden></div>
 
-  <div class="card calendarAddCard" id="calendarAddCard">
+  <details class="card calendarAddCard" id="calendarAddCard">
 
-    <h2>＋ Add Calendar Item</h2>
+    <summary>＋ Add Calendar Item</summary>
 
     <label>Date</label>
     <input type="date" id="calendarDate">
@@ -1393,7 +1413,7 @@ main{max-width:760px;padding:16px}
       Add to Calendar
     </button>
 
-  </div>
+  </details>
 
   <div class="card">
 
@@ -4500,11 +4520,35 @@ function renderCalendarAgenda(){
 }
 
 function addCalendarFromAgenda(key){
+  document.getElementById("calendarAddCard").open = true;
   document.getElementById("calendarDate").value = key;
   document.getElementById("calendarAddCard").scrollIntoView({behavior:"smooth",block:"start"});
   document.getElementById("calendarTitle").focus({preventScroll:true});
 }
 
+function calendarToday(){
+  const today = new Date();
+  currentCalendarDate = new Date(today.getFullYear(),today.getMonth(),1);
+  selectedCalendarDate = dateKey(today);
+  if(!document.getElementById("selectedDateCard").hidden) selectCalendarDate(selectedCalendarDate);
+  else renderCalendar();
+}
+function calendarItemClass(item){
+  return item.type === "Maintenance" ? "maintenanceColor" : item.type === "Task" ? "taskColor" : "projectColor";
+}
+function calendarWeekStrip(date){
+  const start = new Date(date.getFullYear(),date.getMonth(),date.getDate()-date.getDay());
+  return Array.from({length:7},(_,index) => {
+    const day = new Date(start.getFullYear(),start.getMonth(),start.getDate()+index);
+    const key = dateKey(day);
+    return `<button type="button" aria-label="${day.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}" aria-pressed="${key === selectedCalendarDate}" onclick="openCalendarWeekDay('${key}')"><small>${day.toLocaleDateString(undefined,{weekday:"short"})}</small><span>${day.getDate()}</span></button>`;
+  }).join("");
+}
+function openCalendarWeekDay(key){
+  const [year,month] = key.split("-").map(Number);
+  currentCalendarDate = new Date(year,month-1,1);
+  selectCalendarDate(key);
+}
 function moveCalendarDay(offset){
   const [year,month,day] = selectedCalendarDate.split("-").map(Number);
   const target = new Date(year,month-1,day+offset);
@@ -4515,8 +4559,7 @@ function moveCalendarDay(offset){
 function addToSelectedDay(){
   const date = selectedCalendarDate;
   closeCalendarDay();
-  document.getElementById("calendarDate").value = date;
-  document.getElementById("calendarTitle").focus();
+  addCalendarFromAgenda(date);
 }
 
 document.addEventListener("keydown",event => {
@@ -4555,8 +4598,9 @@ function renderSelectedDate(){
   box.innerHTML = `
     <div class="dayViewTop">
       <button type="button" class="dayViewBack" onclick="closeCalendarDay()" aria-label="Back to month">‹ Month</button>
-      <strong>The List</strong>
+      <button type="button" onclick="calendarToday()">Today</button><button type="button" onclick="addToSelectedDay()" aria-label="Add to this day">＋</button>
     </div>
+    <div class="calendarWeekStrip" aria-label="Choose a day">${calendarWeekStrip(date)}</div>
     <h2 class="dayViewDate">${date.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}</h2>
     <p class="dayViewSubtitle">${date.getFullYear()} · ${items.length} ${items.length === 1 ? "item" : "items"}</p>
     <div class="dayViewMove">
@@ -4564,10 +4608,10 @@ function renderSelectedDate(){
       <button type="button" onclick="moveCalendarDay(1)" aria-label="Next day">Next ›</button>
     </div>
     <div class="dayAgenda">
-      <h3>Schedule</h3>
+      <h3>All-day tasks & reminders</h3>
       ${items.length ? items.map(item => `
-        <div class="dayAgendaItem"><strong>${escapeHTML(item.title)}</strong>
-          <small>${escapeHTML(item.project)}</small></div>
+        <div class="dayAgendaItem ${calendarItemClass(item)}"><span class="dayAllDay">All day</span><div><strong>${escapeHTML(item.title)}</strong>
+          <small>${escapeHTML(item.project)}</small></div></div>
       `).join("") : '<p class="smallText">Nothing scheduled for this day.</p>'}
     </div>
     <button type="button" class="dayViewAdd" onclick="addToSelectedDay()">＋ Add calendar item</button>
@@ -4576,6 +4620,24 @@ function renderSelectedDate(){
 }
 
 
+let calendarTouchStart = null;
+document.getElementById("selectedDateCard").addEventListener("touchstart",event => {
+  if(event.touches.length !== 1 || event.target.closest("button,input,select,textarea")) {calendarTouchStart=null;return;}
+  calendarTouchStart = {x:event.touches[0].clientX,y:event.touches[0].clientY};
+},{passive:true});
+document.getElementById("selectedDateCard").addEventListener("touchend",event => {
+  if(!calendarTouchStart || !event.changedTouches.length) return;
+  const dx=event.changedTouches[0].clientX-calendarTouchStart.x;
+  const dy=event.changedTouches[0].clientY-calendarTouchStart.y;
+  calendarTouchStart=null;
+  if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)*1.5) moveCalendarDay(dx<0?1:-1);
+},{passive:true});
+document.getElementById("selectedDateCard").addEventListener("keydown",event => {
+  if(event.key !== "Tab") return;
+  const buttons = [...event.currentTarget.querySelectorAll("button")];
+  if(event.shiftKey && document.activeElement === buttons[0]){event.preventDefault();buttons.at(-1)?.focus();}
+  else if(!event.shiftKey && document.activeElement === buttons.at(-1)){event.preventDefault();buttons[0]?.focus();}
+});
 function showCalendarRange(range){
 
   const today = new Date();
@@ -10063,4 +10125,5 @@ showPage("homePage");
 
 </body>
 </html>
+
 
