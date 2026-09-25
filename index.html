@@ -770,9 +770,15 @@ input,textarea,select{
 .quickProjectPreview .row{display:flex;gap:8px;flex-wrap:wrap}
 .quickProjectPreview .row button{flex:1 1 145px;margin:0}
 .quickProjectPreview .quickDraftNote{padding:11px;border-radius:10px;background:#f1f4eb;color:#314d3a}
-.homeInfoTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.homeInfoTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px}
 .homeInfoTabs button{background:#f8f5ed;color:#314d3a;border:1px solid #c9d1c3;min-height:52px}
 .homeInfoTabs button.active{background:#344e3d;color:#fff;border-color:#344e3d}
+@media(max-width:390px){.homeInfoTabs button{padding:10px 5px;font-size:13px}}
+.backupActions{display:flex;flex-wrap:wrap;gap:10px}
+.backupActions button{margin:0}
+.backupActions input[type="file"]{margin:10px 0}
+.backupPreview{background:#f2f4ed;border:1px solid #d1dacb;border-radius:12px;padding:14px;margin-top:12px}
+.backupPreview[hidden]{display:none}
 .toolRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #e8e4d8}
 .toolRow:last-child{border:0}
 .toolRow button{flex:0 0 auto}
@@ -1371,7 +1377,8 @@ body{padding-bottom:152px}
 
   <div class="homeInfoTabs" role="group" aria-label="Home information sections">
     <button type="button" id="homeDetailsTab" onclick="showHomeInfoSection('details')">🏡 Home Info</button>
-    <button type="button" id="homeToolsTab" onclick="showHomeInfoSection('tools')">🧰 Tool Inventory</button>
+    <button type="button" id="homeToolsTab" onclick="showHomeInfoSection('tools')">🧰 Tools</button>
+    <button type="button" id="homeBackupTab" onclick="showHomeInfoSection('backup')">↧ Backup</button>
   </div>
 
   <div id="homeDetailsSection">
@@ -1459,6 +1466,27 @@ body{padding-bottom:152px}
       <button type="button" onclick="addNeededTool()">🛒 Add to Shopping List</button>
       <p id="toolNeededStatus" class="smallText" role="status"></p>
       <div id="toolsToBuyList"></div>
+    </div>
+  </div>
+
+  <div id="homeBackupSection" class="hidden">
+    <div class="card">
+      <h2>Keep a copy of The List</h2>
+      <p>Download a backup of your projects, photos, shopping list, tools, calendar, maintenance, home information, and Maya chats. Save it in Files or iCloud Drive.</p>
+      <div class="backupActions"><button type="button" onclick="downloadBackup()">↓ Download backup</button></div>
+      <p id="backupDownloadStatus" class="smallText" role="status"></p>
+    </div>
+    <div class="card">
+      <h2>Restore a backup</h2>
+      <p>Choose a backup file from The List. Review its contents before replacing the data on this device.</p>
+      <label for="backupFileInput">Choose backup file</label>
+      <input id="backupFileInput" type="file" accept=".json,application/json" onchange="previewBackupFile()">
+      <p id="backupRestoreStatus" class="smallText" role="status"></p>
+      <div id="backupPreview" class="backupPreview" hidden>
+        <strong id="backupSummary"></strong>
+        <p>Restoring replaces the current data on this device. Download a backup of your current data first if you want to keep it.</p>
+        <button type="button" onclick="restoreBackup()">Restore this backup</button>
+      </div>
     </div>
   </div>
 
@@ -1769,6 +1797,90 @@ function saveData(){
 
 }
 
+
+/* =========================================================
+   BACKUP / RESTORE
+   ========================================================= */
+let pendingBackup = null;
+
+function validateBackup(raw){
+  if(!raw || raw.app !== "The List" || raw.formatVersion !== 1 ||
+     !raw.data || typeof raw.data !== "object" || Array.isArray(raw.data)){
+    throw new Error("This is not a supported The List backup.");
+  }
+  const saved = raw.data;
+  if(!saved.home || typeof saved.home !== "object" || Array.isArray(saved.home) ||
+     !saved.family || typeof saved.family !== "object" || Array.isArray(saved.family) ||
+     !saved.aiChats || typeof saved.aiChats !== "object" || Array.isArray(saved.aiChats) ||
+     !["projects","shopping","tools","maintenance","calendar"].every(k => Array.isArray(saved[k])) ||
+     !saved.projects.every(p => p && typeof p === "object" && !Array.isArray(p) &&
+       (typeof p.name === "string" || p.name == null) &&
+       ["tasks","materials","records","answers"].every(k =>
+         p[k] == null || (Array.isArray(p[k]) && p[k].every(v => v && typeof v === "object" && !Array.isArray(v)))))){
+    throw new Error("The backup is missing required app data.");
+  }
+  return saved;
+}
+
+function downloadBackup(){
+  const status = document.getElementById("backupDownloadStatus");
+  try{
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const snapshot = saved ? JSON.parse(saved) : data;
+    const backup = {app:"The List",formatVersion:1,exportedAt:new Date().toISOString(),data:snapshot};
+    const blob = new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "The-List-backup-" + new Date().toISOString().slice(0,10) + ".json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url),60000);
+    status.textContent = "Backup prepared. Check your downloads, then save the file somewhere you can find it.";
+  }catch(error){
+    status.textContent = "Could not create a backup: " + (error.message || "unknown error");
+  }
+}
+
+async function previewBackupFile(){
+  pendingBackup = null;
+  document.getElementById("backupPreview").hidden = true;
+  const status = document.getElementById("backupRestoreStatus");
+  const file = document.getElementById("backupFileInput").files[0];
+  if(!file){status.textContent = "";return;}
+  if(file.size > 25 * 1024 * 1024){status.textContent = "This backup is too large to open on this device.";return;}
+  status.textContent = "Checking backup...";
+  try{
+    const raw = JSON.parse(await file.text());
+    const saved = validateBackup(raw);
+    pendingBackup = saved;
+    const date = new Date(raw.exportedAt);
+    const when = Number.isNaN(date.getTime()) ? "Date unknown" : date.toLocaleString();
+    document.getElementById("backupSummary").textContent =
+      when + " · " + saved.projects.length + " projects · " +
+      saved.shopping.length + " shopping items · " + saved.tools.length +
+      " tools · " + saved.maintenance.length + " maintenance items · " +
+      saved.calendar.length + " calendar entries";
+    document.getElementById("backupPreview").hidden = false;
+    status.textContent = "Backup checked. Review the contents below.";
+  }catch(error){
+    status.textContent = error.message || "Could not read this backup.";
+  }
+}
+
+function restoreBackup(){
+  if(!pendingBackup) return;
+  const status = document.getElementById("backupRestoreStatus");
+  if(!confirm("Replace the current The List data on this device with this backup? This cannot be undone unless you saved a separate backup.")) return;
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(pendingBackup));
+    status.textContent = "Backup restored. Reloading...";
+    location.reload();
+  }catch(error){
+    status.textContent = "Restore failed. Your current data was not replaced: " + (error.message || "storage unavailable");
+  }
+}
 
 /* =========================================================
    PAGE NAVIGATION
@@ -3824,13 +3936,13 @@ let homeInfoSection = "details";
 let scannedToolNames = [];
 
 function showHomeInfoSection(section){
-  homeInfoSection = section === "tools" ? "tools" : "details";
-  document.getElementById("homeDetailsSection").classList.toggle("hidden",homeInfoSection !== "details");
-  document.getElementById("toolInventorySection").classList.toggle("hidden",homeInfoSection !== "tools");
-  ["homeDetailsTab","homeToolsTab"].forEach((id,index) => {
-    const active = (index === 0) === (homeInfoSection === "details");
-    document.getElementById(id).classList.toggle("active",active);
-    document.getElementById(id).setAttribute("aria-pressed",String(active));
+  homeInfoSection = ["details","tools","backup"].includes(section) ? section : "details";
+  ["details","tools","backup"].forEach((name,index) => {
+    document.getElementById(["homeDetailsSection","toolInventorySection","homeBackupSection"][index])
+      .classList.toggle("hidden",homeInfoSection !== name);
+    const tab = document.getElementById(["homeDetailsTab","homeToolsTab","homeBackupTab"][index]);
+    tab.classList.toggle("active",homeInfoSection === name);
+    tab.setAttribute("aria-pressed",String(homeInfoSection === name));
   });
   if(homeInfoSection === "tools") renderToolInventory();
 }
