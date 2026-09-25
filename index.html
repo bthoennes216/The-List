@@ -1067,6 +1067,16 @@ main{max-width:760px;padding:16px}
 .homeSageHello p{margin:0;color:#60685d;font-size:14px}
 .homeSageAsk{width:100%;margin:0;display:flex;align-items:center;gap:10px;min-height:55px;text-align:left;background:#304521;color:#fff;border-radius:14px;padding:10px 15px}
 .homeSageAsk span:nth-child(2){flex:1}.homeSageAsk span:first-child{font-size:21px}
+.homeSageForm{display:flex;align-items:flex-end;gap:8px;background:#fff;border:1px solid #d8dfd2;border-radius:18px;padding:7px 8px 7px 14px}
+.homeSageForm textarea{flex:1;min-width:0;min-height:42px;max-height:120px;resize:vertical;border:0;outline:0;background:transparent;padding:10px 0;font:inherit;color:#273b2d}
+.homeSageForm button{width:40px;height:40px;flex:none;border-radius:50%;margin:0;padding:0;background:#304521;color:white;box-shadow:none}
+.homeSageIdeas{display:flex;gap:7px;overflow-x:auto;margin-top:11px;padding-bottom:2px}
+.homeSageIdeas button{flex:none;width:auto;margin:0;padding:8px 11px;border:1px solid #dde4d6;border-radius:18px;background:#f3f5ee;color:#344d3b;font-size:12px;box-shadow:none}
+.homeRecent{margin:2px 0 20px}.homeRecent[hidden]{display:none}
+.homeRecentList{display:grid;gap:8px}
+.homeRecentList button{width:100%;margin:0;text-align:left;display:flex;align-items:center;gap:12px;background:#fffdfa;border:1px solid #e8e4d9;border-radius:14px;padding:12px;color:#293e30;box-shadow:none}
+.homeRecentList button span:nth-child(2){flex:1;min-width:0}.homeRecentList strong,.homeRecentList small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.homeRecentList small{font-size:12px;color:#687167;margin-top:3px}
 .homeHubGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:22px}
 .homeHubGrid button{min-width:0;min-height:116px;margin:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;background:#fffdfa;color:#26382b;border:1px solid #ebe8df;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(48,56,37,.04)}
 .homeHubGrid strong{font-size:17px;margin-top:5px}.homeHubGrid small{font-size:13px;color:#626d63;margin-top:2px}
@@ -1177,7 +1187,20 @@ main{max-width:760px;padding:16px}
     <div class="homeSageHello"><img class="homeSageAvatar" src="sage-avatar.webp" alt=""><div>
       <h2 id="homeGreeting">Welcome home</h2><p>What are we working on today?</p>
     </div></div>
-    <button type="button" class="homeSageAsk" onclick="openSageFromHome()"><span aria-hidden="true">✦</span><span>Ask Sage about your home...</span><span aria-hidden="true">›</span></button>
+    <form class="homeSageForm" onsubmit="askSageFromHome(event)">
+      <textarea id="homeSagePrompt" rows="1" maxlength="4000" aria-label="Ask Sage" placeholder="Ask Sage about your home..." onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();this.form.requestSubmit()}"></textarea>
+      <button type="submit" aria-label="Ask Sage">➤</button>
+    </form>
+    <div class="homeSageIdeas" aria-label="Ideas for Sage">
+      <button type="button" onclick="openSageFromHome('Help me plan a project.')">Plan a project</button>
+      <button type="button" onclick="openSageFromHome('What should I work on next?')">What’s next?</button>
+      <button type="button" onclick="openSageFromHome('Help me organize my shopping list.')">Shopping list</button>
+    </div>
+  </div>
+
+  <div class="homeRecent" id="homeRecent" hidden>
+    <div class="sectionHeading"><h2>Pick up where you left off</h2><button type="button" onclick="showPage('aiChatPage');openSageHistory()">All chats ›</button></div>
+    <div class="homeRecentList" id="homeRecentList"></div>
   </div>
 
   <div class="homeHubGrid" aria-label="Your home at a glance">
@@ -1701,6 +1724,7 @@ const defaultData = {
   shopping:[],
   tools:[],
   aiChats:{},
+  sageActiveThread:"general",
   maintenance:[],
   calendar:[],
 
@@ -1745,6 +1769,7 @@ function loadData(){
       : [];
 
     parsed.aiChats = parsed.aiChats && typeof parsed.aiChats === "object" && !Array.isArray(parsed.aiChats) ? parsed.aiChats : {};
+    parsed.sageActiveThread = typeof parsed.sageActiveThread === "string" ? parsed.sageActiveThread : "general";
 
     parsed.shopping = Array.isArray(parsed.shopping)
       ? parsed.shopping
@@ -2190,12 +2215,53 @@ data.projects.forEach(project => {
   }
 
   renderHomeUpcoming();
+  renderHomeRecent();
 
 }
 
-function openSageFromHome(){
+function renderHomeRecent(){
+  const section = document.getElementById("homeRecent");
+  const box = document.getElementById("homeRecentList");
+  const keys = sageConversationKeys().filter(key => data.aiChats[key].length).slice(0,3);
+  section.hidden = !keys.length;
+  box.replaceChildren();
+  keys.forEach(key => {
+    const project = data.projects.find(p => String(p.id) === key);
+    const button = document.createElement("button");
+    button.type = "button";
+    const icon = document.createElement("span");
+    icon.textContent = project ? "▣" : "✦";
+    icon.setAttribute("aria-hidden","true");
+    const details = document.createElement("span");
+    const title = document.createElement("strong");
+    title.textContent = sageChatTitle(key);
+    const label = document.createElement("small");
+    label.textContent = project ? "Project conversation" : "Sage conversation";
+    details.append(title,label);
+    const arrow = document.createElement("span");
+    arrow.textContent = "›";
+    arrow.setAttribute("aria-hidden","true");
+    button.append(icon,details,arrow);
+    button.onclick = () => {showPage("aiChatPage");chooseSageConversation(key);};
+    box.append(button);
+  });
+}
+
+function askSageFromHome(event){
+  event.preventDefault();
+  const prompt = document.getElementById("homeSagePrompt");
+  const message = prompt.value.trim();
+  if(!message){openSageFromHome();return;}
+  if(aiBusy || aiPlanningBusy || aiImageBusy) return;
+  openSageFromHome(message);
+  prompt.value = "";
+  sendAIChat();
+}
+
+function openSageFromHome(prompt){
   showPage("aiChatPage");
-  focusSageChat();
+  if(selectedAIProject()) chooseSageConversation(sageGeneralThread);
+  focusSageChat(prompt);
 }
 
 function renderHomeUpcoming(){
@@ -9548,6 +9614,9 @@ let aiMode = "list";
 let aiBusy = false;
 let sageGeneralThread = "general";
 const sageDrafts = {};
+function sageConversationKeys(){
+  return Object.keys(data.aiChats).filter(key => Array.isArray(data.aiChats[key]) && data.aiChats[key].length).reverse();
+}
 function sageChatTitle(key){
   const project = data.projects.find(p => String(p.id) === key);
   if(project) return project.name;
@@ -9559,7 +9628,10 @@ function openSageHistory(){
   renderSageHistory();
   document.getElementById("sageHistory").showModal();
 }
-function closeSageHistory(){document.getElementById("sageHistory").close();}
+function closeSageHistory(){
+  const dialog = document.getElementById("sageHistory");
+  if(dialog.open) dialog.close();
+}
 function chooseSageConversation(key){
   if(aiBusy || aiPlanningBusy || aiImageBusy) return;
   sageDrafts[aiThreadKey()] = document.getElementById("aiMessageInput").value;
@@ -9567,6 +9639,8 @@ function chooseSageConversation(key){
   const project = data.projects.find(p => String(p.id) === key);
   if(project) select.dataset.pendingProjectId = String(project.id);
   else {sageGeneralThread = key;select.value = "";delete select.dataset.pendingProjectId;}
+  data.sageActiveThread = key;
+  saveData();
   closeSageReview();closeSageHistory();renderAIChat();setAIMode("list");
   document.getElementById("aiMessageInput").value = sageDrafts[key] || "";
 }
@@ -9581,7 +9655,7 @@ function renderSageHistory(){
   box.replaceChildren();
   const query = document.getElementById("sageHistorySearch").value.toLowerCase().trim();
   const projects = data.projects.map(p => String(p.id));
-  const recent = Object.keys(data.aiChats).filter(k => Array.isArray(data.aiChats[k]) && data.aiChats[k].length).reverse();
+  const recent = sageConversationKeys().filter(key => !projects.includes(key));
   for(const [label,keys] of [["Projects",projects],["Recent conversations",recent]]){
     const heading = document.createElement("h3");heading.textContent = label;box.append(heading);
     let count = 0;
@@ -9604,8 +9678,7 @@ function focusSageChat(prompt){
 }
 function openSageFromProjects(){
   showPage("aiChatPage");
-  document.getElementById("aiProjectSelect").value = "";
-  renderAIChat();
+  chooseSageConversation(sageGeneralThread);
   focusSageChat();
 }
 function setAIMode(mode){
@@ -9933,6 +10006,7 @@ async function sendAIChat(){
       {role:"user",content:message},{role:"assistant",content:result.reply}];
     delete data.aiChats[key];
     data.aiChats[key] = savedMessages;
+    data.sageActiveThread = key;
     saveData(); input.value = ""; status.textContent = ""; renderAIChat();
   }catch(err){
     status.textContent = `${err.message || "The chat service is unavailable."} Your message was not sent.`;
@@ -10119,11 +10193,17 @@ function updateHeaderSize(){
 window.addEventListener("scroll",updateHeaderSize,{passive:true});
 updateHeaderSize();
 
+const restoredSageThread = data.sageActiveThread || "general";
+const restoredSageProject = data.projects.find(p => String(p.id) === restoredSageThread);
+if(restoredSageProject){
+  document.getElementById("aiProjectSelect").dataset.pendingProjectId = restoredSageThread;
+}else{
+  sageGeneralThread = restoredSageThread in data.aiChats || restoredSageThread === "general"
+    ? restoredSageThread : "general";
+}
 showPage("homePage");
 
 </script>
 
 </body>
 </html>
-
-
