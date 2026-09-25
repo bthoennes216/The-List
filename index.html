@@ -698,7 +698,7 @@ input,textarea,select{
   margin-bottom:12px;
 }
 
-#homePage > .card:nth-of-type(2) .upcomingActions > button{
+#homePage .upcomingCard .upcomingActions > button{
   width:100%;
   min-height:54px;
   padding:10px;
@@ -710,17 +710,17 @@ input,textarea,select{
   font-weight:600;
   box-shadow:none;
 }
-#homePage > .card:nth-of-type(2) .upcomingActions > button[aria-pressed="true"]{
+#homePage .upcomingCard .upcomingActions > button[aria-pressed="true"]{
   background:#e8efe4 !important;
   border-color:#adc0ae;
 }
-#homePage > .card:nth-of-type(2) .upcomingActions > .viewCalendar{
+#homePage .upcomingCard .upcomingActions > .viewCalendar{
   background:var(--forest) !important;
   color:#fff !important;
   border-color:var(--forest);
 }
 
-#homePage > .card:nth-of-type(3) button{
+#homePage .startProjectCard button{
   background:var(--forest) !important;
   color:#fff !important;
 }
@@ -962,6 +962,22 @@ input,textarea,select{
 .aiComposerHint{font-size:11px;color:#788074;margin:7px 3px 0}
 .aiNote{font-size:13px;color:#5e6058;line-height:1.45}
 
+/* Next Up and Sage review */
+.nextUpRows{display:grid;gap:9px}
+.nextUpItem{width:100%;margin:0;display:flex;align-items:center;gap:12px;text-align:left;padding:13px;background:#fffdf8;color:#283e30;border:1px solid #dfd9cc;border-radius:13px;box-shadow:none}
+.nextUpItem:active{background:#f0eee4}
+.nextUpIcon{font-size:22px;flex:0 0 28px;text-align:center}
+.nextUpItem strong,.nextUpItem small{display:block;line-height:1.35}
+.nextUpItem small{color:#6d6d60;font-size:12px;margin-top:3px}
+.aiReviewPanel[hidden]{display:none}
+.aiReviewPanel h3{margin:0 0 8px}
+.aiReviewRow{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid #e5dfd3}
+.aiReviewRow input[type="checkbox"]{width:auto;margin:12px 2px 0 0;flex:none}
+.aiReviewFields{flex:1;min-width:0}
+.aiReviewFields input{margin:0 0 6px}
+.aiReviewGrid{display:grid;grid-template-columns:2fr 1fr;gap:7px}
+.aiReviewPanel .row{flex-wrap:wrap}
+.aiReviewPanel .row button{min-width:115px}
 /* Five-item bottom navigation */
 #mainNav{
   display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
@@ -1121,7 +1137,12 @@ body{padding-bottom:80px}
   </div>
 </div>
 
-<div class="card" style="
+<div class="card">
+  <h2>✦ Next Up</h2>
+  <div id="homeNextUp" class="nextUpRows"></div>
+</div>
+
+<div class="card upcomingCard" style="
   background:#f7f5ee;
   border:2px solid #d6d2c4;
   border-radius:14px;
@@ -1151,7 +1172,7 @@ body{padding-bottom:80px}
 
 </div>
 
-  <div class="card" style="
+  <div class="card startProjectCard" style="
     background:#f7f5ee;
     border:2px solid #d6d2c4;
     border-radius:14px;
@@ -1224,6 +1245,20 @@ body{padding-bottom:80px}
       <p class="aiComposerHint">Enter to send · Shift + Enter for a new line</p>
       <p id="aiChatStatus" class="aiNote" role="status"></p>
     </div>
+  </div>
+  <div id="aiReviewPanel" class="card aiReviewPanel" hidden>
+    <h3>Review Sage's suggestions</h3>
+    <p class="aiNote">Edit or uncheck anything before adding it to your project and shopping list.</p>
+    <div id="aiReviewRows"></div>
+    <label for="aiReviewReminder">Calendar reminder (optional)</label>
+    <input id="aiReviewReminder" maxlength="120" placeholder="Example: Buy lumber">
+    <label for="aiReviewDate">Reminder date</label>
+    <input id="aiReviewDate" type="date">
+    <div class="row">
+      <button type="button" onclick="saveSageReview()">Add selected items</button>
+      <button type="button" class="secondary" onclick="closeSageReview()">Cancel</button>
+    </div>
+    <p id="aiReviewStatus" class="aiNote" role="status"></p>
   </div>
   <div id="aiChatGPTPanel" class="card aiPanel" hidden>
     <h3>Continue in ChatGPT</h3>
@@ -2053,7 +2088,45 @@ data.projects.forEach(project => {
   }
 
   renderHomeUpcoming();
+  renderNextUp();
 
+}
+
+function renderNextUp(){
+  const box = document.getElementById("homeNextUp");
+  const today = dateKey(new Date());
+  const tasks = data.projects
+    .filter(project => project.status === "active")
+    .flatMap(project => (project.tasks || []).filter(task => !task.done)
+      .map(task => ({project,task})));
+  tasks.sort((a,b) => {
+    const ad = a.task.dueDate || "9999-12-31";
+    const bd = b.task.dueDate || "9999-12-31";
+    return ad.localeCompare(bd);
+  });
+  const task = tasks[0];
+  const event = data.calendar.filter(item => item.date && item.date >= today)
+    .sort((a,b) => a.date.localeCompare(b.date))[0];
+  const maintenance = data.maintenance.map(item => ({
+    item,date:item.dueDate && item.dueDate < today && (!item.repeat || item.repeat === "none")
+      ? item.dueDate : nextMaintenanceDate(item,today)
+  })).filter(entry => entry.date).sort((a,b) => a.date.localeCompare(b.date))[0];
+  const rows = [];
+  if(task) rows.push(`<button type="button" class="nextUpItem" data-next-page="project" data-next-id="${escapeAttribute(task.project.id)}">
+    <span class="nextUpIcon" aria-hidden="true">✓</span><span><strong>${escapeHTML(task.task.text)}</strong>
+    <small>${escapeHTML(task.project.name)} · ${task.task.dueDate ? formatDate(task.task.dueDate) : "No due date"}</small></span></button>`);
+  if(event) rows.push(`<button type="button" class="nextUpItem" data-next-page="calendarPage">
+    <span class="nextUpIcon" aria-hidden="true">▦</span><span><strong>${escapeHTML(event.title)}</strong>
+    <small>Calendar · ${formatDate(event.date)}</small></span></button>`);
+  if(maintenance) rows.push(`<button type="button" class="nextUpItem" data-next-page="maintenancePage">
+    <span class="nextUpIcon" aria-hidden="true">🔧</span><span><strong>${escapeHTML(maintenance.item.name)}</strong>
+    <small>Maintenance · ${formatDate(maintenance.date)}</small></span></button>`);
+  box.innerHTML = rows.length ? rows.join("") :
+    '<p class="smallText">Nothing to do yet. Start a project or add something to the calendar.</p>';
+  box.querySelectorAll("[data-next-page]").forEach(button => button.addEventListener("click",() => {
+    if(button.dataset.nextPage === "project") openProject(button.dataset.nextId);
+    else showPage(button.dataset.nextPage);
+  }));
 }
 
 function renderHomeUpcoming(){
@@ -4044,7 +4117,7 @@ function moveToolToInventory(id){
 function showScannedTools(){
   const box = document.getElementById("toolPhotoSuggestions");
   box.innerHTML = scannedToolNames.length
-    ? `<strong>Review these tools</strong>${scannedToolNames.map((name,index) => `<label class="toolRow"><span><input type="checkbox" class="scannedToolChoice" value="${index}" checked style="width:auto;margin:0 10px 0 0">${escapeHTML(name)}</span></label>`).join("")}<button type="button" onclick="saveScannedTools()">Add selected tools</button>`
+    ? `<strong>Review these tools</strong>${scannedToolNames.map((name,index) => `<label class="toolRow"><span><input type="checkbox" class="scannedToolChoice" value="${index}" checked style="width:auto;margin:0 10px 0 0">${escapeHTML(name)}</span></div>`).join("")}<button type="button" onclick="saveScannedTools()">Add selected tools</button>`
     : "";
 }
 
@@ -9349,6 +9422,7 @@ function setAIMode(mode){
   aiMode = mode === "chatgpt" ? "chatgpt" : "list";
   document.getElementById("aiListPanel").hidden = aiMode !== "list";
   document.getElementById("aiChatGPTPanel").hidden = aiMode !== "chatgpt";
+  if(aiMode === "chatgpt" && sageReview) closeSageReview();
   document.getElementById("modeList").classList.toggle("selected", aiMode === "list");
   document.getElementById("modeChatGPT").classList.toggle("selected", aiMode === "chatgpt");
   document.getElementById("modeList").setAttribute("aria-pressed",String(aiMode === "list"));
@@ -9445,7 +9519,8 @@ function renderAIMessage(message,index){
     ${mine ? "" : `<div class="aiMessageActions">
       <button type="button" onclick="copyAIReply(${index})" aria-label="Copy reply">Copy</button>
       <button type="button" onclick="generateAIChatImage(${index})" aria-label="${images.length ? "Show another visual idea" : "Show a visual idea"}">🎨 ${images.length ? "Another idea" : "Show a visual idea"}</button>
-      ${selectedAIProject() ? `<button type="button" onclick="saveAIReplyAt(${index})" aria-label="Save reply to project notes">Save to project</button>` : ""}
+      ${selectedAIProject() ? `<button type="button" onclick="saveAIReplyAt(${index})" aria-label="Save reply to project notes">Save to project</button>
+      <button type="button" onclick="reviewSageReply(${index})" aria-label="Review tasks and materials from reply">Review tasks &amp; materials</button>` : ""}
     </div>${showVisualPrompt ? `<div class="aiActionCard">
       <strong>Would you like to see an example of this design or project?</strong>
       <div class="row"><button type="button" onclick="generateAIChatImage(${index})">Yes, show me</button><button type="button" class="secondary" onclick="dismissAIVisualPrompt(${index})">No</button></div>
@@ -9624,6 +9699,7 @@ function renderAIChat(){
   const box = document.getElementById("aiMessages");
   const messages = aiThread();
   const project = selectedAIProject();
+  if(sageReview && sageReview.projectId !== aiThreadKey()) closeSageReview();
   document.getElementById("aiConversationLabel").textContent = project ? project.name : "Your home and ideas";
   box.innerHTML = messages.length ? messages.map(renderAIMessage).join("")
     : `<div class="aiWelcome"><span aria-hidden="true" style="font-size:29px">✦</span><strong>What can I help you with?</strong><p>Ask about a project, materials, maintenance, or a decision you're weighing.</p></div>`;
@@ -9674,6 +9750,95 @@ async function sendAIChat(){
     document.getElementById("aiProjectSelect").disabled = false;
     input.disabled = false;
     input.focus();
+  }
+}
+let sageReview = null;
+function closeSageReview(){
+  sageReview = null;
+  document.getElementById("aiReviewPanel").hidden = true;
+  document.getElementById("aiReviewRows").innerHTML = "";
+  document.getElementById("aiReviewStatus").textContent = "";
+}
+async function reviewSageReply(index){
+  if(aiPlanningBusy) return;
+  const project = selectedAIProject();
+  const reply = aiThread()[index];
+  if(!project || !reply || reply.role !== "assistant") return;
+  const key = aiThreadKey();
+  const context = aiThread().slice(Math.max(0,index-5),index+1)
+    .filter(item => item.role === "user" || item.role === "assistant")
+    .map(item => ({role:item.role,content:item.content}));
+  const status = document.getElementById("aiChatStatus");
+  aiPlanningBusy = true;
+  status.textContent = "Preparing tasks and materials to review...";
+  try{
+    const {tasks,materials} = await buildStructuredChatPlan(project.name,context,project.roomPhotos || []);
+    if(aiThreadKey() !== key) return;
+    const existingTasks = new Set((project.tasks || []).map(item => item.text.trim().toLowerCase()));
+    const existingMaterials = new Set((project.materials || []).map(item => item.name.trim().toLowerCase()));
+    const newTasks = tasks.filter(item => !existingTasks.has(item.text.trim().toLowerCase())).slice(0,12);
+    const newMaterials = materials.filter(item => !existingMaterials.has(item.name.trim().toLowerCase())).slice(0,12);
+    sageReview = {projectId:key,tasks:newTasks,materials:newMaterials};
+    const rows = document.getElementById("aiReviewRows");
+    rows.innerHTML = `<h4>Project tasks</h4>` +
+      (newTasks.length ? newTasks.map((item,i) => `<div class="aiReviewRow"><input type="checkbox" data-sage-task="${i}" checked>
+        <span class="aiReviewFields"><input aria-label="Task ${i+1}" maxlength="500" value="${escapeAttribute(item.text)}"></span></div>`).join("")
+        : '<p class="smallText">No new tasks suggested.</p>') +
+      `<h4>Materials</h4>` +
+      (newMaterials.length ? newMaterials.map((item,i) => `<div class="aiReviewRow"><input type="checkbox" data-sage-material="${i}" checked>
+        <span class="aiReviewFields aiReviewGrid"><input aria-label="Material ${i+1}" maxlength="160" value="${escapeAttribute(item.name)}">
+        <input aria-label="Quantity for material ${i+1}" maxlength="120" value="${escapeAttribute(item.quantity)}"></span></div>`).join("")
+        : '<p class="smallText">No new materials suggested.</p>');
+    document.getElementById("aiReviewReminder").value = "";
+    document.getElementById("aiReviewDate").value = "";
+    document.getElementById("aiReviewStatus").textContent = "";
+    document.getElementById("aiReviewPanel").hidden = false;
+    document.getElementById("aiReviewPanel").scrollIntoView({behavior:"smooth",block:"start"});
+    status.textContent = "Review the suggestions before saving.";
+  }catch(error){
+    status.textContent = "Could not prepare suggestions. " + (error.message || "Try again.");
+  }finally{aiPlanningBusy = false;}
+}
+function saveSageReview(){
+  if(!sageReview) return;
+  const status = document.getElementById("aiReviewStatus");
+  const project = data.projects.find(item => String(item.id) === sageReview.projectId);
+  if(!project || aiThreadKey() !== sageReview.projectId){
+    status.textContent = "Select the original project and review this reply again.";
+    return;
+  }
+  const chosenTasks = [...document.querySelectorAll("[data-sage-task]:checked")]
+    .map(box => box.parentElement.querySelector("input[aria-label^='Task']")?.value.trim()).filter(Boolean);
+  const chosenMaterials = [...document.querySelectorAll("[data-sage-material]:checked")]
+    .map(box => [...box.parentElement.querySelectorAll(".aiReviewFields input")].map(input => input.value.trim()))
+    .filter(([name]) => name);
+  const title = document.getElementById("aiReviewReminder").value.trim();
+  const date = document.getElementById("aiReviewDate").value;
+  if((title && !date) || (date && !title)){status.textContent = "Enter both a reminder and a date.";return;}
+  if(!chosenTasks.length && !chosenMaterials.length && !title){
+    status.textContent = "Select an item or add a reminder first.";return;
+  }
+  const next = structuredClone(data);
+  const target = next.projects.find(item => String(item.id) === sageReview.projectId);
+  const stamp = Date.now();
+  chosenTasks.forEach((text,i) => target.tasks.push({
+    id:`task-sage-${stamp}-${i}`,text,done:false,dueDate:"",source:"aiChat"
+  }));
+  chosenMaterials.forEach(([name,quantity],i) => {
+    target.materials.push({id:`material-sage-${stamp}-${i}`,name,quantity,source:"aiChat"});
+    next.shopping.push({id:`shopping-sage-${stamp}-${i}`,name,quantity,
+      project:target.name,done:false});
+  });
+  if(title) next.calendar.push({id:`calendar-sage-${stamp}`,title,date,type:"project"});
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(next));
+    data = next;
+    closeSageReview();
+    document.getElementById("aiChatStatus").textContent =
+      `Added ${chosenTasks.length} tasks, ${chosenMaterials.length} materials to the project and shopping list${title ? ", and a calendar reminder" : ""}.`;
+    renderAIChat();
+  }catch(error){
+    status.textContent = "Could not save these items. Your project has not changed.";
   }
 }
 async function copyAIReply(index){
