@@ -4516,7 +4516,7 @@ function renderCalendarAgenda(){
     ${items.length ? items.map(item => `<div class="calendarAgendaRow"><span class="agendaMark ${item.type === "Maintenance" ? "maintenance" : ""}"></span>
       <span><strong>${escapeHTML(item.title)}</strong><small>${escapeHTML(item.project)}</small></span></div>`).join("")
       : '<p class="smallText">Nothing scheduled for this day.</p>'}
-    <button type="button" class="calendarAgendaAdd" onclick="addCalendarFromAgenda('${key}')">＋ Add an item</button>`;
+`;
 }
 
 function addCalendarFromAgenda(key){
