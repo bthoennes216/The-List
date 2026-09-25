@@ -996,7 +996,7 @@ body{padding-bottom:80px}
 <nav id="mainNav" aria-label="Main navigation">
   <button type="button" data-page="homePage" id="navHome"><span class="navIcon" aria-hidden="true">⌂</span><span>Home</span></button>
   <button type="button" data-page="projectsPage" id="navProjects"><span class="navIcon" aria-hidden="true">▣</span><span>Projects</span></button>
-  <button type="button" data-page="aiChatPage" id="navAIChat"><span class="navIcon" aria-hidden="true">✦</span><span>Scout</span></button>
+  <button type="button" data-page="aiChatPage" id="navAIChat"><span class="navIcon" aria-hidden="true">✦</span><span>Sage</span></button>
   <button type="button" data-page="calendarPage" id="navCalendar"><span class="navIcon" aria-hidden="true">▦</span><span>Calendar</span></button>
   <button type="button" data-page="morePage" id="navMore"><span class="navIcon" aria-hidden="true">•••</span><span>More</span></button>
 </nav>
@@ -1200,12 +1200,12 @@ body{padding-bottom:80px}
 
 <section id="aiChatPage" class="hidden">
   <div class="card aiChatIntro">
-    <h2>✨ Ask Scout</h2>
+    <h2>✨ Ask Sage</h2>
     <p class="aiNote">Talk through a project, ask follow-up questions, and keep the conversation together.</p>
     <label for="aiProjectSelect">Conversation about</label>
     <select id="aiProjectSelect" onchange="this.dataset.pendingProjectId=''; renderAIChat()"></select>
     <div class="aiTabs">
-      <button type="button" id="modeList" onclick="setAIMode('list')">Chat with Scout</button>
+      <button type="button" id="modeList" onclick="setAIMode('list')">Chat with Sage</button>
       <button type="button" id="modeChatGPT" onclick="setAIMode('chatgpt')">Open ChatGPT ↗</button>
     </div>
   </div>
@@ -1218,7 +1218,7 @@ body{padding-bottom:80px}
     <div class="aiComposerWrap">
       <div id="aiSuggestions" class="aiSuggestions" aria-label="Suggested follow-up questions"></div>
       <div class="aiComposer">
-        <textarea id="aiMessageInput" maxlength="4000" rows="1" aria-label="Message Scout" placeholder="Ask anything about your home or project..." onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendAIChat()}"></textarea>
+        <textarea id="aiMessageInput" maxlength="4000" rows="1" aria-label="Message Sage" placeholder="Ask anything about your home or project..." onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendAIChat()}"></textarea>
         <button type="button" id="aiSendButton" onclick="sendAIChat()" aria-label="Send message">➤</button>
       </div>
       <p class="aiComposerHint">Enter to send · Shift + Enter for a new line</p>
@@ -9438,7 +9438,7 @@ function renderAIMessage(message,index){
   const showVisualPrompt = !mine && index === aiThread().length-1 && !message.imagePromptDismissed && !images.length;
   const showProjectPrompt = !mine && index === aiThread().length-1 && !selectedAIProject() && !message.projectPromptDismissed;
   return `<div class="aiEntry ${mine ? "mine" : ""}">
-    <div class="aiSender">${mine ? "You" : "✦ Scout"}</div>
+    <div class="aiSender">${mine ? "You" : "✦ Sage"}</div>
     <div class="aiBubble">${mine ? escapeHTML(message.content) : renderChatMarkdown(message.content)}
       ${images.length ? `<div class="aiImageGallery">${images.map((src,i) => `<button type="button" class="imageOpen" onclick="openImageViewer(this.querySelector('img'))" aria-label="Open visual project idea ${i+1}"><img src="${escapeAttribute(src)}" alt="Visual project idea ${i+1}" loading="lazy"></button>`).join("")}<p>Visual ideas are examples. Review dimensions and details before building.</p></div>` : ""}
     </div>
@@ -9647,7 +9647,7 @@ async function sendAIChat(){
   const box = document.getElementById("aiMessages");
   if(!history.length) box.innerHTML = "";
   box.insertAdjacentHTML("beforeend",renderAIMessage({role:"user",content:message},-1)
-    + `<div class="aiEntry"><div class="aiSender">✦ Scout</div><div class="aiThinking">Thinking…</div></div>`);
+    + `<div class="aiEntry"><div class="aiSender">✦ Sage</div><div class="aiThinking">Thinking…</div></div>`);
   box.scrollTop = box.scrollHeight;
   status.textContent = "";
   try{
