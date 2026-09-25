@@ -981,6 +981,10 @@ input,textarea,select{
 .sageIntro.hasMessages .sageAvatar{width:42px;height:42px;font-size:24px}
 .sageIntro.hasMessages .sageIdentity h2{font-size:21px}
 .sageIntro.hasMessages{padding:14px 16px}
+.projectBuildChoices{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0 18px}
+.projectBuildChoices button{min-height:49px;margin:0;padding:9px;background:#f4f4ec;color:#344f3d;border:1px solid #d7d9cb;box-shadow:none;font-size:14px}
+.projectBuildChoices button.current{background:#344f3d;color:#fff;border-color:#344f3d}
+@media(max-width:360px){.projectBuildChoices button{font-size:12px;padding:8px 5px}}
 
 /* Shopping groups */
 .shoppingGroup h3{margin:0 0 8px;font-size:17px}
@@ -1228,6 +1232,10 @@ body.calendarDayOpen{overflow:hidden}
 
   <div class="card quickProjectCard">
     <h2>✨ Start a Project</h2>
+    <div class="projectBuildChoices" aria-label="Project building options">
+      <button type="button" class="current" onclick="document.getElementById('quickProjectPrompt').focus()">Quick project</button>
+      <button type="button" onclick="openSageFromProjects()">Build a project with Sage</button>
+    </div>
     <p class="smallText">Tell me what you want to do. I'll name the project and organize the tasks, materials, tools, and DIY steps.</p>
     <form id="quickProjectForm" onsubmit="createQuickProject(event)">
       <label for="quickProjectPrompt">What would you like to make or improve?</label>
@@ -9435,6 +9443,12 @@ function focusSageChat(prompt){
   if(prompt) input.value = prompt;
   input.scrollIntoView({behavior:"smooth",block:"center"});
   input.focus({preventScroll:true});
+}
+function openSageFromProjects(){
+  showPage("aiChatPage");
+  document.getElementById("aiProjectSelect").value = "";
+  renderAIChat();
+  focusSageChat();
 }
 function setAIMode(mode){
   aiMode = mode === "chatgpt" ? "chatgpt" : "list";
