@@ -1000,6 +1000,8 @@ input,textarea,select{
 .aiReviewFields{flex:1;min-width:0}
 .aiReviewFields input{margin:0 0 6px}
 .aiReviewGrid{display:grid;grid-template-columns:2fr 1fr;gap:7px}
+.aiReviewGrid input{min-width:0}
+.aiReviewCost{grid-column:1/-1;max-width:180px}
 .aiReviewPanel .row{flex-wrap:wrap}
 .aiReviewPanel .row button{min-width:115px}
 /* Five-item bottom navigation */
@@ -1326,7 +1328,7 @@ main{width:100%;max-width:760px;min-width:0;padding:16px}
   </div>
   <div id="aiReviewPanel" class="card aiReviewPanel" hidden>
     <h3>Review Sage's suggestions</h3>
-    <p class="aiNote">Edit or uncheck anything before adding it to your project and shopping list.</p>
+    <p class="aiNote">Approve tasks and materials for this project. Task dates appear on the calendar; material estimates appear in the budget.</p>
     <div id="aiReviewRows"></div>
     <label for="aiReviewReminder">Calendar reminder (optional)</label>
     <input id="aiReviewReminder" maxlength="120" placeholder="Example: Buy lumber">
@@ -2882,6 +2884,10 @@ function openProject(id){
         ${escapeHTML(project.description || "")}
       </p>
 
+      <button type="button" class="secondary" onclick="openSageForProject('${escapeAttribute(project.id)}')">
+        ✦ Discuss this project with Sage
+      </button>
+
       ${!project.aiPlan && String(project.notes || "").startsWith("Started from AI Chat:")
         ? `<button type="button" id="organizeChatProjectButton" onclick="organizeChatProject('${escapeAttribute(project.id)}')">✨ Organize this chat into a plan</button>
           <p id="chatPlanStatus" class="smallText" role="status"></p>` : ""}
@@ -3056,12 +3062,14 @@ function openProject(id){
 
     </div>
 
-    ${
-      project.budget
+      ${
+      (project.budget || projectEstimatedMaterials(project))
       ? `
         <div class="card">
           <h2>💰 Budget</h2>
-          <strong>$${Number(project.budget).toFixed(2)}</strong>
+          ${project.budget ? `<p>Target: <strong>$${Number(project.budget).toFixed(2)}</strong></p>` : ""}
+          <p>Estimated materials: <strong>$${projectEstimatedMaterials(project).toFixed(2)}</strong></p>
+          ${project.budget ? `<p>Target less estimated materials: <strong>$${(Number(project.budget)-projectEstimatedMaterials(project)).toFixed(2)}</strong></p>` : ""}
         </div>
       `
       : ""
@@ -3909,6 +3917,7 @@ function renderProjectMaterials(project){
 
           <div class="smallText">
             ${escapeHTML(m.quantity || "")}
+            ${Number(m.estimatedCost) > 0 ? ` · Est. $${Number(m.estimatedCost).toFixed(2)}` : ""}
           </div>
 
         </div>
@@ -3969,6 +3978,12 @@ function addMaterial(projectId){
 
 }
 
+function projectEstimatedMaterials(project){
+  return (project.materials || []).reduce((sum,item) =>
+    sum + (Number.isFinite(Number(item.estimatedCost)) && Number(item.estimatedCost) > 0
+      ? Number(item.estimatedCost) : 0),0);
+}
+
 function deleteMaterial(projectId,index){
 
   const project =
@@ -3986,6 +4001,19 @@ function deleteMaterial(projectId,index){
 
 }
 
+function addProjectMaterialToShopping(store,project,material){
+  if(!material || !material.name) return false;
+  const exists=store.shopping.some(item => !item.done &&
+    ((item.materialId && String(item.materialId) === String(material.id)) ||
+      ((String(item.projectId || "") === String(project.id) || item.project === project.name) &&
+        toolKey(item.name) === toolKey(material.name))));
+  if(exists) return false;
+  store.shopping.push({id:`shopping-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+    name:material.name,quantity:material.quantity || "",project:project.name,
+    projectId:project.id,materialId:material.id,estimatedCost:material.estimatedCost || 0,done:false});
+  return true;
+}
+
 function addMaterialToShopping(projectId,index){
 
   const project =
@@ -3998,21 +4026,9 @@ function addMaterialToShopping(projectId,index){
   const material =
     project.materials[index];
 
-  data.shopping.push({
-
-    id:
-      Date.now().toString(),
-
-    name:material.name,
-    quantity:material.quantity,
-    project:project.name,
-    done:false
-
-  });
-
-  saveData();
-
-  alert("Added to Shopping List.");
+  const added=addProjectMaterialToShopping(data,project,material);
+  if(added) saveData();
+  alert(added ? "Added to Shopping List." : "This material is already on your shopping list.");
 
 }
 
@@ -4027,30 +4043,14 @@ function addAllProjectMaterialsToShopping(projectId){
     return;
   }
 
+  let added=0;
   project.materials.forEach(material => {
-
-    data.shopping.push({
-
-      id:
-        Date.now().toString() +
-        Math.random(),
-
-      name:material.name,
-      quantity:material.quantity,
-      project:project.name,
-      done:false
-
-    });
-
+    if(addProjectMaterialToShopping(data,project,material)) added++;
   });
-
-  saveData();
-
-  alert(
-    `✓ Added ${project.materials.length} material items to the Shopping List.`
-  );
-
-  renderHome();
+  if(added) saveData();
+  alert(added ? `Added ${added} material item${added === 1 ? "" : "s"} to Shopping.`
+    : "All project materials are already on your shopping list.");
+  if(added) renderHome();
 
 }
 
@@ -4139,7 +4139,8 @@ function renderShopping(){
     <h3>${group.status === "Bought" ? "✓" : "🛒"} ${escapeHTML(group.status)} · ${escapeHTML(group.project)}</h3>
     ${group.items.map(({item,index}) => `<div class="shoppingRow">
       <div class="shoppingName"><strong class="${item.done ? "done" : ""}">${escapeHTML(item.name)}</strong>
-      ${item.quantity ? `<small>${escapeHTML(item.quantity)}</small>` : ""}</div>
+      ${item.quantity ? `<small>${escapeHTML(item.quantity)}</small>` : ""}
+      ${Number(item.estimatedCost) > 0 ? `<small>Est. $${Number(item.estimatedCost).toFixed(2)}</small>` : ""}</div>
       <button type="button" class="small secondary" onclick="toggleShopping(${index})">${item.done ? "Undo" : "Done"}</button>
       <button type="button" class="small secondary" onclick="deleteShopping(${index})" aria-label="Remove ${escapeAttribute(item.name)}">×</button>
     </div>`).join("")}
@@ -9713,6 +9714,13 @@ function openSageFromProjects(){
   chooseSageConversation(sageGeneralThread);
   focusSageChat();
 }
+function openSageForProject(projectId){
+  if(aiBusy || aiPlanningBusy || aiImageBusy ||
+    !data.projects.some(item => String(item.id) === String(projectId))) return;
+  showPage("aiChatPage");
+  chooseSageConversation(String(projectId));
+  focusSageChat();
+}
 function setAIMode(mode){
   aiMode = mode === "chatgpt" ? "chatgpt" : "list";
   document.getElementById("aiListPanel").hidden = aiMode !== "list";
@@ -10081,12 +10089,14 @@ async function reviewSageReply(index){
     const rows = document.getElementById("aiReviewRows");
     rows.innerHTML = `<h4>Project tasks</h4>` +
       (newTasks.length ? newTasks.map((item,i) => `<div class="aiReviewRow"><input type="checkbox" data-sage-task="${i}" checked>
-        <span class="aiReviewFields"><input aria-label="Task ${i+1}" maxlength="500" value="${escapeAttribute(item.text)}"></span></div>`).join("")
+        <span class="aiReviewFields"><input aria-label="Task ${i+1}" maxlength="500" value="${escapeAttribute(item.text)}">
+        <input type="date" aria-label="Due date for task ${i+1}" title="Due date (optional)"></span></div>`).join("")
         : '<p class="smallText">No new tasks suggested.</p>') +
       `<h4>Materials</h4>` +
       (newMaterials.length ? newMaterials.map((item,i) => `<div class="aiReviewRow"><input type="checkbox" data-sage-material="${i}" checked>
         <span class="aiReviewFields aiReviewGrid"><input aria-label="Material ${i+1}" maxlength="160" value="${escapeAttribute(item.name)}">
-        <input aria-label="Quantity for material ${i+1}" maxlength="120" value="${escapeAttribute(item.quantity)}"></span></div>`).join("")
+        <input aria-label="Quantity for material ${i+1}" maxlength="120" value="${escapeAttribute(item.quantity)}">
+        <input class="aiReviewCost" type="number" min="0" step="0.01" inputmode="decimal" aria-label="Estimated total cost for material ${i+1} (optional)" placeholder="Est. total $ (optional)"></span></div>`).join("")
         : '<p class="smallText">No new materials suggested.</p>');
     document.getElementById("aiReviewReminder").value = "";
     document.getElementById("aiReviewDate").value = "";
@@ -10107,34 +10117,56 @@ function saveSageReview(){
     return;
   }
   const chosenTasks = [...document.querySelectorAll("[data-sage-task]:checked")]
-    .map(box => box.parentElement.querySelector("input[aria-label^='Task']")?.value.trim()).filter(Boolean);
+    .map(box => ({text:box.parentElement.querySelector("input[aria-label^='Task']")?.value.trim(),
+      dueDate:box.parentElement.querySelector("input[type='date']")?.value || ""})).filter(item => item.text);
   const chosenMaterials = [...document.querySelectorAll("[data-sage-material]:checked")]
-    .map(box => [...box.parentElement.querySelectorAll(".aiReviewFields input")].map(input => input.value.trim()))
-    .filter(([name]) => name);
+    .map(box => {const inputs=box.parentElement.querySelectorAll(".aiReviewFields input");
+      return {name:inputs[0].value.trim(),quantity:inputs[1].value.trim(),cost:inputs[2].value.trim()};})
+    .filter(item => item.name);
   const title = document.getElementById("aiReviewReminder").value.trim();
   const date = document.getElementById("aiReviewDate").value;
   if((title && !date) || (date && !title)){status.textContent = "Enter both a reminder and a date.";return;}
   if(!chosenTasks.length && !chosenMaterials.length && !title){
     status.textContent = "Select an item or add a reminder first.";return;
   }
+  if(chosenMaterials.some(item => item.cost && (!Number.isFinite(Number(item.cost)) || Number(item.cost) < 0))){
+    status.textContent = "Enter a valid, nonnegative material estimate.";return;
+  }
   const next = structuredClone(data);
   const target = next.projects.find(item => String(item.id) === sageReview.projectId);
   const stamp = Date.now();
-  chosenTasks.forEach((text,i) => target.tasks.push({
-    id:`task-sage-${stamp}-${i}`,text,done:false,dueDate:"",source:"aiChat"
-  }));
-  chosenMaterials.forEach(([name,quantity],i) => {
-    target.materials.push({id:`material-sage-${stamp}-${i}`,name,quantity,source:"aiChat"});
-    next.shopping.push({id:`shopping-sage-${stamp}-${i}`,name,quantity,
-      project:target.name,done:false});
+  const taskNames = new Set(target.tasks.map(item => toolKey(item.text)));
+  const materialNames = new Set(target.materials.map(item => toolKey(item.name)));
+  let addedTasks=0,addedMaterials=0,addedShopping=0;
+  chosenTasks.forEach(({text,dueDate},i) => {
+    const key=toolKey(text);
+    if(taskNames.has(key)) return;
+    taskNames.add(key);
+    target.tasks.push({id:`task-sage-${stamp}-${i}`,text,done:false,dueDate,source:"aiChat"});
+    addedTasks++;
   });
-  if(title) next.calendar.push({id:`calendar-sage-${stamp}`,title,date,type:"project"});
+  chosenMaterials.forEach(({name,quantity,cost},i) => {
+    const key=toolKey(name);
+    if(materialNames.has(key)) return;
+    materialNames.add(key);
+    const material={id:`material-sage-${stamp}-${i}`,name,quantity,
+      estimatedCost:cost ? Number(cost) : 0,source:"aiChat"};
+    target.materials.push(material);
+    addedMaterials++;
+    if(addProjectMaterialToShopping(next,target,material)) addedShopping++;
+  });
+  const addedReminder=Boolean(title) && !next.calendar.some(item =>
+    item.projectId === target.id && item.date === date && toolKey(item.title) === toolKey(title));
+  if(addedReminder) next.calendar.push({id:`calendar-sage-${stamp}`,title,date,type:"project",projectId:target.id});
+  if(!addedTasks && !addedMaterials && !addedReminder){
+    status.textContent = "Those tasks, materials, and reminders are already saved in this project.";return;
+  }
   try{
     localStorage.setItem(STORAGE_KEY,JSON.stringify(next));
     data = next;
     closeSageReview();
     document.getElementById("aiChatStatus").textContent =
-      `Added ${chosenTasks.length} tasks, ${chosenMaterials.length} materials to the project and shopping list${title ? ", and a calendar reminder" : ""}.`;
+      `Added ${addedTasks} tasks, ${addedMaterials} materials, ${addedShopping} shopping items${addedReminder ? ", and a calendar reminder" : ""}.`;
     renderAIChat();
   }catch(error){
     status.textContent = "Could not save these items. Your project has not changed.";
