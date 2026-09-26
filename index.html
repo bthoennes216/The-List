@@ -1056,7 +1056,7 @@ header.isCompact .appLogo{top:8px}
 .headerSage{position:absolute;right:16px;top:11px;width:38px;height:38px;border:1px solid #ced7c3;border-radius:50%;padding:0;background:#e3e8d8;color:#304a34;box-shadow:none;font-family:Georgia,serif;font-size:21px}
 .headerSage img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover}
 header.isCompact .headerSage{top:8px}
-main{max-width:760px;padding:16px}
+main{width:100%;max-width:760px;min-width:0;padding:16px}
 #mainNav{background:#fffcf6;border-color:#e8e3d8;box-shadow:0 -3px 16px rgba(32,44,30,.08)}
 #mainNav button.active{background:#304521;color:#fff;box-shadow:none}
 #mainNav .navIcon{font-size:23px}
@@ -1070,12 +1070,12 @@ main{max-width:760px;padding:16px}
 .homeSageForm{display:flex;align-items:flex-end;gap:8px;background:#fff;border:1px solid #d8dfd2;border-radius:18px;padding:7px 8px 7px 14px}
 .homeSageForm textarea{flex:1;min-width:0;min-height:42px;max-height:120px;resize:vertical;border:0;outline:0;background:transparent;padding:10px 0;font:inherit;color:#273b2d}
 .homeSageForm button{width:40px;height:40px;flex:none;border-radius:50%;margin:0;padding:0;background:#304521;color:white;box-shadow:none}
-.homeSageIdeas{display:flex;gap:7px;overflow-x:auto;margin-top:11px;padding-bottom:2px}
-.homeSageIdeas button{flex:none;width:auto;margin:0;padding:8px 11px;border:1px solid #dde4d6;border-radius:18px;background:#f3f5ee;color:#344d3b;font-size:12px;box-shadow:none}
-.homeRecent{margin:2px 0 20px}.homeRecent[hidden]{display:none}
-.homeRecentList{display:grid;gap:8px}
-.homeRecentList button{width:100%;margin:0;text-align:left;display:flex;align-items:center;gap:12px;background:#fffdfa;border:1px solid #e8e4d9;border-radius:14px;padding:12px;color:#293e30;box-shadow:none}
-.homeRecentList button span:nth-child(2){flex:1;min-width:0}.homeRecentList strong,.homeRecentList small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.homeSageIdeas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:11px}
+.homeSageIdeas button{min-width:0;width:100%;margin:0;padding:8px 5px;border:1px solid #dde4d6;border-radius:18px;background:#f3f5ee;color:#344d3b;font-size:12px;line-height:1.2;box-shadow:none;white-space:normal;text-align:center}
+.homeRecent{min-width:0;max-width:100%;margin:2px 0 20px}.homeRecent[hidden]{display:none}
+.homeRecentList{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%;gap:8px}
+.homeRecentList button{min-width:0;width:100%;margin:0;text-align:left;display:flex;align-items:center;gap:8px;background:#fffdfa;border:1px solid #e8e4d9;border-radius:14px;padding:10px;color:#293e30;box-shadow:none}
+.homeRecentList button span:nth-child(2){flex:1;min-width:0;overflow:hidden}.homeRecentList strong,.homeRecentList small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .homeRecentList small{font-size:12px;color:#687167;margin-top:3px}
 .homeHubGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:22px}
 .homeHubGrid button{min-width:0;min-height:116px;margin:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;background:#fffdfa;color:#26382b;border:1px solid #ebe8df;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(48,56,37,.04)}
