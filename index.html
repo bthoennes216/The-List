@@ -747,16 +747,6 @@ input,textarea,select{
   margin-top:10px;
 }
 
-.projectStartActions{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-  margin:14px 0;
-}
-.projectStartActions button{
-  min-height:56px;
-  margin:0;
-}
 .quickProjectCard{background:#fbfaf4;border:1px solid #dedfd2}
 .quickProjectCard textarea{min-height:106px}
 .quickProjectCard .quickProjectSubmit{width:100%;min-height:52px;background:#344f3d}
@@ -2892,17 +2882,6 @@ function openProject(id){
         ? `<button type="button" id="organizeChatProjectButton" onclick="organizeChatProject('${escapeAttribute(project.id)}')">✨ Organize this chat into a plan</button>
           <p id="chatPlanStatus" class="smallText" role="status"></p>` : ""}
 
-      ${project.status !== "completed" ? `
-        <div class="projectStartActions">
-          <button type="button" class="secondary" onclick="focusProjectTasks()">
-            ＋ Add tasks myself
-          </button>
-          <button type="button" onclick="buildPlanForProject('${escapeAttribute(project.id)}')">
-            ✨ Build a plan with AI
-          </button>
-        </div>
-      ` : ""}
-
       <div style="
         margin:16px 0;
         padding:14px;
@@ -3311,14 +3290,6 @@ async function generateSavedProjectImage(projectId){
     openProject(projectId);
   }catch(err){status.textContent = err.message || "Could not create image.";}
 }
-function focusProjectTasks(){
-  const input = document.getElementById("newTaskText");
-  if(input){
-    input.scrollIntoView({behavior:"smooth",block:"center"});
-    input.focus({preventScroll:true});
-  }
-}
-
 function startProject(projectId){
 
   const project =
