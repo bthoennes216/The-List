@@ -1122,9 +1122,12 @@ main{max-width:760px;padding:16px}
 .sageHistoryHeader h2{font-size:23px;margin:0}
 .sageHistoryHeader button{width:auto;margin:0}
 #sageHistoryItems h3{font-size:14px;color:#77796e;margin:22px 8px 8px}
-#sageHistory .sageHistoryItem{display:block;text-align:left;color:#293e30;background:transparent;border:0;box-shadow:none;margin:3px 0;padding:14px 12px;border-radius:14px;overflow-wrap:anywhere;font-weight:500}
+#sageHistory .sageHistoryRow{display:flex;align-items:center;gap:4px;margin:3px 0}
+#sageHistory .sageHistoryItem{flex:1;min-width:0;display:block;text-align:left;color:#293e30;background:transparent;border:0;box-shadow:none;margin:0;padding:14px 12px;border-radius:14px;overflow-wrap:anywhere;font-weight:500}
 #sageHistory .sageHistoryItem[aria-current="true"]{background:#e7ecdf}
 #sageHistory .sageHistoryItem:hover{background:#eef0e8}
+#sageHistory .sageHistoryDelete{flex:none;width:42px;height:42px;margin:0;padding:0;display:grid;place-items:center;border:0;border-radius:12px;background:transparent;color:#725b52;box-shadow:none;font-size:17px}
+#sageHistory .sageHistoryDelete:hover,#sageHistory .sageHistoryDelete:focus-visible{background:#f2e8e2}
 /* Open, conversation-first Sage layout */
 #aiChatPage .sageIntro{background:transparent;border:0;box-shadow:none;padding:10px 4px;margin-bottom:4px}
 #aiChatPage .sageIdentity{display:none}
@@ -9650,6 +9653,28 @@ function newSageConversation(){
   const key = !selectedAIProject() && !aiThread().length ? current : "chat-" + Date.now() + "-" + Math.random().toString(36).slice(2,8);
   chooseSageConversation(key);focusSageChat();
 }
+function deleteSageConversation(key){
+  if(aiBusy || aiPlanningBusy || aiImageBusy) return;
+  if(!Array.isArray(data.aiChats[key]) || !data.aiChats[key].length) return;
+  const project = data.projects.find(p => String(p.id) === key);
+  const message = project
+    ? `Delete Sage's conversation for "${project.name}"? The project, its plans, tasks and records will stay.`
+    : `Delete "${sageChatTitle(key)}"?`;
+  if(!confirm(`${message}\n\nThis conversation will be removed from this device and cannot be recovered unless it is in a backup.`)) return;
+  const wasActive = aiThreadKey() === key;
+  delete data.aiChats[key];
+  delete sageDrafts[key];
+  if(!project && sageGeneralThread === key) sageGeneralThread = "general";
+  if(wasActive && !project){
+    document.getElementById("aiProjectSelect").value = "";
+    data.sageActiveThread = "general";
+    document.getElementById("aiMessageInput").value = "";
+  }
+  saveData();
+  if(wasActive) renderAIChat();
+  renderSageHistory();
+  renderHomeRecent();
+}
 function renderSageHistory(){
   const box = document.getElementById("sageHistoryItems");
   box.replaceChildren();
@@ -9662,9 +9687,16 @@ function renderSageHistory(){
     for(const key of keys){
       const title = sageChatTitle(key);
       if(query && !(title + " " + (data.aiChats[key] || []).map(m => m.content).join(" ")).toLowerCase().includes(query)) continue;
+      const row = document.createElement("div");row.className = "sageHistoryRow";
       const button = document.createElement("button");button.type = "button";button.className = "sageHistoryItem";
       button.textContent = title;button.setAttribute("aria-current",String(key === aiThreadKey()));
-      button.onclick = () => chooseSageConversation(key);box.append(button);count++;
+      button.onclick = () => chooseSageConversation(key);row.append(button);
+      if(Array.isArray(data.aiChats[key]) && data.aiChats[key].length){
+        const remove = document.createElement("button");remove.type = "button";remove.className = "sageHistoryDelete";
+        remove.textContent = "🗑";remove.setAttribute("aria-label",`Delete conversation: ${title}`);
+        remove.onclick = () => deleteSageConversation(key);row.append(remove);
+      }
+      box.append(row);count++;
     }
     if(!count){const empty = document.createElement("p");empty.className = "aiNote";empty.textContent = query ? "No matches" : "Nothing saved yet";box.append(empty);}
   }
