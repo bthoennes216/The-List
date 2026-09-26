@@ -1155,6 +1155,44 @@ main{width:100%;max-width:760px;min-width:0;padding:16px}
 .dayViewDate{font-size:29px;letter-spacing:-.8px}.dayViewTop button{background:transparent;border:0;padding:8px 4px}.dayViewTop .dayViewBack{margin-right:auto}.dayViewMove button{background:transparent;border:0;font-size:13px}
 .dayAgenda{border:0;border-radius:0;background:transparent;padding:16px 0}.dayAgenda h3{font-size:13px;color:#77796e;font-weight:500}.dayAgendaItem{display:flex;align-items:flex-start;gap:16px;padding:14px 0;border-top:1px solid #e0ded5}.dayAgendaItem>div{border-left:3px solid var(--item-color);padding:4px 12px;flex:1}.dayAllDay{font-size:12px;color:#77796e;padding-top:7px;white-space:nowrap}
 .calendarAddCard summary{font-weight:600;cursor:pointer}.calendarAddCard[open] summary{margin-bottom:20px}
+
+/* A quiet Sage workspace: conversation first, tools on demand. */
+body.sageChatOpen > header{display:none}
+body.sageChatOpen main{padding-top:0}
+#aiChatPage .sageChatToolbar{position:sticky;top:0;z-index:30;display:flex;gap:4px;margin:0 -4px;padding:10px 0;background:#f8f5ed}
+#aiChatPage .sageChatHeading{flex:1;min-width:0;text-align:center;line-height:1.3}
+#aiChatPage .sageChatHeading strong{display:block;font-size:18px}
+#aiChatPage #aiConversationLabel{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#74796f;margin-top:3px}
+#aiChatPage #aiConversationLabel[hidden]{display:none}
+#aiChatPage .sageIconButton,#aiChatPage .sageMenu>summary{display:grid;place-items:center;width:44px;height:44px;min-width:44px;padding:0;margin:0;border:0;border-radius:12px;background:transparent;color:#304632;box-shadow:none;font-size:24px;cursor:pointer;list-style:none}
+#aiChatPage .sageMenu>summary::-webkit-details-marker{display:none}
+#aiChatPage .sageMenu>summary:focus-visible,#aiChatPage .sageIconButton:focus-visible{outline:2px solid #537454;outline-offset:2px}
+#aiChatPage .sageMenu[open]>summary{background:#e8ece3}
+#aiChatPage .sageMenu{position:relative;flex:none}
+#aiChatPage .sageMenuPanel{position:absolute;right:0;top:calc(100% + 6px);z-index:45;width:min(280px,calc(100vw - 48px));padding:6px;border:1px solid #e3e3d9;border-radius:16px;background:#fffdf8;box-shadow:0 8px 30px #20332226}
+#aiChatPage .sageMenuPanel button{display:block;width:100%;min-height:44px;text-align:left;white-space:normal;padding:12px;margin:0;border:0;border-radius:9px;background:transparent;color:#304632;font-size:14px;font-weight:500;box-shadow:none}
+#aiChatPage .sageMenuPanel button:hover{background:#edf0e7}
+#aiChatPage .sageMenuPanel>strong{display:block;padding:10px 12px 6px;font-size:12px;color:#74796f}
+#aiChatPage .aiConversation{margin-bottom:0}
+#aiChatPage .aiMessages{min-height:calc(100dvh - 250px);padding:22px 0 16px}
+#aiChatPage .aiMessages.isEmpty{display:flex;align-items:center;justify-content:center}
+#aiChatPage .aiWelcome{padding:20px 0;margin:0;max-width:100%}
+#aiChatPage .aiWelcome strong{font-size:24px;line-height:1.3;font-weight:600;letter-spacing:-.5px}
+#aiChatPage .aiEntry{margin-bottom:28px}
+#aiChatPage .aiEntry .aiSender{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+#aiChatPage .aiEntry.mine .aiBubble{max-width:88%;background:#e9eee4}
+#aiChatPage .aiEntry:not(.mine) .aiBubble{padding:4px 0;line-height:1.65;font-size:16px}
+#aiChatPage .aiMessageActions{align-items:center;gap:2px;margin:6px 0 0}
+#aiChatPage .aiMessageActions>button{margin:0;min-height:44px;padding:8px;font-weight:400;box-shadow:none}
+#aiChatPage .sageReplyMenu .sageMenuPanel{left:-50px;right:auto;top:auto;bottom:100%}
+#aiChatPage .aiComposerWrap{padding:10px 0;background:#f8f5ed;border-radius:0}
+#aiChatPage .aiComposer{padding:5px;gap:3px;border:1px solid #e0e3d9;border-radius:28px;background:#eeeee7;box-shadow:none}
+#aiChatPage .aiComposer textarea{min-width:0;resize:none;padding:10px 3px;min-height:44px;line-height:24px}
+#aiChatPage .aiComposer #aiSendButton{width:44px;height:44px;min-width:44px;padding:0;box-shadow:none}
+#aiChatPage .sagePromptMenu .sageMenuPanel{left:0;right:auto;top:auto;bottom:calc(100% + 12px)}
+#aiChatPage #aiChatGPTPanel{margin-top:18px}
+@media(max-width:360px){#aiChatPage .aiWelcome strong{font-size:21px}}
+
 </style>
 </head>
 
@@ -1272,44 +1310,36 @@ main{width:100%;max-width:760px;min-width:0;padding:16px}
 
 
 <section id="aiChatPage" class="hidden">
-  <div class="sageChatToolbar"><button id="sageHistoryButton" type="button" class="secondary" onclick="openSageHistory()" aria-label="Open saved projects and conversations">☰ <span>Saved chats</span></button><strong>Sage</strong><button type="button" class="secondary" onclick="newSageConversation()" aria-label="Start a new conversation">＋ New chat</button></div>
+  <div class="sageChatToolbar">
+    <button id="sageHistoryButton" type="button" class="sageIconButton" onclick="openSageHistory()" aria-label="Open saved chats" title="Saved chats">☰</button>
+    <div class="sageChatHeading"><strong>Sage</strong><span id="aiConversationLabel" hidden></span></div>
+    <button type="button" class="sageIconButton" onclick="newSageConversation()" aria-label="Start a new conversation" title="New chat">＋</button>
+    <details class="sageMenu" id="sageChatOptions">
+      <summary aria-label="Conversation options" title="Conversation options">⋯</summary>
+      <div class="sageMenuPanel">
+        <button type="button" id="modeList" onclick="setAIMode('list');closeSageMenus()">Chat with Sage</button>
+        <button type="button" id="modeChatGPT" onclick="setAIMode('chatgpt');closeSageMenus();window.scrollTo(0,0)">Continue in ChatGPT ↗</button>
+        <button type="button" onclick="closeSageMenus();clearAIChat()">Clear conversation</button>
+      </div>
+    </details>
+  </div>
   <dialog id="sageHistory" aria-labelledby="sageHistoryTitle">
     <div class="sageHistoryHeader"><h2 id="sageHistoryTitle">Your conversations</h2><button type="button" class="secondary" onclick="closeSageHistory()" aria-label="Close saved conversations">✕</button></div>
     <button type="button" onclick="newSageConversation()">＋ New chat</button>
     <input id="sageHistorySearch" type="search" aria-label="Search projects and conversations" placeholder="Search projects and chats" oninput="renderSageHistory()">
     <div id="sageHistoryItems"></div><p class="aiNote">Saved on this device.</p>
   </dialog>
-  <div class="card aiChatIntro sageIntro">
-    <div class="sageIdentity"><img class="sageAvatar" src="sage-avatar.webp" alt=""><div><h2>Meet Sage</h2><p>Your home project assistant</p></div></div>
-    <div class="sageGreeting"><strong>Hi, I'm Sage.</strong> Tell me what you want to plan, design, or build. We can keep the steps, tools, and shopping list together in The List.</div>
-    <div class="sageActions" aria-label="Start with Sage">
-      <button type="button" onclick="focusSageChat()"><span aria-hidden="true">✦</span><span>Build a project with Sage</span><span aria-hidden="true">›</span></button>
-    </div>
-    <p class="sagePopular">Popular with Sage</p>
-    <div class="sagePopularOptions">
-      <button type="button" onclick="focusSageChat('Help me plan a backyard fire pit.')">Plan a project</button>
-      <button type="button" onclick="focusSageChat('Help me design my yard.')">Design my yard</button>
-      <button type="button" onclick="focusSageChat('Help me make a shopping list.')">Shopping list</button>
-      <button type="button" onclick="focusSageChat('What tools do I need?')">What tools do I need?</button>
-      <button type="button" onclick="focusSageChat('Help me plan my garden.')">Garden plan</button>
-    </div>
-    <label for="aiProjectSelect" hidden>Conversation about</label>
-    <select hidden id="aiProjectSelect" onchange="this.dataset.pendingProjectId=''; renderAIChat()"></select>
-    <div class="aiTabs">
-      <button type="button" id="modeList" onclick="setAIMode('list')">Chat with Sage</button>
-      <button type="button" id="modeChatGPT" onclick="setAIMode('chatgpt')">Open ChatGPT ↗</button>
-    </div>
-  </div>
+  <label for="aiProjectSelect" hidden>Conversation about</label>
+  <select hidden id="aiProjectSelect" onchange="this.dataset.pendingProjectId=''; renderAIChat()"></select>
   <div id="aiListPanel" class="card aiPanel aiConversation">
-    <div class="aiConversationHeader">
-      <div><h3>Conversation</h3><p class="aiNote" id="aiConversationLabel"></p></div>
-      <details><summary aria-label="Conversation options">⋯</summary><button type="button" class="secondary small" onclick="clearAIChat()">Clear conversation</button></details>
-    </div>
     <div id="aiMessages" class="aiMessages" aria-live="polite"></div>
     <div class="aiComposerWrap">
-      <div id="aiSuggestions" class="aiSuggestions" aria-label="Suggested follow-up questions"></div>
       <div class="aiComposer">
-        <textarea id="aiMessageInput" maxlength="4000" rows="1" aria-label="Message Sage" placeholder="Ask anything about your home or project..." onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendAIChat()}"></textarea>
+        <details class="sageMenu sagePromptMenu" id="sagePromptMenu">
+          <summary aria-label="Suggested prompts" title="Suggested prompts">＋</summary>
+          <div class="sageMenuPanel"><strong>Try asking Sage</strong><div id="aiSuggestions" aria-label="Suggested prompts"></div></div>
+        </details>
+        <textarea id="aiMessageInput" maxlength="4000" rows="1" aria-label="Message Sage" placeholder="Message Sage…" oninput="resizeSageInput()" onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendAIChat()}"></textarea>
         <button type="button" id="aiSendButton" onclick="sendAIChat()" aria-label="Send message">➤</button>
       </div>
       <p class="aiComposerHint">Enter to send · Shift + Enter for a new line</p>
@@ -2028,6 +2058,8 @@ const pageIds = [
 ];
 
 function showPage(pageId){
+  document.body.classList.toggle("sageChatOpen",pageId === "aiChatPage");
+  closeSageMenus();
 
   if(pageId !== "calendarPage"){
     document.getElementById("selectedDateCard").hidden = true;
@@ -9598,7 +9630,27 @@ function sageChatTitle(key){
   const first = (data.aiChats[key] || []).find(m => m.role === "user");
   return first ? String(first.content).slice(0,70) : "New conversation";
 }
+function closeSageMenus(){
+  document.querySelectorAll("#aiChatPage details.sageMenu[open]").forEach(menu => menu.open = false);
+}
+function resizeSageInput(){
+  const input = document.getElementById("aiMessageInput");
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight,130) + "px";
+}
+document.addEventListener("click",event => {
+  document.querySelectorAll("#aiChatPage details.sageMenu[open]").forEach(menu => {
+    if(!menu.contains(event.target)) menu.open = false;
+  });
+});
+document.addEventListener("keydown",event => {
+  if(event.key !== "Escape") return;
+  const menu = document.querySelector("#aiChatPage details.sageMenu[open]");
+  closeSageMenus();
+  menu?.querySelector("summary")?.focus();
+});
 function openSageHistory(){
+  closeSageMenus();
   document.getElementById("sageHistorySearch").value = "";
   renderSageHistory();
   document.getElementById("sageHistory").showModal();
@@ -9609,6 +9661,7 @@ function closeSageHistory(){
 }
 function chooseSageConversation(key){
   if(aiBusy || aiPlanningBusy || aiImageBusy) return;
+  aiProjectDraftIndex = null;
   sageDrafts[aiThreadKey()] = document.getElementById("aiMessageInput").value;
   const select = document.getElementById("aiProjectSelect");
   const project = data.projects.find(p => String(p.id) === key);
@@ -9618,6 +9671,7 @@ function chooseSageConversation(key){
   saveData();
   closeSageReview();closeSageHistory();renderAIChat();setAIMode("list");
   document.getElementById("aiMessageInput").value = sageDrafts[key] || "";
+  resizeSageInput();
 }
 function newSageConversation(){
   if(aiBusy || aiPlanningBusy || aiImageBusy) return;
@@ -9677,6 +9731,7 @@ function focusSageChat(prompt){
   setAIMode("list");
   const input = document.getElementById("aiMessageInput");
   if(prompt) input.value = prompt;
+  resizeSageInput();
   input.scrollIntoView({behavior:"smooth",block:"center"});
   input.focus({preventScroll:true});
 }
@@ -9783,8 +9838,7 @@ function renderChatMarkdown(content){
 function renderAIMessage(message,index){
   const mine = message.role === "user";
   const images = Array.isArray(message.images) ? message.images : [];
-  const showVisualPrompt = !mine && index === aiThread().length-1 && !message.imagePromptDismissed && !images.length;
-  const showProjectPrompt = !mine && index === aiThread().length-1 && !selectedAIProject() && !message.projectPromptDismissed;
+
   return `<div class="aiEntry ${mine ? "mine" : ""}">
     <div class="aiSender">${mine ? "You" : "✦ Sage"}</div>
     <div class="aiBubble">${mine ? escapeHTML(message.content) : renderChatMarkdown(message.content)}
@@ -9792,18 +9846,21 @@ function renderAIMessage(message,index){
     </div>
     ${mine ? "" : `<div class="aiMessageActions">
       <button type="button" onclick="copyAIReply(${index})" aria-label="Copy reply">Copy</button>
-      <button type="button" onclick="generateAIChatImage(${index})" aria-label="${images.length ? "Show another visual idea" : "Show a visual idea"}">🎨 ${images.length ? "Another idea" : "Show a visual idea"}</button>
-      ${selectedAIProject() ? `<button type="button" onclick="saveAIReplyAt(${index})" aria-label="Save reply to project notes">Save to project</button>
-      <button type="button" onclick="reviewSageReply(${index})" aria-label="Review tasks and materials from reply">Review tasks &amp; materials</button>` : ""}
-    </div>${showVisualPrompt ? `<div class="aiActionCard">
-      <strong>Would you like to see an example of this design or project?</strong>
-      <div class="row"><button type="button" onclick="generateAIChatImage(${index})">Yes, show me</button><button type="button" class="secondary" onclick="dismissAIVisualPrompt(${index})">No</button></div>
-    </div>` : ""}
-    ${showProjectPrompt ? `<div class="aiActionCard">
-      <strong>Make this your next project?</strong>
-      ${aiProjectDraftIndex === index ? `<label for="aiDraftProjectName">Project name</label><input id="aiDraftProjectName" maxlength="100" value="${escapeAttribute(chatProjectTitle(index))}"><div class="row"><button type="button" onclick="createProjectFromChat(${index})">Create Project</button><button type="button" class="secondary" onclick="dismissAIProjectPrompt(${index})">Not now</button></div>`
-        : `<div class="row"><button type="button" onclick="showAIProjectDraft(${index})">Yes</button><button type="button" class="secondary" onclick="dismissAIProjectPrompt(${index})">No</button></div>`}
+      <details class="sageMenu sageReplyMenu">
+        <summary aria-label="More actions for this reply">⋯</summary>
+        <div class="sageMenuPanel">
+          <button type="button" onclick="closeSageMenus();generateAIChatImage(${index})">${images.length ? "Another visual idea" : "Show a visual idea"}</button>
+          ${selectedAIProject() ? `<button type="button" onclick="closeSageMenus();saveAIReplyAt(${index})">Save to project notes</button>
+          <button type="button" onclick="closeSageMenus();reviewSageReply(${index})">Review tasks &amp; materials</button>`
+          : `<button type="button" onclick="closeSageMenus();showAIProjectDraft(${index})">Create a project from this chat</button>`}
+        </div>
+      </details>
+    </div>
+    ${!selectedAIProject() && aiProjectDraftIndex === index ? `<div class="aiActionCard">
+      <label for="aiDraftProjectName">Project name</label><input id="aiDraftProjectName" maxlength="100" value="${escapeAttribute(chatProjectTitle(index))}">
+      <div class="row"><button type="button" onclick="createProjectFromChat(${index})">Create Project</button><button type="button" class="secondary" onclick="dismissAIProjectPrompt(${index})">Cancel</button></div>
     </div>` : ""}`}
+
   </div>`;
 }
 let aiProjectDraftIndex = null;
@@ -9959,7 +10016,9 @@ function renderAISuggestions(hasMessages,hasProject){
 function useAISuggestion(index){
   const input = document.getElementById("aiMessageInput");
   if(!aiSuggestions[index] || aiBusy) return;
+  closeSageMenus();
   input.value = aiSuggestions[index];
+  resizeSageInput();
   input.focus();
   input.setSelectionRange(input.value.length,input.value.length);
 }
@@ -9986,14 +10045,18 @@ function renderAIChat(){
   const box = document.getElementById("aiMessages");
   const messages = aiThread();
   const project = selectedAIProject();
-  document.querySelector(".sageIntro").classList.toggle("hasMessages",messages.length > 0);
+  box.classList.toggle("isEmpty",messages.length === 0);
   if(sageReview && sageReview.projectId !== aiThreadKey()) closeSageReview();
-  document.getElementById("aiConversationLabel").textContent = project ? project.name : sageChatTitle(aiThreadKey());
+  const label = document.getElementById("aiConversationLabel");
+  label.textContent = project ? project.name : sageChatTitle(aiThreadKey());
+  label.hidden = !project && !messages.length;
+  label.title = label.textContent;
   box.innerHTML = messages.length ? messages.map(renderAIMessage).join("")
-    : `<div class="aiWelcome"><span aria-hidden="true" style="font-size:29px">✦</span><strong>What can I help you with?</strong><p>Ask about a project, materials, maintenance, or a decision you're weighing.</p></div>`;
+    : `<div class="aiWelcome"><strong>What can I help you with?</strong></div>`;
   renderAISuggestions(messages.length > 0,Boolean(project));
   scrollToSageLatest();
   setAIMode(aiMode);
+  resizeSageInput();
 }
 async function sendAIChat(){
   if(aiBusy) return;
