@@ -941,6 +941,9 @@ input,textarea,select{
 .aiWelcome{text-align:center;margin:auto;max-width:330px;padding:42px 10px;color:#405847}
 .aiWelcome strong{display:block;font-size:21px;margin:7px 0}.aiWelcome p{line-height:1.5}
 .aiThinking{color:#5d7162;font-size:14px;padding:9px 12px}
+@keyframes sageThinkingPulse{0%,100%{opacity:.45}50%{opacity:1}}
+#aiChatPage .aiThinking{display:block;align-self:flex-start;padding:8px 0;animation:sageThinkingPulse 1.5s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){#aiChatPage .aiThinking{animation:none}}
 .aiComposerWrap{padding:12px 14px 14px;background:#fff;border-top:1px solid #e8e5db}
 .aiSuggestions{display:flex;gap:7px;overflow-x:auto;padding-bottom:9px;scrollbar-width:thin}
 .aiSuggestions button{flex:0 0 auto;background:#f8f7f1;color:#37523f;border:1px solid #d9ded3;border-radius:20px;padding:7px 11px;font-size:12px}
@@ -9946,7 +9949,7 @@ function renderAIMessage(message,index){
       </details>
     </div>
     ${!selectedAIProject() && aiProjectDraftIndex === index ? `<div class="aiActionCard">
-      <label for="aiDraftProjectName">Project name</label><input id="aiDraftProjectName" maxlength="100" value="${escapeAttribute(chatProjectTitle(index))}">
+      <label for="aiDraftProjectName">Project name</label><input id="aiDraftProjectName" maxlength="100" placeholder="Name your project" value="">
       <div class="row"><button type="button" onclick="createProjectFromChat(${index})">Create Project</button><button type="button" class="secondary" onclick="dismissAIProjectPrompt(${index})">Cancel</button></div>
     </div>` : ""}`}
 
@@ -9959,15 +9962,6 @@ function dismissAIVisualPrompt(index){
   if(!reply) return;
   reply.imagePromptDismissed = true;
   saveData();renderAIChat();
-}
-function chatProjectTitle(index){
-  const messages = aiThread();
-  const earlier = messages.slice(0,index).reverse().find(message => message.role === "user");
-  let name = String(earlier?.content || "New home project")
-    .replace(/^(can you |could you |please |help me |i want to |i'd like to |how do i |tell me about )+/i,"")
-    .replace(/[?.!]+$/g,"").trim();
-  if(name.length > 76) name = name.slice(0,76).replace(/\s+\S*$/,"");
-  return name ? name.charAt(0).toUpperCase()+name.slice(1) : "New home project";
 }
 function showAIProjectDraft(index){
   aiProjectDraftIndex = index;
@@ -10023,21 +10017,37 @@ async function createProjectFromChat(index){
   const context = aiThread().slice(Math.max(0,index-5),index+1)
     .filter(item => item.role === "user" || item.role === "assistant")
     .map(item => ({role:item.role,content:item.content}));
+  const projectConversation = aiThread().slice(0,index+1).map(item => ({...item}));
   const status = document.getElementById("aiChatStatus");
   const button = document.querySelector('.aiActionCard button[onclick="createProjectFromChat('+index+')"]');
   aiPlanningBusy = true;
   if(button){button.disabled=true;button.textContent="Organizing your plan…";}
   status.textContent = "Separating tasks, materials, tools, and DIY instructions…";
   try{
-    const {plan,tasks,materials} = await buildStructuredChatPlan(title,context);
+    let plan = null, tasks = [], materials = [];
+    try{
+      ({plan,tasks,materials} = await buildStructuredChatPlan(title,context));
+    }catch(error){
+      if(!/quota|credit|limit/i.test(error.message || "")) throw error;
+      // A project and its conversation can still be saved when AI planning credits run out.
+    }
     const id = `project-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
     data.projects.push({id,name:title,category:"Home",status:"planned",startedAt:"",completedAt:"",
-      description:plan.summary || title,tasks,materials,records:[],notes:"Created from AI Chat.",
+      description:plan?.summary || reply.content.slice(0,1000) || title,tasks,materials,records:[],
+      notes:plan ? "Created from AI Chat." : "Started from AI Chat: AI planning limit reached. Organize this conversation later.",
       aiPlan:plan,aiImage:(reply.images || []).at(-1) || ""});
-    data.aiChats[id] = context;
+    data.aiChats[id] = projectConversation;
+    try{saveData();}
+    catch(error){
+      data.projects.pop();
+      delete data.aiChats[id];
+      throw new Error(/quota|storage/i.test(error.message || "")
+        ? "This device is out of space for another project image. Free up space or remove an unused image, then try again."
+        : (error.message || "Could not save this project."));
+    }
     reply.projectPromptDismissed = true;
     aiProjectDraftIndex = null;
-    saveData();renderProjects();openProject(id);
+    renderProjects();openProject(id);
   }catch(err){
     status.textContent = `The project wasn't created yet. ${err.message || "Try again."}`;
     if(button){button.disabled=false;button.textContent="Create Project";}
@@ -10082,14 +10092,27 @@ async function generateAIChatImage(index){
   status.textContent = "Creating a visual idea…";
   try{
     const image = await requestProjectImage(prompt,project?.roomPhotos || []);
-    const compact = image.startsWith("data:image/")
-      ? await photoToJpeg(await (await fetch(image)).blob(),850,0.72)
-      : image;
-    reply.images = [...(reply.images || []),compact].slice(-3);
-    saveData();
+    const source = image.startsWith("data:image/") ? await (await fetch(image)).blob() : null;
+    const previousImages = reply.images;
+    let saved = false;
+    for(const [size,quality] of source ? [[680,.6],[480,.48],[360,.4]] : [[0,0]]){
+      const compact = source ? await photoToJpeg(source,size,quality) : image;
+      reply.images = [...(previousImages || []),compact].slice(-3);
+      try{saveData();saved = true;break;}
+      catch(error){
+        reply.images = previousImages;
+        if(!source || !/quota|storage/i.test(error.message || "")) throw error;
+      }
+    }
+    if(!saved) throw new Error("This device has no room for another image. Free up storage or remove an unused image, then try again.");
     status.textContent = "Visual idea ready. Tap Another idea to see a different example.";
     if(aiThreadKey() === key) renderAIChat();
-  }catch(err){status.textContent = `Could not create an image. ${err.message || "Try again."}`;}
+  }catch(err){
+    const reason = err.message || "Try again.";
+    status.textContent = /quota|credit|limit/i.test(reason)
+      ? "Image generation has reached its limit for now. Sage text chat still works; try an image again later."
+      : `Could not save the visual idea. ${reason}`;
+  }
   finally{aiImageBusy = false;}
 }
 let aiSuggestions = [];
@@ -10124,7 +10147,16 @@ function scrollToSageLatest(){
     window.scrollTo(0,Math.max(0,top));
   });
 }
-function renderAIChat(){
+function scrollToSageReply(index){
+  requestAnimationFrame(() => {
+    if(document.getElementById("aiChatPage").classList.contains("hidden")) return;
+    const reply = document.getElementById("aiMessages").children[index];
+    if(!reply) return;
+    const header = document.querySelector("#aiChatPage .sageChatToolbar");
+    window.scrollTo({top:Math.max(0,window.scrollY+reply.getBoundingClientRect().top-header.offsetHeight-12),behavior:"smooth"});
+  });
+}
+function renderAIChat({replyIndex=null}={}){
   const select = document.getElementById("aiProjectSelect");
   const previous = select.dataset.pendingProjectId || select.value;
   delete select.dataset.pendingProjectId;
@@ -10143,7 +10175,8 @@ function renderAIChat(){
   box.innerHTML = messages.length ? messages.map(renderAIMessage).join("")
     : `<div class="aiWelcome"><strong>What can I help you with?</strong></div>`;
   renderAISuggestions(messages.length > 0,Boolean(project));
-  scrollToSageLatest();
+  if(replyIndex === null) scrollToSageLatest();
+  else scrollToSageReply(replyIndex);
   setAIMode(aiMode);
   resizeSageInput();
 }
@@ -10162,8 +10195,11 @@ async function sendAIChat(){
   input.disabled = true;
   const box = document.getElementById("aiMessages");
   if(!history.length) box.innerHTML = "";
+  box.classList.remove("isEmpty");
   box.insertAdjacentHTML("beforeend",renderAIMessage({role:"user",content:message},-1)
     + `<div class="aiEntry"><div class="aiSender">✦ Sage</div><div class="aiThinking">Thinking…</div></div>`);
+  input.value = "";
+  resizeSageInput();
   scrollToSageLatest();
   status.textContent = "";
   try{
@@ -10180,19 +10216,28 @@ async function sendAIChat(){
       throw new Error(result.error || "The chat service is unavailable.");
     const savedMessages = [...(data.aiChats[key] || []),
       {role:"user",content:message},{role:"assistant",content:result.reply}];
+    const priorMessages = data.aiChats[key];
+    const priorActiveThread = data.sageActiveThread;
     delete data.aiChats[key];
     data.aiChats[key] = savedMessages;
     data.sageActiveThread = key;
-    saveData(); input.value = ""; status.textContent = ""; renderAIChat();
+    try{saveData();}
+    catch(error){
+      delete data.aiChats[key];
+      if(priorMessages) data.aiChats[key] = priorMessages;
+      data.sageActiveThread = priorActiveThread;
+      throw error;
+    }
+    status.textContent = ""; renderAIChat({replyIndex:savedMessages.length-1});
   }catch(err){
     status.textContent = `${err.message || "The chat service is unavailable."} Your message was not sent.`;
+    input.value = message;
     renderAIChat();
   }finally{
     aiBusy = false;
     document.getElementById("aiSendButton").disabled = false;
     document.getElementById("aiProjectSelect").disabled = false;
     input.disabled = false;
-    input.focus();
   }
 }
 let sageReview = null;
