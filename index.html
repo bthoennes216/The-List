@@ -954,6 +954,11 @@ input,textarea,select{
 .aiComposer button:disabled{opacity:.55}
 .aiComposerHint{font-size:11px;color:#788074;margin:7px 3px 0}
 .aiNote{font-size:13px;color:#5e6058;line-height:1.45}
+.sageBriefCard{margin-top:18px;padding:16px;border:1px solid #d9e2d6;border-radius:16px;background:#f5f7f1}
+.sageBriefCard summary{cursor:pointer;font-weight:700;color:#304734}
+.sageBriefCard label{display:block;font-weight:600;margin:12px 0 5px}
+.sageBriefCard textarea{min-height:65px;margin:0;width:100%}
+.sageBriefCard select{width:100%;max-width:100%;margin-bottom:12px}
 .sageIntro{background:#fbf8f0;border:1px solid #e2dbcd;padding:20px}
 .sageIdentity{display:flex;align-items:center;gap:14px;margin-bottom:16px}
 .sageAvatar{width:62px;height:62px;flex:none;border-radius:50%;display:block;object-fit:cover;background:#e9e5d9;box-shadow:0 4px 13px rgba(37,60,42,.18)}
@@ -2947,6 +2952,21 @@ function openProject(id){
         ✦ Discuss this project with Sage
       </button>
 
+      <details class="sageBriefCard" ${project.sageBrief ? "" : "open"}>
+        <summary>✦ What Sage should remember</summary>
+        <p class="smallText">Save details Sage should use in this project's chats and visual ideas. You can change them anytime.</p>
+        <label for="sageBriefChoices">Design choices</label>
+        <textarea id="sageBriefChoices" maxlength="800" placeholder="For example: forest-green cabinets and dark butcher-block counters">${escapeHTML(project.sageBrief?.choices || "")}</textarea>
+        <label for="sageBriefMeasurements">Measurements and budget</label>
+        <textarea id="sageBriefMeasurements" maxlength="800" placeholder="Add dimensions, spending limit, or details to confirm">${escapeHTML(project.sageBrief?.measurements || "")}</textarea>
+        <label for="sageBriefKeep">What must stay the same?</label>
+        <textarea id="sageBriefKeep" maxlength="800" placeholder="For example: keep the kitchen layout, sink, windows and appliances">${escapeHTML(project.sageBrief?.keep || "")}</textarea>
+        <label for="sageBriefPhoto">Reference photo</label>
+        <select id="sageBriefPhoto" aria-label="Reference photo for Sage"></select>
+        <button type="button" onclick="saveSageBrief('${escapeAttribute(project.id)}')">Save for Sage</button>
+        <p id="sageBriefStatus" class="smallText" role="status"></p>
+      </details>
+
       ${!project.aiPlan && String(project.notes || "").startsWith("Started from AI Chat:")
         ? `<button type="button" id="organizeChatProjectButton" onclick="organizeChatProject('${escapeAttribute(project.id)}')">✨ Organize this chat into a plan</button>
           <p id="chatPlanStatus" class="smallText" role="status"></p>` : ""}
@@ -3188,6 +3208,7 @@ function openProject(id){
   renderProjectTasks(project);
   renderProjectMaterials(project);
   renderProjectPhotos(project);
+  renderSageBriefPhotoOptions(project);
 
 }
 async function compressProjectPhoto(file){
@@ -3227,6 +3248,33 @@ function renderProjectPhotos(project){
     </div>`).join("");
 }
 
+function renderSageBriefPhotoOptions(project){
+  const select = document.getElementById("sageBriefPhoto");
+  if(!select) return;
+  const chosen = project.sageBrief?.photoIndex;
+  select.innerHTML = '<option value="">Use the latest photo in this conversation</option>' +
+    (project.roomPhotos || []).map((_,index) =>
+      `<option value="${index}">Project photo ${index+1}</option>`).join("");
+  select.value = Number.isInteger(chosen) && chosen >= 0 && chosen < (project.roomPhotos || []).length
+    ? String(chosen) : "";
+}
+
+function saveSageBrief(projectId){
+  const project = data.projects.find(p => String(p.id) === String(projectId));
+  if(!project) return;
+  const previous = project.sageBrief;
+  const photoValue = document.getElementById("sageBriefPhoto").value;
+  project.sageBrief = {
+    choices:document.getElementById("sageBriefChoices").value.trim(),
+    measurements:document.getElementById("sageBriefMeasurements").value.trim(),
+    keep:document.getElementById("sageBriefKeep").value.trim(),
+    photoIndex:photoValue === "" ? null : Number(photoValue)
+  };
+  const status = document.getElementById("sageBriefStatus");
+  try{saveData();status.textContent = "Saved. Sage will use these details for this project.";}
+  catch(error){project.sageBrief = previous;status.textContent = "Could not save these details. Check available storage and try again.";}
+}
+
 async function addProjectPhotos(projectId,input){
   const project = data.projects.find(p => String(p.id) === String(projectId));
   if(!project) return;
@@ -3240,6 +3288,7 @@ async function addProjectPhotos(projectId,input){
     project.roomPhotos = [...oldPhotos,...photos];
     saveData();
     renderProjectPhotos(project);
+    renderSageBriefPhotoOptions(project);
     status.textContent = `${photos.length} photo${photos.length === 1 ? "" : "s"} added. Build your plan to use them.`;
   }catch(err){
     project.roomPhotos = oldPhotos;
@@ -3250,9 +3299,22 @@ async function addProjectPhotos(projectId,input){
 function removeProjectPhoto(projectId,index){
   const project = data.projects.find(p => String(p.id) === String(projectId));
   if(!project) return;
+  const previousPhotos = [...(project.roomPhotos || [])];
+  const previousBrief = project.sageBrief ? {...project.sageBrief} : null;
   project.roomPhotos.splice(index,1);
-  saveData();
+  if(Number.isInteger(project.sageBrief?.photoIndex)){
+    if(project.sageBrief.photoIndex === index) project.sageBrief.photoIndex = null;
+    else if(project.sageBrief.photoIndex > index) project.sageBrief.photoIndex--;
+  }
+  try{saveData();}
+  catch(error){
+    project.roomPhotos = previousPhotos;
+    project.sageBrief = previousBrief;
+    document.getElementById("projectPhotoStatus").textContent = "Could not remove this photo. Try again.";
+    return;
+  }
   renderProjectPhotos(project);
+  renderSageBriefPhotoOptions(project);
 }
 
 const imageViewerState = {scale:1,x:0,y:0,pointers:new Map(),gesture:null};
@@ -9927,12 +9989,24 @@ function aiThread(){
   return data.aiChats[key];
 }
 function sageRoomPhoto(messages=aiThread(),project=selectedAIProject()){
+  const pinnedIndex = project?.sageBrief?.photoIndex;
+  if(Number.isInteger(pinnedIndex) && project?.roomPhotos?.[pinnedIndex])
+    return project.roomPhotos[pinnedIndex];
   for(let index=messages.length-1;index>=0;index--){
     const entry = messages[index];
     if(entry.role === "user" && Array.isArray(entry.images) && entry.images.length)
       return entry.images.at(-1);
   }
   return project?.roomPhotos?.at(-1) || "";
+}
+function sageBriefText(project){
+  if(!project?.sageBrief) return "";
+  const brief = project.sageBrief;
+  return [
+    brief.choices && `Design choices: ${String(brief.choices).slice(0,800)}`,
+    brief.measurements && `Measurements and budget: ${String(brief.measurements).slice(0,800)}`,
+    brief.keep && `Keep unchanged: ${String(brief.keep).slice(0,800)}`
+  ].filter(Boolean).join("\n");
 }
 function sageVisualRequest(message){
   return /\b(show|visuali[sz]e|render|mock.?up|re.?imagine|generate (?:an? )?(?:image|picture|photo)|what .* look like)\b/i.test(message);
@@ -10073,11 +10147,11 @@ function dismissAIProjectPrompt(index){
   saveData();renderAIChat();
 }
 let aiPlanningBusy = false;
-async function buildStructuredChatPlan(name,context,roomPhotos=[],existingPlan=null,feedback=""){
+async function buildStructuredChatPlan(name,context,roomPhotos=[],existingPlan=null,feedback="",project=null){
   const conversation = context.map(item => `${item.role === "user" ? "Homeowner" : "AI"}: ${item.content}`)
     .join("\n\n").slice(-9000);
   const plan = await requestTheListAI({
-    projectDescription:`${name}\n\nProject discussion:\n${conversation}`,
+    projectDescription:`${name}${sageBriefText(project) ? `\n\nProject details to preserve:\n${sageBriefText(project)}` : ""}\n\nProject discussion:\n${conversation}`,
     measurements:{},style:"",
     refinement:`Turn this discussion into a practical project record. Separate actionable project tasks, a material takeoff with quantities or clearly labeled estimates, tools needed versus tools already owned, and numbered DIY build instructions. Use the homeowner's actual request as the project scope. Identify unknown measurements rather than inventing them.${feedback ? ` Revise the existing plan based on this feedback: ${feedback}` : ""}`,
     existingPlan,toolsOwned:data.tools.map(tool => tool.name),
@@ -10166,7 +10240,7 @@ async function organizeChatProject(projectId){
   button.textContent = "Organizing your plan…";
   status.textContent = "Separating tasks, materials, tools, and DIY instructions…";
   try{
-    const {plan,tasks,materials} = await buildStructuredChatPlan(project.name,context,project.roomPhotos || []);
+    const {plan,tasks,materials} = await buildStructuredChatPlan(project.name,context,project.roomPhotos || [],null,"",project);
     project.description = plan.summary || project.description;
     project.tasks = [...(project.tasks || []),...tasks];
     project.materials = [...(project.materials || []),...materials];
@@ -10186,7 +10260,7 @@ async function generateAIChatImage(index){
   const project = selectedAIProject();
   const earlier = aiThread().slice(0,index).reverse().find(item => item.role === "user");
   const status = document.getElementById("aiChatStatus");
-  const prompt = `Photorealistic visual example of this completed home project or design idea. Preserve the supplied room layout and camera angle when a photo is provided. No labels, diagrams, or text overlays. Earlier homeowner requests: ${sageDesignContext(aiThread().slice(0,index))}. Latest request: ${String(earlier?.content || project?.name || "Home project").slice(0,700)}. Proposed idea: ${reply.content.slice(0,1600)}`;
+  const prompt = `Photorealistic visual example of this completed home project or design idea. Preserve the supplied room layout and camera angle when a photo is provided. No labels, diagrams, or text overlays. ${project ? `Project details to preserve: ${sageBriefText(project)}. ` : ""}Earlier homeowner requests: ${sageDesignContext(aiThread().slice(0,index))}. Latest request: ${String(earlier?.content || project?.name || "Home project").slice(0,700)}. Proposed idea: ${reply.content.slice(0,1600)}`;
   aiImageBusy = true;
   status.textContent = "Creating a visual idea…";
   try{
@@ -10291,6 +10365,8 @@ async function sendAIChat(){
   const key = aiThreadKey();
   const project = selectedAIProject();
   const history = sageChatHistory(aiThread(),Boolean(savedPhoto));
+  const brief = sageBriefText(project);
+  if(brief) history.unshift({role:"user",content:`Project details to use throughout this conversation:\n${brief}`});
   const status = document.getElementById("aiChatStatus");
   aiBusy = true;
   document.getElementById("aiSendButton").disabled = true;
@@ -10312,6 +10388,7 @@ async function sendAIChat(){
       body:JSON.stringify({message,history,roomPhotos:canSeePhoto ? [savedPhoto] : [],project:project ? {
         name:project.name, description:project.description || "",
         notes:(project.notes || "").slice(0,1500),
+        sageBrief:brief,
         tasks:(project.tasks || []).slice(0,20).map(t => t.text || t.title || "")
       } : null, homeContext:data.home || {}})
     });
@@ -10355,7 +10432,7 @@ async function sendSagePhoto(savedPhoto=""){
   const project = selectedAIProject();
   const status = document.getElementById("aiChatStatus");
   const box = document.getElementById("aiMessages");
-  const prompt = `Edit this supplied room photo into a realistic view of the finished project. Keep the existing room layout, fixed walls, windows, doors and camera angle unless the request changes them. Project: ${project?.name || "Home improvement"}. Earlier homeowner design requests: ${sageDesignContext(aiThread())}. Latest requested changes take priority: ${message.slice(0,1000)}. No labels, diagrams or text overlays.`;
+  const prompt = `Edit this supplied room photo into a realistic view of the finished project. Keep the existing room layout, fixed walls, windows, doors and camera angle unless the request changes them. Project: ${project?.name || "Home improvement"}. ${project ? `Project details to preserve: ${sageBriefText(project)}. ` : ""}Earlier homeowner design requests: ${sageDesignContext(aiThread())}. Latest requested changes take priority: ${message.slice(0,1000)}. No labels, diagrams or text overlays.`;
   aiBusy = true;
   document.getElementById("aiSendButton").disabled = true;
   input.disabled = true;
@@ -10423,7 +10500,7 @@ async function reviewSageReply(index){
   aiPlanningBusy = true;
   status.textContent = "Preparing tasks and materials to review...";
   try{
-    const {tasks,materials} = await buildStructuredChatPlan(project.name,context,project.roomPhotos || []);
+    const {tasks,materials} = await buildStructuredChatPlan(project.name,context,project.roomPhotos || [],null,"",project);
     if(aiThreadKey() !== key) return;
     const existingTasks = new Set((project.tasks || []).map(item => item.text.trim().toLowerCase()));
     const existingMaterials = new Set((project.materials || []).map(item => item.name.trim().toLowerCase()));
