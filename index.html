@@ -1712,6 +1712,8 @@ body.sageChatOpen main{padding-top:0}
 <script>
 
 const STORAGE_KEY = "theListDataV2";
+const STORED_IMAGE_PREFIX = "the-list-image-ref:v1:";
+const STORED_IMAGE_POOL = "theListImagePoolV1";
 
 /* =========================================================
    THE LIST AI BACKEND
@@ -1722,23 +1724,27 @@ const STORAGE_KEY = "theListDataV2";
 const AI_BACKEND_URL = "https://the-list-ai.bkt216.workers.dev/";
 function ensureProjectStatuses(){
 
+  let changed = false;
   data.projects.forEach(project => {
 
     if(!project.status){
       project.status = "planned";
+      changed = true;
     }
 
     if(!("startedAt" in project)){
       project.startedAt = "";
+      changed = true;
     }
 
     if(!("completedAt" in project)){
       project.completedAt = "";
+      changed = true;
     }
 
   });
 
-  saveData();
+  if(changed) saveData();
 
 }
 const defaultData = {
@@ -1789,8 +1795,6 @@ let planningProjectId = null;
    ========================================================= */
 
 // Store repeated image data once, while keeping the in-memory and backup formats unchanged.
-const STORED_IMAGE_PREFIX = "the-list-image-ref:v1:";
-const STORED_IMAGE_POOL = "theListImagePoolV1";
 
 function serializeStoredData(snapshot){
   const imageIds = new Map();
@@ -1994,8 +1998,8 @@ function loadData(){
   }catch(error){
 
     console.error(error);
-
-    return structuredClone(defaultData);
+    alert("The List could not open your saved data. Your existing projects and chats were not replaced. Please keep this browser data and try again after an update.");
+    throw error;
 
   }
 
