@@ -1552,7 +1552,53 @@ body.sageChatOpen main{padding-top:0}
       <button type="button" onclick="openHomeInfo('details')"><span aria-hidden="true">⌂</span><strong>Home Info</strong><small>House and yard details</small></button>
       <button type="button" onclick="openHomeInfo('tools')"><span aria-hidden="true">🧰</span><strong>My Tools</strong><small>Inventory and tools to buy</small></button>
       <button type="button" onclick="showPage('familyPage')"><span aria-hidden="true">♧</span><strong>Family</strong><small>Shared home notes</small></button>
+      <button type="button" onclick="showPage('householdPage')"><span aria-hidden="true">↔</span><strong>Household</strong><small>Sign in and share</small></button>
       <button type="button" onclick="openHomeInfo('backup')"><span aria-hidden="true">↧</span><strong>Backup</strong><small>Download or restore data</small></button>
+    </div>
+  </div>
+</section>
+
+<section id="householdPage" class="hidden">
+  <div class="card">
+    <h2>Share your home</h2>
+    <p class="smallText">Your projects stay on this phone until you review and save them to a household. Each person signs in with their own email.</p>
+    <p id="householdStatus" class="smallText" role="status"></p>
+    <div id="householdSignIn">
+      <label for="householdEmail">Email address</label>
+      <input id="householdEmail" type="email" autocomplete="email" placeholder="you@example.com">
+      <button type="button" onclick="householdSignIn()">Email me a sign-in link</button>
+      <p class="smallText">Open the email link on this phone to sign in. You can use two test emails first.</p>
+    </div>
+    <div id="householdSignedIn" hidden>
+      <p>Signed in as <strong id="householdSignedEmail"></strong></p>
+      <button type="button" class="secondary" onclick="householdSignOut()">Sign out of household</button>
+      <div id="householdChoose" hidden>
+        <h3>Create a household</h3>
+        <button type="button" onclick="householdCreate()">Create our household</button>
+        <h3>Join your household</h3>
+        <label for="householdJoinCode">Invitation code from the other phone</label>
+        <input id="householdJoinCode" type="text" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="Paste invitation code">
+        <button type="button" class="secondary" onclick="householdJoin()">Join household</button>
+      </div>
+      <div id="householdConnected" hidden>
+        <p><strong id="householdName"></strong></p>
+        <label for="householdCode">Invitation code for the second phone</label>
+        <input id="householdCode" readonly aria-label="Invitation code">
+        <p class="smallText">Share this code privately with someone you trust. Anyone who signs in and has the code can join.</p>
+        <button type="button" onclick="householdReview()">Review phone and shared projects</button>
+        <p id="householdSyncState" class="smallText"></p>
+        <div id="householdReviewPanel" hidden>
+          <p id="householdReviewSummary"></p>
+          <label for="householdConflictChoice">If both phones changed the same project or conversation</label>
+          <select id="householdConflictChoice">
+            <option value="local">Keep this phone's version</option>
+            <option value="shared">Keep the shared version</option>
+          </select>
+          <p class="smallText">Unique projects, tasks, and conversations are combined. Download a backup before the first sync.</p>
+          <button type="button" onclick="householdApplyReview()">Save reviewed household changes</button>
+          <button type="button" class="secondary" onclick="householdLoadOnly()">Only load the shared copy on this phone</button>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1997,6 +2043,7 @@ function saveData(){
   const saved = serializeStoredData(data);
   localStorage.setItem(STORAGE_KEY,saved);
   if(typeof scheduleRecoverySnapshot === "function") scheduleRecoverySnapshot(saved);
+  if(typeof householdLocalChange === "function") householdLocalChange();
 }
 
 
@@ -2203,6 +2250,7 @@ const pageIds = [
   "maintenancePage",
   "homeInfoPage",
   "familyPage",
+  "householdPage",
   "projectDetailPage"
 ];
 
@@ -2241,7 +2289,8 @@ function showPage(pageId){
     calendarPage:"navCalendar",
     maintenancePage:"navMore",
     homeInfoPage:"navMore",
-    familyPage:"navMore"
+    familyPage:"navMore",
+    householdPage:"navMore"
   };
 
   if(map[pageId]){
@@ -2296,6 +2345,8 @@ function showPage(pageId){
   if(pageId === "familyPage"){
     renderFamily();
   }
+
+  if(pageId === "householdPage" && typeof householdRender === "function") householdRender();
 
 }
 
@@ -10799,6 +10850,8 @@ showPage("homePage");
 scheduleRecoverySnapshot(localStorage.getItem(STORAGE_KEY));
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="household.js"></script>
 
 </body>
 </html>
