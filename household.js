@@ -1,7 +1,7 @@
 /* Household sync is opt-in. Configure these PUBLIC client settings after creating the
    Supabase project described in HOUSEHOLD_SETUP.md. Never put a service-role key here. */
-const HOUSEHOLD_SUPABASE_URL = "";
-const HOUSEHOLD_SUPABASE_PUBLISHABLE_KEY = "";
+const HOUSEHOLD_SUPABASE_URL = "https://pllquupnlhzgguvmnxsc.supabase.co";
+const HOUSEHOLD_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_iIQLOtnQEK7dpQ575opPFg_DnqWcVvl";
 const householdClient = HOUSEHOLD_SUPABASE_URL && HOUSEHOLD_SUPABASE_PUBLISHABLE_KEY && window.supabase
   ? window.supabase.createClient(HOUSEHOLD_SUPABASE_URL,HOUSEHOLD_SUPABASE_PUBLISHABLE_KEY)
   : null;
