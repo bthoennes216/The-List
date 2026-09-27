@@ -1672,6 +1672,11 @@ body.sageChatOpen main{padding-top:0}
         <button type="button" onclick="restoreBackup()">Restore this backup</button>
       </div>
     </div>
+    <div class="card">
+      <h2>On-device recovery copies</h2>
+      <p class="smallText">The List keeps recent copies on this device to help if data is accidentally replaced. Browser data can be cleared all at once, so keep a downloaded backup in Files or iCloud Drive too.</p>
+      <div id="recoveryCopies" role="status">Checking for recovery copies…</div>
+    </div>
   </div>
 
 </section>
@@ -1989,12 +1994,9 @@ function loadData(){
 }
 
 function saveData(){
-
-  localStorage.setItem(
-    STORAGE_KEY,
-    serializeStoredData(data)
-  );
-
+  const saved = serializeStoredData(data);
+  localStorage.setItem(STORAGE_KEY,saved);
+  if(typeof scheduleRecoverySnapshot === "function") scheduleRecoverySnapshot(saved);
 }
 
 
@@ -2002,6 +2004,110 @@ function saveData(){
    BACKUP / RESTORE
    ========================================================= */
 let pendingBackup = null;
+const RECOVERY_DB_NAME = "theListRecoveryV1";
+const RECOVERY_STORE_NAME = "copies";
+let recoverySaveTimer = null;
+
+function openRecoveryDB(){
+  return new Promise((resolve,reject) => {
+    if(typeof indexedDB === "undefined") return reject(new Error("On-device recovery is unavailable."));
+    const request = indexedDB.open(RECOVERY_DB_NAME,1);
+    request.onupgradeneeded = () => request.result.createObjectStore(RECOVERY_STORE_NAME,{keyPath:"id"});
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("Cannot open recovery storage."));
+  });
+}
+
+async function recoveryRecord(id,record){
+  const db = await openRecoveryDB();
+  try{
+    return await new Promise((resolve,reject) => {
+      const transaction = db.transaction(RECOVERY_STORE_NAME,record ? "readwrite" : "readonly");
+      const request = record ? transaction.objectStore(RECOVERY_STORE_NAME).put(record)
+        : transaction.objectStore(RECOVERY_STORE_NAME).get(id);
+      let result;
+      request.onsuccess = () => {result = request.result;};
+      transaction.oncomplete = () => resolve(result);
+      transaction.onerror = () => reject(transaction.error || new Error("Recovery storage is unavailable."));
+      transaction.onabort = () => reject(transaction.error || new Error("Recovery storage was interrupted."));
+    });
+  }finally{db.close();}
+}
+
+function hasRecoveryContent(snapshot){
+  try{
+    const saved = JSON.parse(snapshot);
+    return Array.isArray(saved.projects) && (
+      saved.projects.length > 0 || (saved.shopping || []).length > 0 ||
+      (saved.tools || []).length > 0 || (saved.maintenance || []).length > 0 ||
+      (saved.calendar || []).length > 0 ||
+      Object.values(saved.aiChats || {}).some(chat => Array.isArray(chat) && chat.length > 0));
+  }catch{return false;}
+}
+
+async function saveRecoverySnapshot(snapshot,beforeRestore=false){
+  if(!snapshot || !hasRecoveryContent(snapshot)) return false;
+  const now = Date.now();
+  if(beforeRestore){
+    await recoveryRecord("before-restore",{id:"before-restore",snapshot,createdAt:now});
+    return true;
+  }
+  const latest = await recoveryRecord("latest");
+  if(latest?.snapshot === snapshot) return true;
+  if(latest && now - latest.createdAt > 24*60*60*1000)
+    await recoveryRecord("previous",{...latest,id:"previous"});
+  await recoveryRecord("latest",{id:"latest",snapshot,createdAt:now});
+  return true;
+}
+
+function scheduleRecoverySnapshot(snapshot){
+  if(!hasRecoveryContent(snapshot)) return;
+  clearTimeout(recoverySaveTimer);
+  recoverySaveTimer = setTimeout(() => {
+    saveRecoverySnapshot(snapshot).then(() => {
+      if(!document.getElementById("homeBackupSection").classList.contains("hidden")) renderRecoveryCopies();
+    }).catch(() => {}); // Primary project saves still succeed if recovery storage is unavailable.
+  },1500);
+}
+
+async function renderRecoveryCopies(){
+  const box = document.getElementById("recoveryCopies");
+  try{
+    const copies = (await Promise.all(["latest","previous","before-restore"].map(id => recoveryRecord(id))))
+      .filter(item => item && hasRecoveryContent(item.snapshot));
+    box.innerHTML = copies.length ? copies.map(copy => {
+      const label = copy.id === "before-restore" ? "Before last restore" :
+        copy.id === "previous" ? "Earlier copy" : "Recent copy";
+      const count = JSON.parse(copy.snapshot).projects.length;
+      return `<div class="toolRow"><span><strong>${label}</strong><br><small>${new Date(copy.createdAt).toLocaleString()} · ${count} project${count === 1 ? "" : "s"}</small></span><button type="button" class="small secondary" onclick="previewRecoveryCopy('${copy.id}')">Review</button></div>`;
+    }).join("") : "No recovery copies yet. Save a project or conversation to make one.";
+  }catch{
+    box.textContent = "On-device recovery is unavailable in this browser. Download a backup to Files or iCloud Drive.";
+  }
+}
+
+async function previewRecoveryCopy(id){
+  const status = document.getElementById("backupRestoreStatus");
+  pendingBackup = null;
+  document.getElementById("backupPreview").hidden = true;
+  try{
+    if(!["latest","previous","before-restore"].includes(id)) throw new Error("Unknown recovery copy.");
+    const copy = await recoveryRecord(id);
+    const saved = validateBackup({app:"The List",formatVersion:1,data:parseStoredData(copy.snapshot)});
+    showBackupPreview(saved,new Date(copy.createdAt).toLocaleString());
+    status.textContent = "Review this recovery copy before restoring it.";
+  }catch(error){status.textContent = error.message || "Could not open this recovery copy.";}
+}
+
+function showBackupPreview(saved,when){
+  pendingBackup = saved;
+  document.getElementById("backupSummary").textContent =
+    when + " · " + saved.projects.length + " projects · " +
+    saved.shopping.length + " shopping items · " + saved.tools.length +
+    " tools · " + saved.maintenance.length + " maintenance items · " +
+    saved.calendar.length + " calendar entries";
+  document.getElementById("backupPreview").hidden = false;
+}
 
 function validateBackup(raw){
   if(!raw || raw.app !== "The List" || raw.formatVersion !== 1 ||
@@ -2054,27 +2160,28 @@ async function previewBackupFile(){
   try{
     const raw = JSON.parse(await file.text());
     const saved = validateBackup(raw);
-    pendingBackup = saved;
     const date = new Date(raw.exportedAt);
     const when = Number.isNaN(date.getTime()) ? "Date unknown" : date.toLocaleString();
-    document.getElementById("backupSummary").textContent =
-      when + " · " + saved.projects.length + " projects · " +
-      saved.shopping.length + " shopping items · " + saved.tools.length +
-      " tools · " + saved.maintenance.length + " maintenance items · " +
-      saved.calendar.length + " calendar entries";
-    document.getElementById("backupPreview").hidden = false;
+    showBackupPreview(saved,when);
     status.textContent = "Backup checked. Review the contents below.";
   }catch(error){
     status.textContent = error.message || "Could not read this backup.";
   }
 }
 
-function restoreBackup(){
+async function restoreBackup(){
   if(!pendingBackup) return;
+  const chosenBackup = pendingBackup;
   const status = document.getElementById("backupRestoreStatus");
   if(!confirm("Replace the current The List data on this device with this backup? This cannot be undone unless you saved a separate backup.")) return;
   try{
-    localStorage.setItem(STORAGE_KEY,serializeStoredData(pendingBackup));
+    clearTimeout(recoverySaveTimer);
+    const current = localStorage.getItem(STORAGE_KEY);
+    try{await saveRecoverySnapshot(current,true);}
+    catch{
+      if(!confirm("An on-device recovery copy could not be saved. Continue only if you have downloaded a backup of your current data.")) return;
+    }
+    localStorage.setItem(STORAGE_KEY,serializeStoredData(chosenBackup));
     status.textContent = "Backup restored. Reloading...";
     location.reload();
   }catch(error){
@@ -4262,6 +4369,7 @@ function showHomeInfoSection(section){
     tab.setAttribute("aria-pressed",String(homeInfoSection === name));
   });
   if(homeInfoSection === "tools") renderToolInventory();
+  if(homeInfoSection === "backup") renderRecoveryCopies();
 }
 
 function toolKey(name){
@@ -10687,6 +10795,8 @@ if(restoredSageProject){
     ? restoredSageThread : "general";
 }
 showPage("homePage");
+// Copy existing data without changing the primary save during startup.
+scheduleRecoverySnapshot(localStorage.getItem(STORAGE_KEY));
 
 </script>
 
