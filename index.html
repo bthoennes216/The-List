@@ -1543,6 +1543,40 @@ body.sageChatOpen main{padding-top:0}
 </section>
 
 <section id="morePage" class="hidden">
+  <div class="card" id="accountCard">
+    <h2>Household account</h2>
+    <p id="accountStatus" role="status">Connecting to accounts…</p>
+    <div id="accountSignedOut">
+      <label for="accountEmail">Email</label><input id="accountEmail" type="email" autocomplete="email">
+      <label for="accountPassword">Password</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="6">
+      <div class="backupActions">
+        <button type="button" onclick="accountSignIn()">Sign in</button>
+        <button type="button" class="secondary" onclick="accountSignUp()">Create account</button>
+      </div>
+      <p class="smallText">After creating an account, check your email to confirm it.</p>
+    </div>
+    <div id="accountSignedIn" hidden>
+      <p id="accountIdentity"></p>
+      <div id="accountNoHousehold" hidden>
+        <button type="button" onclick="accountCreate()">Start a household</button>
+        <label for="accountInviteCode">Or enter a household invite code</label>
+        <input id="accountInviteCode" autocomplete="off" placeholder="Invite code">
+        <button type="button" onclick="accountJoin()">Join household</button>
+      </div>
+      <div id="accountHousehold" hidden>
+        <p id="accountSyncStatus"></p>
+        <div id="accountDataChoices" class="backupActions" hidden>
+          <button type="button" onclick="accountUseCloud()">Use shared data on this device</button>
+          <button type="button" class="secondary" onclick="accountUpload()">Upload this device's data</button>
+        </div>
+        <div id="accountOwnerActions" hidden>
+          <button type="button" class="secondary" onclick="accountInvite()">Make invite code</button>
+          <p id="accountInviteResult" class="smallText"></p>
+        </div>
+      </div>
+      <button type="button" class="secondary" onclick="accountSignOut()">Sign out (keep device copy)</button>
+    </div>
+  </div>
   <div class="card">
     <h2>More in The List</h2>
     <p class="smallText">Your lists and home details, all in one place.</p>
@@ -1997,6 +2031,7 @@ function saveData(){
   const saved = serializeStoredData(data);
   localStorage.setItem(STORAGE_KEY,saved);
   if(typeof scheduleRecoverySnapshot === "function") scheduleRecoverySnapshot(saved);
+  if(typeof window !== "undefined" && typeof window.queueCloudSync === "function") window.queueCloudSync();
 }
 
 
@@ -2182,6 +2217,7 @@ async function restoreBackup(){
       if(!confirm("An on-device recovery copy could not be saved. Continue only if you have downloaded a backup of your current data.")) return;
     }
     localStorage.setItem(STORAGE_KEY,serializeStoredData(chosenBackup));
+    if(typeof window !== "undefined" && typeof window.pauseCloudSyncForRestore === "function") window.pauseCloudSyncForRestore();
     status.textContent = "Backup restored. Reloading...";
     location.reload();
   }catch(error){
@@ -10693,6 +10729,7 @@ function saveSageReview(){
   try{
     localStorage.setItem(STORAGE_KEY,serializeStoredData(next));
     data = next;
+    if(typeof window !== "undefined" && typeof window.queueCloudSync === "function") window.queueCloudSync();
     closeSageReview();
     document.getElementById("aiChatStatus").textContent =
       `Added ${addedTasks} tasks, ${addedMaterials} materials, ${addedShopping} shopping items${addedReminder ? ", and a calendar reminder" : ""}.`;
@@ -10799,6 +10836,7 @@ showPage("homePage");
 scheduleRecoverySnapshot(localStorage.getItem(STORAGE_KEY));
 
 </script>
+<script src="sync.js"></script>
 
 </body>
 </html>
