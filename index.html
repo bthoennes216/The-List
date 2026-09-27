@@ -1199,6 +1199,11 @@ body.sageChatOpen main{padding-top:0}
 #aiChatPage .aiComposer textarea{min-width:0;resize:none;padding:10px 3px;min-height:44px;line-height:24px}
 #aiChatPage .aiComposer #aiSendButton{width:44px;height:44px;min-width:44px;padding:0;box-shadow:none}
 #aiChatPage .sagePromptMenu .sageMenuPanel{left:0;right:auto;top:auto;bottom:calc(100% + 12px)}
+#aiChatPage .sagePhotoPreview{display:flex;align-items:center;gap:10px;width:max-content;max-width:100%;margin:0 0 8px;padding:6px 8px;background:#e9eee4;border:1px solid #d4e1d2;border-radius:12px;color:#304632;font-size:13px}
+#aiChatPage .sagePhotoPreview[hidden]{display:none}
+#aiChatPage .sagePhotoPreview img{width:54px;height:54px;object-fit:cover;border-radius:8px}
+#aiChatPage .sagePhotoPreview button{margin:0;min-width:44px;min-height:44px;padding:0;border:0;background:transparent;color:#304632;box-shadow:none;font-size:23px}
+#aiChatPage .aiEntry.mine .aiImageGallery p{display:none}
 #aiChatPage #aiChatGPTPanel{margin-top:18px}
 @media(max-width:360px){#aiChatPage .aiWelcome strong{font-size:21px}}
 
@@ -1350,11 +1355,13 @@ body.sageChatOpen main{padding-top:0}
   <div id="aiListPanel" class="card aiPanel aiConversation">
     <div id="aiMessages" class="aiMessages" aria-live="polite"></div>
     <div class="aiComposerWrap">
+      <div id="sagePhotoPreview" class="sagePhotoPreview" hidden><img alt="Photo to send"><span>Photo ready to reimagine</span><button type="button" onclick="removeSagePhoto()" aria-label="Remove selected photo">×</button></div>
       <div class="aiComposer">
         <details class="sageMenu sagePromptMenu" id="sagePromptMenu">
           <summary aria-label="Suggested prompts" title="Suggested prompts">＋</summary>
-          <div class="sageMenuPanel"><strong>Try asking Sage</strong><div id="aiSuggestions" aria-label="Suggested prompts"></div></div>
+          <div class="sageMenuPanel"><button type="button" onclick="chooseSagePhoto()">📷 Add a room photo</button><strong>Try asking Sage</strong><div id="aiSuggestions" aria-label="Suggested prompts"></div></div>
         </details>
+        <input id="sagePhotoInput" type="file" accept="image/*" hidden onchange="attachSagePhoto(event)">
         <textarea id="aiMessageInput" maxlength="4000" rows="1" aria-label="Message Sage" placeholder="Message Sage…" oninput="resizeSageInput()" onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendAIChat()}"></textarea>
         <button type="button" id="aiSendButton" onclick="sendAIChat()" aria-label="Send message">➤</button>
       </div>
@@ -9651,6 +9658,48 @@ let aiMode = "list";
 let aiBusy = false;
 let sageGeneralThread = "general";
 const sageDrafts = {};
+let sagePendingPhoto = null;
+function showSagePhotoPreview(){
+  const preview = document.getElementById("sagePhotoPreview");
+  preview.hidden = !sagePendingPhoto;
+  if(sagePendingPhoto) preview.querySelector("img").src = sagePendingPhoto.image;
+  else preview.querySelector("img").removeAttribute("src");
+}
+function removeSagePhoto(){
+  sagePendingPhoto = null;
+  document.getElementById("sagePhotoInput").value = "";
+  showSagePhotoPreview();
+}
+function chooseSagePhoto(){
+  if(aiBusy || aiImageBusy || aiPlanningBusy) return;
+  closeSageMenus();
+  document.getElementById("sagePhotoInput").click();
+}
+async function attachSagePhoto(event){
+  const file = event.target.files?.[0];
+  if(!file) return;
+  const key = aiThreadKey();
+  const status = document.getElementById("aiChatStatus");
+  if(!file.type.startsWith("image/")){
+    status.textContent = "Choose a photo of your room.";
+    event.target.value = "";
+    return;
+  }
+  try{
+    let photo;
+    for(const [size,quality] of [[800,.62],[640,.52],[480,.45]]){
+      photo = await photoToJpeg(file,size,quality);
+      if(photo.length < 500000) break;
+    }
+    if(photo.length >= 1800000) throw new Error("This photo is too large. Try a different photo.");
+    if(aiThreadKey() !== key) return;
+    sagePendingPhoto = {key,image:photo};
+    showSagePhotoPreview();
+    status.textContent = "Describe how you want to change this space, then send it to Sage.";
+    document.getElementById("aiMessageInput").focus();
+  }catch(error){status.textContent = error.message || "Could not open this photo.";}
+  finally{event.target.value = "";}
+}
 function sageConversationKeys(){
   return Object.keys(data.aiChats).filter(key => Array.isArray(data.aiChats[key]) && data.aiChats[key].length).reverse();
 }
@@ -9765,6 +9814,7 @@ function closeSageHistory(){
 }
 function chooseSageConversation(key){
   if(aiBusy || aiPlanningBusy || aiImageBusy) return;
+  if(sagePendingPhoto?.key !== key) removeSagePhoto();
   aiProjectDraftIndex = null;
   sageDrafts[aiThreadKey()] = document.getElementById("aiMessageInput").value;
   const select = document.getElementById("aiProjectSelect");
@@ -9948,7 +9998,7 @@ function renderAIMessage(message,index){
   return `<div class="aiEntry ${mine ? "mine" : ""}">
     <div class="aiSender">${mine ? "You" : "✦ Sage"}</div>
     <div class="aiBubble">${mine ? escapeHTML(message.content) : renderChatMarkdown(message.content)}
-      ${images.length ? `<div class="aiImageGallery">${images.map((src,i) => `<button type="button" class="imageOpen" onclick="openImageViewer(this.querySelector('img'))" aria-label="Open visual project idea ${i+1}"><img src="${escapeAttribute(src)}" alt="Visual project idea ${i+1}" loading="lazy"></button>`).join("")}<p>Visual ideas are examples. Review dimensions and details before building.</p></div>` : ""}
+      ${images.length ? `<div class="aiImageGallery">${images.map((src,i) => `<button type="button" class="imageOpen" onclick="openImageViewer(this.querySelector('img'))" aria-label="Open ${mine ? "your room photo" : "visual project idea"} ${i+1}"><img src="${escapeAttribute(src)}" alt="${mine ? "Your room photo" : `Visual project idea ${i+1}`}" loading="lazy"></button>`).join("")}${mine ? "" : "<p>Visual ideas are examples. Review dimensions and details before building.</p>"}</div>` : ""}
     </div>
     ${mine ? "" : `<div class="aiMessageActions">
       <button type="button" onclick="copyAIReply(${index})" aria-label="Copy reply">Copy</button>
@@ -10032,6 +10082,8 @@ async function createProjectFromChat(index){
     .filter(item => item.role === "user" || item.role === "assistant")
     .map(item => ({role:item.role,content:item.content}));
   const projectConversation = aiThread().slice(0,index+1).map(item => ({...item}));
+  const roomPhotos = projectConversation.filter(item => item.role === "user")
+    .flatMap(item => Array.isArray(item.images) ? item.images : []).slice(-3);
   const status = document.getElementById("aiChatStatus");
   const button = document.querySelector('.aiActionCard button[onclick="createProjectFromChat('+index+')"]');
   aiPlanningBusy = true;
@@ -10040,7 +10092,7 @@ async function createProjectFromChat(index){
   try{
     let plan = null, tasks = [], materials = [];
     try{
-      ({plan,tasks,materials} = await buildStructuredChatPlan(title,context));
+      ({plan,tasks,materials} = await buildStructuredChatPlan(title,context,roomPhotos));
     }catch(error){
       if(!/quota|credit|limit/i.test(error.message || "")) throw error;
       // A project and its conversation can still be saved when AI planning credits run out.
@@ -10049,7 +10101,7 @@ async function createProjectFromChat(index){
     data.projects.push({id,name:title,category:"Home",status:"planned",startedAt:"",completedAt:"",
       description:plan?.summary || reply.content.slice(0,1000) || title,tasks,materials,records:[],
       notes:plan ? "Created from AI Chat." : "Started from AI Chat: AI planning limit reached. Organize this conversation later.",
-      aiPlan:plan,aiImage:(reply.images || []).at(-1) || ""});
+      aiPlan:plan,aiImage:(reply.images || []).at(-1) || "",roomPhotos});
     data.aiChats[id] = projectConversation;
     try{saveData();}
     catch(error){
@@ -10105,7 +10157,8 @@ async function generateAIChatImage(index){
   aiImageBusy = true;
   status.textContent = "Creating a visual idea…";
   try{
-    const image = await requestProjectImage(prompt,project?.roomPhotos || []);
+    const image = await requestProjectImage(prompt,(earlier?.images || []).slice(-1).length
+      ? earlier.images.slice(-1) : project?.roomPhotos || []);
     const source = image.startsWith("data:image/") ? await (await fetch(image)).blob() : null;
     const previousImages = reply.images;
     let saved = false;
@@ -10196,6 +10249,7 @@ function renderAIChat({replyIndex=null}={}){
 }
 async function sendAIChat(){
   if(aiBusy) return;
+  if(sagePendingPhoto) return sendSagePhoto();
   const input = document.getElementById("aiMessageInput");
   const message = input.value.trim();
   if(!message) return;
@@ -10252,6 +10306,64 @@ async function sendAIChat(){
     document.getElementById("aiSendButton").disabled = false;
     document.getElementById("aiProjectSelect").disabled = false;
     input.disabled = false;
+  }
+}
+async function sendSagePhoto(){
+  if(aiBusy || aiImageBusy || aiPlanningBusy || !sagePendingPhoto) return;
+  const input = document.getElementById("aiMessageInput");
+  const typed = input.value.trim();
+  const message = typed || "Reimagine this space for my project.";
+  const photo = sagePendingPhoto.image;
+  const key = aiThreadKey();
+  const project = selectedAIProject();
+  const status = document.getElementById("aiChatStatus");
+  const box = document.getElementById("aiMessages");
+  const prompt = `Edit this room photo into a realistic view of the finished project. Keep the existing room layout, fixed walls, windows, doors and camera angle unless the request changes them. Project: ${project?.name || "Home improvement"}. Homeowner's requested changes: ${message.slice(0,1000)}. No labels, diagrams or text overlays.`;
+  aiBusy = true;
+  document.getElementById("aiSendButton").disabled = true;
+  input.disabled = true;
+  status.textContent = "Reimagining your photo…";
+  box.classList.remove("isEmpty");
+  if(!aiThread().length) box.innerHTML = "";
+  box.insertAdjacentHTML("beforeend",renderAIMessage({role:"user",content:message,images:[photo]},-1)
+    + `<div class="aiEntry"><div class="aiSender">✦ Sage</div><div class="aiThinking">Reimagining your room…</div></div>`);
+  scrollToSageLatest();
+  try{
+    const image = await requestProjectImage(prompt,[photo]);
+    const source = image.startsWith("data:image/") ? await (await fetch(image)).blob() : null;
+    const previousMessages = data.aiChats[key];
+    const previousPhotos = project?.roomPhotos;
+    const previousActiveThread = data.sageActiveThread;
+    let saved = false;
+    for(const [size,quality] of source ? [[680,.6],[480,.48],[360,.4]] : [[0,0]]){
+      const concept = source ? await photoToJpeg(source,size,quality) : image;
+      data.aiChats[key] = [...(previousMessages || []),
+        {role:"user",content:message,images:[photo]},
+        {role:"assistant",content:"Here is a visual idea based on your photo. Tell me what you would change, or ask for another visual idea.",images:[concept]}];
+      data.sageActiveThread = key;
+      if(project && (previousPhotos || []).length < 3 && !(previousPhotos || []).includes(photo))
+        project.roomPhotos = [...(previousPhotos || []),photo];
+      try{saveData();saved = true;break;}
+      catch(error){
+        if(previousMessages) data.aiChats[key] = previousMessages;
+        else delete data.aiChats[key];
+        data.sageActiveThread = previousActiveThread;
+        if(project) project.roomPhotos = previousPhotos;
+        if(!source || !/quota|storage/i.test(error.message || "")) throw error;
+      }
+    }
+    if(!saved) throw new Error("This device has no room for another photo. Try a smaller photo or remove an unused image.");
+    input.value = "";
+    removeSagePhoto();
+    status.textContent = "Visual idea ready. Your original photo and Sage's idea are saved in this conversation.";
+    renderAIChat();
+  }catch(error){
+    status.textContent = `Could not reimagine this photo. ${error.message || "Please try again."}`;
+    renderAIChat();
+  }finally{
+    aiBusy = false;
+    input.disabled = false;
+    document.getElementById("aiSendButton").disabled = false;
   }
 }
 let sageReview = null;
