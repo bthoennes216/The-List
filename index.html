@@ -1724,27 +1724,21 @@ const STORED_IMAGE_POOL = "theListImagePoolV1";
 const AI_BACKEND_URL = "https://the-list-ai.bkt216.workers.dev/";
 function ensureProjectStatuses(){
 
-  let changed = false;
   data.projects.forEach(project => {
 
     if(!project.status){
       project.status = "planned";
-      changed = true;
     }
 
     if(!("startedAt" in project)){
       project.startedAt = "";
-      changed = true;
     }
 
     if(!("completedAt" in project)){
       project.completedAt = "";
-      changed = true;
     }
 
   });
-
-  if(changed) saveData();
 
 }
 const defaultData = {
@@ -1876,8 +1870,6 @@ function loadData(){
       ...(parsed.family || {})
     };
 
-    let dataChanged = false;
-
     parsed.projects.forEach((p,index) => {
 
       if(!p.id){
@@ -1892,42 +1884,34 @@ function loadData(){
             .toString(36)
             .substring(2,8);
 
-        dataChanged = true;
       }
 
       if(!p.name){
         p.name = "Untitled Project";
-        dataChanged = true;
       }
 
       if(!Array.isArray(p.tasks)){
         p.tasks = [];
-        dataChanged = true;
       }
 
       if(!Array.isArray(p.materials)){
         p.materials = [];
-        dataChanged = true;
       }
 
       if(!Array.isArray(p.records)){
         p.records = [];
-        dataChanged = true;
       }
 
       if(!Array.isArray(p.answers)){
         p.answers = [];
-        dataChanged = true;
       }
 
       if(typeof p.notes !== "string"){
         p.notes = "";
-        dataChanged = true;
       }
 
       if(typeof p.budget !== "number"){
         p.budget = Number(p.budget) || 0;
-        dataChanged = true;
       }
 
       if(!p.takeoff){
@@ -1950,17 +1934,14 @@ function loadData(){
               .toString(36)
               .substring(2,8);
 
-          dataChanged = true;
         }
 
         if(typeof t.done !== "boolean"){
           t.done = false;
-          dataChanged = true;
         }
 
         if(typeof t.dueDate === "undefined"){
           t.dueDate = "";
-          dataChanged = true;
         }
 
       });
@@ -1977,21 +1958,11 @@ function loadData(){
               .toString(36)
               .substring(2,8);
 
-          dataChanged = true;
         }
 
       });
 
     });
-
-    if(dataChanged){
-
-      localStorage.setItem(
-        STORAGE_KEY,
-        serializeStoredData(parsed)
-      );
-
-    }
 
     return parsed;
 
