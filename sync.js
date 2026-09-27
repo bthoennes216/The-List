@@ -31,9 +31,13 @@
   async function loadAccount() {
     linked = false;
     clearTimeout(timer);
-    const result = await client.auth.getUser();
-    if(result.error) throw result.error;
-    user = result.data.user;
+    const sessionResult = await client.auth.getSession();
+    if(sessionResult.error) throw sessionResult.error;
+    if(sessionResult.data.session) {
+      const result = await client.auth.getUser();
+      if(result.error) throw result.error;
+      user = result.data.user;
+    } else user = null;
     byId("accountSignedOut").hidden = !!user;
     byId("accountSignedIn").hidden = !user;
     if(!user) { household = null; status("Your projects are saved on this device. Sign in to share them."); return; }
