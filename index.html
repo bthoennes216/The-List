@@ -1788,6 +1788,45 @@ let planningProjectId = null;
    LOAD / SAVE
    ========================================================= */
 
+// Store repeated image data once, while keeping the in-memory and backup formats unchanged.
+const STORED_IMAGE_PREFIX = "the-list-image-ref:v1:";
+const STORED_IMAGE_POOL = "theListImagePoolV1";
+
+function serializeStoredData(snapshot){
+  const imageIds = new Map();
+  const images = {};
+  const compact = JSON.parse(JSON.stringify(snapshot, (key,value) => {
+    if(typeof value !== "string" || !value.startsWith("data:image/")) return value;
+    if(!imageIds.has(value)){
+      const id = String(imageIds.size);
+      imageIds.set(value,id);
+      images[id] = value;
+    }
+    return STORED_IMAGE_PREFIX + imageIds.get(value);
+  }));
+  if(imageIds.size) compact[STORED_IMAGE_POOL] = images;
+  return JSON.stringify(compact);
+}
+
+function parseStoredData(saved){
+  const snapshot = JSON.parse(saved);
+  const images = snapshot?.[STORED_IMAGE_POOL];
+  if(!images || typeof images !== "object" || Array.isArray(images)) return snapshot;
+  delete snapshot[STORED_IMAGE_POOL];
+  function expand(value){
+    if(typeof value === "string" && value.startsWith(STORED_IMAGE_PREFIX)){
+      const image = images[value.slice(STORED_IMAGE_PREFIX.length)];
+      return typeof image === "string" && image.startsWith("data:image/") ? image : value;
+    }
+    if(Array.isArray(value)) return value.map(expand);
+    if(value && typeof value === "object"){
+      Object.keys(value).forEach(key => {value[key] = expand(value[key]);});
+    }
+    return value;
+  }
+  return expand(snapshot);
+}
+
 function loadData(){
 
   try{
@@ -1798,7 +1837,7 @@ function loadData(){
       return structuredClone(defaultData);
     }
 
-    const parsed = JSON.parse(saved);
+    const parsed = parseStoredData(saved);
 
     parsed.home = {
       ...defaultData.home,
@@ -1945,7 +1984,7 @@ function loadData(){
 
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify(parsed)
+        serializeStoredData(parsed)
       );
 
     }
@@ -1966,7 +2005,7 @@ function saveData(){
 
   localStorage.setItem(
     STORAGE_KEY,
-    JSON.stringify(data)
+    serializeStoredData(data)
   );
 
 }
@@ -2000,7 +2039,7 @@ function downloadBackup(){
   const status = document.getElementById("backupDownloadStatus");
   try{
     const saved = localStorage.getItem(STORAGE_KEY);
-    const snapshot = saved ? JSON.parse(saved) : data;
+    const snapshot = saved ? parseStoredData(saved) : data;
     const backup = {app:"The List",formatVersion:1,exportedAt:new Date().toISOString(),data:snapshot};
     const blob = new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
     const url = URL.createObjectURL(blob);
@@ -2048,7 +2087,7 @@ function restoreBackup(){
   const status = document.getElementById("backupRestoreStatus");
   if(!confirm("Replace the current The List data on this device with this backup? This cannot be undone unless you saved a separate backup.")) return;
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(pendingBackup));
+    localStorage.setItem(STORAGE_KEY,serializeStoredData(pendingBackup));
     status.textContent = "Backup restored. Reloading...";
     location.reload();
   }catch(error){
@@ -10343,7 +10382,7 @@ function saveSageReview(){
     status.textContent = "Those tasks, materials, and reminders are already saved in this project.";return;
   }
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(next));
+    localStorage.setItem(STORAGE_KEY,serializeStoredData(next));
     data = next;
     closeSageReview();
     document.getElementById("aiChatStatus").textContent =
