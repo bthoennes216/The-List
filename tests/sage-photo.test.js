@@ -8,8 +8,10 @@ const html = fs.readFileSync(path.join(__dirname,"..","index.html"),"utf8");
 const script = html.split("<script>",2)[1].split("</script>",1)[0];
 const storage = script.slice(script.indexOf("function serializeStoredData("),
   script.indexOf("/* =========================================================\n   BACKUP / RESTORE"));
-const sending = script.slice(script.indexOf("async function sendSagePhoto(){"),
+const sending = script.slice(script.indexOf("async function sendAIChat(){"),
   script.indexOf("let sageReview = null;"));
+const memory = script.slice(script.indexOf("function sageRoomPhoto("),
+  script.indexOf("function renderChatInline("));
 const original = "data:image/jpeg;base64," + "a".repeat(50000);
 const concept = "data:image/jpeg;base64," + "b".repeat(60000);
 const input = {value:"Reimagine this bathroom with a walk-in shower",disabled:false};
@@ -30,6 +32,8 @@ const context = vm.createContext({
   aiBusy:false,aiImageBusy:false,aiPlanningBusy:false,
   aiThreadKey:() => "bathroom",selectedAIProject:() => project,
   aiThread:() => data.aiChats.bathroom,
+  sageDesignContext:messages => messages.filter(message => message.role === "user")
+    .map(message => message.content).join("; "),
   renderAIMessage:() => "",scrollToSageLatest:() => {},
   requestProjectImage:async (prompt,photos) => {
     receivedPhoto = photos.length === 1 && photos[0] === original &&
@@ -42,7 +46,7 @@ const context = vm.createContext({
   renderAIChat:() => {renders++;}
 });
 vm.runInContext(`let sagePendingPhoto = {key:"bathroom",image:${JSON.stringify(original)}};
-  ${storage}\n${sending}`,context);
+  ${storage}\n${memory}\n${sending}`,context);
 
 (async () => {
   await vm.runInContext("sendSagePhoto()",context);
@@ -58,5 +62,17 @@ vm.runInContext(`let sagePendingPhoto = {key:"bathroom",image:${JSON.stringify(o
   const reopened = vm.runInContext("parseStoredData",context)(saved);
   assert.equal(reopened.projects[0].roomPhotos[0],original);
   assert.equal(reopened.aiChats.bathroom[1].images[0],concept);
+  input.value = "Show the same bathroom with green cabinets";
+  await vm.runInContext("sendAIChat()",context);
+  assert.equal(data.aiChats.bathroom.length,4);
+  assert.equal(data.aiChats.bathroom[2].images,undefined,
+    "follow-up messages reuse the earlier photo without attaching it again");
+  assert.equal(project.roomPhotos.length,1);
+  assert.equal(saved.split(original).length-1,1);
+  assert.equal(vm.runInContext("sageRoomPhoto()",context),original);
+  assert.equal(vm.runInContext("sageVisualRequest('Show me my kitchen cabinets green')",context),true);
+  assert.equal(vm.runInContext("sageVisualRequest('What tools do I need?')",context),false);
+  assert.ok(vm.runInContext("sageChatHistory(data.aiChats.bathroom,true)[0].content",context)
+    .includes("room photo is saved"));
   console.log("Sage photo generation, project storage, and reload checks passed.");
 })().catch(error => {console.error(error);process.exitCode = 1;});

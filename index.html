@@ -9926,6 +9926,39 @@ function aiThread(){
   if(!Array.isArray(data.aiChats[key])) data.aiChats[key] = [];
   return data.aiChats[key];
 }
+function sageRoomPhoto(messages=aiThread(),project=selectedAIProject()){
+  for(let index=messages.length-1;index>=0;index--){
+    const entry = messages[index];
+    if(entry.role === "user" && Array.isArray(entry.images) && entry.images.length)
+      return entry.images.at(-1);
+  }
+  return project?.roomPhotos?.at(-1) || "";
+}
+function sageVisualRequest(message){
+  return /\b(show|visuali[sz]e|render|mock.?up|re.?imagine|generate (?:an? )?(?:image|picture|photo)|what .* look like)\b/i.test(message);
+}
+function sageDesignContext(messages){
+  return messages.filter(entry => entry.role === "user" && entry.content)
+    .slice(-8).map(entry => entry.content).join("; ").slice(-1800);
+}
+function sageChatHistory(messages,hasPhoto=false){
+  const recent = messages.slice(-8).map(entry => ({role:entry.role,content:entry.content}));
+  const earlier = sageDesignContext(messages.slice(0,-8));
+  const photoNote = hasPhoto ? "A room photo is saved in this conversation. If you cannot inspect it, do not ask the homeowner to re-upload it; the app can use it to generate another image. Do not invent details you cannot see." : "";
+  return earlier || photoNote
+    ? [{role:"user",content:`Earlier homeowner requests: ${earlier || "None"}. ${photoNote}`},...recent]
+    : recent;
+}
+let sageChatImageSupport = null;
+async function sageSupportsPhotoChat(){
+  if(sageChatImageSupport !== null) return sageChatImageSupport;
+  try{
+    const response = await fetch(AI_BACKEND_URL);
+    const info = await response.json();
+    sageChatImageSupport = Array.isArray(info.capabilities) && info.capabilities.includes("chatImages");
+  }catch{sageChatImageSupport = false;}
+  return sageChatImageSupport;
+}
 function renderChatInline(value){
   const code = [];
   let html = escapeHTML(value).replace(/`([^`]+)`/g,(_,content) => {
@@ -10153,12 +10186,12 @@ async function generateAIChatImage(index){
   const project = selectedAIProject();
   const earlier = aiThread().slice(0,index).reverse().find(item => item.role === "user");
   const status = document.getElementById("aiChatStatus");
-  const prompt = `Photorealistic visual example of this completed home project or design idea. Show the final result, with plausible materials, lighting, and the described style. No labels, diagrams, or text overlays. User request: ${String(earlier?.content || project?.name || "Home project").slice(0,700)}. Proposed idea: ${reply.content.slice(0,1600)}`;
+  const prompt = `Photorealistic visual example of this completed home project or design idea. Preserve the supplied room layout and camera angle when a photo is provided. No labels, diagrams, or text overlays. Earlier homeowner requests: ${sageDesignContext(aiThread().slice(0,index))}. Latest request: ${String(earlier?.content || project?.name || "Home project").slice(0,700)}. Proposed idea: ${reply.content.slice(0,1600)}`;
   aiImageBusy = true;
   status.textContent = "Creating a visual idea…";
   try{
-    const image = await requestProjectImage(prompt,(earlier?.images || []).slice(-1).length
-      ? earlier.images.slice(-1) : project?.roomPhotos || []);
+    const photo = sageRoomPhoto(aiThread().slice(0,index),project);
+    const image = await requestProjectImage(prompt,photo ? [photo] : []);
     const source = image.startsWith("data:image/") ? await (await fetch(image)).blob() : null;
     const previousImages = reply.images;
     let saved = false;
@@ -10253,9 +10286,11 @@ async function sendAIChat(){
   const input = document.getElementById("aiMessageInput");
   const message = input.value.trim();
   if(!message) return;
+  const savedPhoto = sageRoomPhoto();
+  if(savedPhoto && sageVisualRequest(message)) return sendSagePhoto(savedPhoto);
   const key = aiThreadKey();
   const project = selectedAIProject();
-  const history = aiThread().slice(-10).map(m => ({role:m.role,content:m.content}));
+  const history = sageChatHistory(aiThread(),Boolean(savedPhoto));
   const status = document.getElementById("aiChatStatus");
   aiBusy = true;
   document.getElementById("aiSendButton").disabled = true;
@@ -10271,9 +10306,10 @@ async function sendAIChat(){
   scrollToSageLatest();
   status.textContent = "";
   try{
+    const canSeePhoto = savedPhoto && await sageSupportsPhotoChat();
     const response = await fetch(AI_BACKEND_URL.replace(/\/$/,"") + "/chat", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({message,history,project:project ? {
+      body:JSON.stringify({message,history,roomPhotos:canSeePhoto ? [savedPhoto] : [],project:project ? {
         name:project.name, description:project.description || "",
         notes:(project.notes || "").slice(0,1500),
         tasks:(project.tasks || []).slice(0,20).map(t => t.text || t.title || "")
@@ -10308,24 +10344,25 @@ async function sendAIChat(){
     input.disabled = false;
   }
 }
-async function sendSagePhoto(){
-  if(aiBusy || aiImageBusy || aiPlanningBusy || !sagePendingPhoto) return;
+async function sendSagePhoto(savedPhoto=""){
+  if(aiBusy || aiImageBusy || aiPlanningBusy || (!sagePendingPhoto && !savedPhoto)) return;
   const input = document.getElementById("aiMessageInput");
   const typed = input.value.trim();
   const message = typed || "Reimagine this space for my project.";
-  const photo = sagePendingPhoto.image;
+  const newPhoto = sagePendingPhoto?.image || "";
+  const photo = newPhoto || savedPhoto;
   const key = aiThreadKey();
   const project = selectedAIProject();
   const status = document.getElementById("aiChatStatus");
   const box = document.getElementById("aiMessages");
-  const prompt = `Edit this room photo into a realistic view of the finished project. Keep the existing room layout, fixed walls, windows, doors and camera angle unless the request changes them. Project: ${project?.name || "Home improvement"}. Homeowner's requested changes: ${message.slice(0,1000)}. No labels, diagrams or text overlays.`;
+  const prompt = `Edit this supplied room photo into a realistic view of the finished project. Keep the existing room layout, fixed walls, windows, doors and camera angle unless the request changes them. Project: ${project?.name || "Home improvement"}. Earlier homeowner design requests: ${sageDesignContext(aiThread())}. Latest requested changes take priority: ${message.slice(0,1000)}. No labels, diagrams or text overlays.`;
   aiBusy = true;
   document.getElementById("aiSendButton").disabled = true;
   input.disabled = true;
   status.textContent = "Reimagining your photo…";
   box.classList.remove("isEmpty");
   if(!aiThread().length) box.innerHTML = "";
-  box.insertAdjacentHTML("beforeend",renderAIMessage({role:"user",content:message,images:[photo]},-1)
+  box.insertAdjacentHTML("beforeend",renderAIMessage({role:"user",content:message,images:newPhoto ? [photo] : []},-1)
     + `<div class="aiEntry"><div class="aiSender">✦ Sage</div><div class="aiThinking">Reimagining your room…</div></div>`);
   scrollToSageLatest();
   try{
@@ -10338,10 +10375,10 @@ async function sendSagePhoto(){
     for(const [size,quality] of source ? [[680,.6],[480,.48],[360,.4]] : [[0,0]]){
       const concept = source ? await photoToJpeg(source,size,quality) : image;
       data.aiChats[key] = [...(previousMessages || []),
-        {role:"user",content:message,images:[photo]},
+        {role:"user",content:message,...(newPhoto ? {images:[photo]} : {})},
         {role:"assistant",content:"Here is a visual idea based on your photo. Tell me what you would change, or ask for another visual idea.",images:[concept]}];
       data.sageActiveThread = key;
-      if(project && (previousPhotos || []).length < 3 && !(previousPhotos || []).includes(photo))
+      if(project && newPhoto && (previousPhotos || []).length < 3 && !(previousPhotos || []).includes(photo))
         project.roomPhotos = [...(previousPhotos || []),photo];
       try{saveData();saved = true;break;}
       catch(error){
@@ -10354,7 +10391,7 @@ async function sendSagePhoto(){
     }
     if(!saved) throw new Error("This device has no room for another photo. Try a smaller photo or remove an unused image.");
     input.value = "";
-    removeSagePhoto();
+    if(newPhoto) removeSagePhoto();
     status.textContent = "Visual idea ready. Your original photo and Sage's idea are saved in this conversation.";
     renderAIChat();
   }catch(error){
