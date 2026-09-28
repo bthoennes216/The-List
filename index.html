@@ -1020,6 +1020,13 @@ input,textarea,select{
 .moreNavGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:14px}
 .moreNavGrid button{min-height:106px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;text-align:left;padding:15px;background:#fffdf8;color:#294734;border:1px solid #d8d4c5;border-radius:15px;box-shadow:0 2px 7px rgba(73,58,36,.06)}
 .moreNavGrid button span{font-size:24px}.moreNavGrid button strong{font-size:16px}.moreNavGrid button small{font-size:12px;color:#667065}
+.accountSection{margin-top:18px;padding-top:16px;border-top:1px solid #dedace}
+.accountSection h3{margin:0 0 10px;color:#294734}
+.accountSection label{display:block;margin-top:12px}
+.accountSection .backupActions{margin-top:10px}
+.projectNote{padding:12px 0;border-bottom:1px solid #e6e1d5;overflow-wrap:anywhere}
+.projectNote:last-child{border-bottom:0}
+.projectNote p{margin:8px 0 0;white-space:pre-wrap}
 body{padding-bottom:80px}
 @supports(padding:max(0px)){body{padding-bottom:max(80px,calc(72px + env(safe-area-inset-bottom)))}}
 /* Keep the title and navigation visible without covering the content. */
@@ -1543,8 +1550,24 @@ body.sageChatOpen main{padding-top:0}
 </section>
 
 <section id="morePage" class="hidden">
+  <div class="card">
+    <h2>More in The List</h2>
+    <p class="smallText">Your lists and home details, all in one place.</p>
+    <div class="moreNavGrid">
+      <button type="button" onclick="showPage('shoppingPage')"><span aria-hidden="true">🛒</span><strong>Shopping</strong><small>Items and materials</small></button>
+      <button type="button" onclick="showPage('maintenancePage')"><span aria-hidden="true">🔧</span><strong>Maintenance</strong><small>Keep things on track</small></button>
+      <button type="button" onclick="openHomeInfo('details')"><span aria-hidden="true">⌂</span><strong>Home Info</strong><small>House and yard details</small></button>
+      <button type="button" onclick="openHomeInfo('tools')"><span aria-hidden="true">🧰</span><strong>My Tools</strong><small>Inventory and tools to buy</small></button>
+      <button type="button" onclick="showPage('accountPage')"><span aria-hidden="true">♙</span><strong>Account</strong><small>Profile and family sync</small></button>
+      <button type="button" onclick="openHomeInfo('backup')"><span aria-hidden="true">↧</span><strong>Backup</strong><small>Download or restore data</small></button>
+    </div>
+  </div>
+</section>
+
+<section id="accountPage" class="hidden">
   <div class="card" id="accountCard">
-    <h2>Household account</h2>
+    <button type="button" class="secondary" onclick="showPage('morePage')">← Back to More</button>
+    <h2>Account</h2>
     <p id="accountStatus" role="status">Connecting to accounts…</p>
     <div id="accountSignedOut">
       <label for="accountEmail">Email</label><input id="accountEmail" type="email" autocomplete="email">
@@ -1556,7 +1579,33 @@ body.sageChatOpen main{padding-top:0}
       <p class="smallText">After creating an account, check your email to confirm it.</p>
     </div>
     <div id="accountSignedIn" hidden>
-      <p id="accountIdentity"></p>
+      <div class="accountSection">
+        <h3>Your profile</h3>
+        <p id="accountIdentity"></p>
+        <label for="accountDisplayName">Display name</label>
+        <input id="accountDisplayName" type="text" autocomplete="name" maxlength="60" placeholder="Your name">
+        <button type="button" onclick="accountSaveProfile()">Save name</button>
+      </div>
+      <div class="accountSection">
+        <h3>Email and password</h3>
+        <label for="accountNewEmail">New email address</label>
+        <input id="accountNewEmail" type="email" autocomplete="email" placeholder="New email address">
+        <button type="button" class="secondary" onclick="accountChangeEmail()">Change email</button>
+        <p class="smallText">Check both your current and new inboxes for confirmation links.</p>
+        <label for="accountNewPassword">New password</label>
+        <input id="accountNewPassword" type="password" autocomplete="new-password" minlength="6">
+        <label for="accountConfirmPassword">Confirm new password</label>
+        <input id="accountConfirmPassword" type="password" autocomplete="new-password" minlength="6">
+        <label for="accountPasswordCode">Verification code (if requested)</label>
+        <input id="accountPasswordCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="Code from your email">
+        <div class="backupActions">
+          <button type="button" class="secondary" onclick="accountRequestPasswordCode()">Email me a code</button>
+          <button type="button" onclick="accountChangePassword()">Change password</button>
+        </div>
+      </div>
+      <div class="accountSection">
+        <h3>Family sync</h3>
+        <p class="smallText">Each person signs in with their own account. Share an invite code so they can join the same household and see your projects and notes.</p>
       <div id="accountNoHousehold" hidden>
         <button type="button" onclick="accountCreate()">Start a household</button>
         <label for="accountInviteCode">Or enter a household invite code</label>
@@ -1574,19 +1623,13 @@ body.sageChatOpen main{padding-top:0}
           <p id="accountInviteResult" class="smallText"></p>
         </div>
       </div>
+      </div>
+      <div id="previousHouseholdNote" class="accountSection" hidden>
+        <h3>Previous household note</h3>
+        <p class="smallText">Your earlier Family note is kept here. New notes belong in each project.</p>
+        <p id="previousHouseholdNoteText" class="projectNote"></p>
+      </div>
       <button type="button" class="secondary" onclick="accountSignOut()">Sign out (keep device copy)</button>
-    </div>
-  </div>
-  <div class="card">
-    <h2>More in The List</h2>
-    <p class="smallText">Your lists and home details, all in one place.</p>
-    <div class="moreNavGrid">
-      <button type="button" onclick="showPage('shoppingPage')"><span aria-hidden="true">🛒</span><strong>Shopping</strong><small>Items and materials</small></button>
-      <button type="button" onclick="showPage('maintenancePage')"><span aria-hidden="true">🔧</span><strong>Maintenance</strong><small>Keep things on track</small></button>
-      <button type="button" onclick="openHomeInfo('details')"><span aria-hidden="true">⌂</span><strong>Home Info</strong><small>House and yard details</small></button>
-      <button type="button" onclick="openHomeInfo('tools')"><span aria-hidden="true">🧰</span><strong>My Tools</strong><small>Inventory and tools to buy</small></button>
-      <button type="button" onclick="showPage('familyPage')"><span aria-hidden="true">♧</span><strong>Family</strong><small>Shared home notes</small></button>
-      <button type="button" onclick="openHomeInfo('backup')"><span aria-hidden="true">↧</span><strong>Backup</strong><small>Download or restore data</small></button>
     </div>
   </div>
 </section>
@@ -1711,30 +1754,6 @@ body.sageChatOpen main{padding-top:0}
       <p class="smallText">The List keeps recent copies on this device to help if data is accidentally replaced. Browser data can be cleared all at once, so keep a downloaded backup in Files or iCloud Drive too.</p>
       <div id="recoveryCopies" role="status">Checking for recovery copies…</div>
     </div>
-  </div>
-
-</section>
-
-<section id="familyPage" class="hidden">
-
-  <div class="card">
-
-    <h2>👨‍👩‍👧‍👦 Family</h2>
-
-    <p>
-      Shared home workspace for your household.
-    </p>
-
-    <input
-      id="familyNote"
-      placeholder="Add a family note">
-
-    <button onclick="saveFamilyNote()">
-      Save Note
-    </button>
-
-    <p id="familySaved"></p>
-
   </div>
 
 </section>
@@ -1960,6 +1979,9 @@ function loadData(){
       if(typeof p.notes !== "string"){
         p.notes = "";
       }
+      p.discussionNotes = Array.isArray(p.discussionNotes)
+        ? p.discussionNotes.filter(note => note && typeof note.text === "string")
+        : [];
 
       if(typeof p.budget !== "number"){
         p.budget = Number(p.budget) || 0;
@@ -2235,10 +2257,10 @@ const pageIds = [
   "shoppingPage",
   "aiChatPage",
   "morePage",
+  "accountPage",
   "calendarPage",
   "maintenancePage",
   "homeInfoPage",
-  "familyPage",
   "projectDetailPage"
 ];
 
@@ -2274,10 +2296,10 @@ function showPage(pageId){
     shoppingPage:"navMore",
     aiChatPage:"navAIChat",
     morePage:"navMore",
+    accountPage:"navMore",
     calendarPage:"navCalendar",
     maintenancePage:"navMore",
     homeInfoPage:"navMore",
-    familyPage:"navMore"
   };
 
   if(map[pageId]){
@@ -2329,8 +2351,10 @@ function showPage(pageId){
     showHomeInfoSection(homeInfoSection);
   }
 
-  if(pageId === "familyPage"){
-    renderFamily();
+  if(pageId === "accountPage"){
+    const previous = String(data.family?.note || "").trim();
+    document.getElementById("previousHouseholdNote").hidden = !previous;
+    document.getElementById("previousHouseholdNoteText").textContent = previous;
   }
 
 }
@@ -3175,6 +3199,18 @@ function openProject(id){
         ${completed} of ${total} tasks complete
       </div>
 
+    </div>
+
+    <div class="card">
+      <h2>Project notes</h2>
+      <p class="smallText">Leave an update for everyone sharing this household.</p>
+      <div id="projectDiscussionNotes">
+        ${renderProjectDiscussionNotes(project)}
+      </div>
+      <label for="newProjectNote">Add a note</label>
+      <textarea id="newProjectNote" maxlength="2000" placeholder="What should everyone know about this project?"></textarea>
+      <button type="button" onclick="addProjectDiscussionNote('${escapeAttribute(project.id)}')">Post note</button>
+      <p id="projectNoteStatus" class="smallText" role="status"></p>
     </div>
 
     ${
@@ -4303,6 +4339,37 @@ function addAllProjectMaterialsToShopping(projectId){
 /* =========================================================
    PROJECT RECORDS
    ========================================================= */
+
+function renderProjectDiscussionNotes(project){
+  const notes = Array.isArray(project.discussionNotes) ? project.discussionNotes : [];
+  if(!notes.length) return '<p class="smallText">No notes yet. Add the first update.</p>';
+  return notes.slice().reverse().map(note => {
+    const date = new Date(note.createdAt);
+    const when = Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
+    return `<article class="projectNote"><strong>${escapeHTML(note.author || "Household member")}</strong>` +
+      `${when ? ` <span class="smallText">· ${escapeHTML(when)}</span>` : ""}` +
+      `<p>${escapeHTML(note.text)}</p></article>`;
+  }).join("");
+}
+
+function addProjectDiscussionNote(projectId){
+  const project = data.projects.find(p => String(p.id) === String(projectId));
+  if(!project) return;
+  const field = document.getElementById("newProjectNote");
+  const value = field.value.trim();
+  const feedback = document.getElementById("projectNoteStatus");
+  if(!value) { feedback.textContent = "Write a note first."; return; }
+  if(value.length > 2000) { feedback.textContent = "Keep notes under 2,000 characters."; return; }
+  if(!Array.isArray(project.discussionNotes)) project.discussionNotes = [];
+  project.discussionNotes.push({
+    id: crypto.randomUUID(), text:value, createdAt:new Date().toISOString(),
+    author:window.accountNoteAuthor?.() || "On this device"
+  });
+  saveData();
+  document.getElementById("projectDiscussionNotes").innerHTML = renderProjectDiscussionNotes(project);
+  field.value = "";
+  feedback.textContent = "Note saved to this project.";
+}
 
 function saveProjectNotes(projectId){
 
@@ -5715,31 +5782,6 @@ function saveHomeInfo(){
 
   document.getElementById("homeInfoSaved")
     .textContent = "✓ Home information saved.";
-
-}
-
-
-/* =========================================================
-   FAMILY
-   ========================================================= */
-
-function renderFamily(){
-
-  document.getElementById("familyNote").value =
-    data.family.note || "";
-
-}
-
-function saveFamilyNote(){
-
-  data.family.note =
-    document.getElementById("familyNote").value;
-
-  saveData();
-
-  document.getElementById("familySaved")
-    .textContent =
-      "✓ Family note saved.";
 
 }
 
@@ -10836,7 +10878,7 @@ showPage("homePage");
 scheduleRecoverySnapshot(localStorage.getItem(STORAGE_KEY));
 
 </script>
-<script src="sync.js?v=2"></script>
+<script src="sync.js?v=3"></script>
 
 </body>
 </html>
