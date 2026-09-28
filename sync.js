@@ -14,6 +14,7 @@
   const status = message => { byId("accountStatus").textContent = message; };
   const syncStatus = message => { byId("accountSyncStatus").textContent = message; };
   const message = error => error?.message || String(error);
+  window.accountNoteAuthor = () => user?.user_metadata?.display_name || user?.email || "On this device";
   const hasLocalData = () => {
     try { return hasRecoveryContent(localStorage.getItem(STORAGE_KEY) || ""); }
     catch { return true; }
@@ -40,8 +41,14 @@
     } else user = null;
     byId("accountSignedOut").hidden = !!user;
     byId("accountSignedIn").hidden = !user;
-    if(!user) { household = null; status("Your projects are saved on this device. Sign in to share them."); return; }
+    byId("accountPassword").value = "";
+    if(!user) {
+      household = null;
+      status("Your projects are saved on this device. Sign in to share them.");
+      return;
+    }
     byId("accountIdentity").textContent = user.email || "Signed in";
+    byId("accountDisplayName").value = user.user_metadata?.display_name || "";
     const memberResult = await client.from("household_members")
       .select("household_id").eq("user_id",user.id).maybeSingle();
     if(memberResult.error) throw memberResult.error;
@@ -94,6 +101,7 @@
       ...credentials(),options:{emailRedirectTo:location.origin + location.pathname}
     });
     if(error) throw error;
+    byId("accountPassword").value = "";
     if(authData.session) await loadAccount();
     else status("Check your email for the confirmation link, then return here and sign in.");
   });
@@ -109,6 +117,45 @@
     localStorage.removeItem(LINK_KEY);
     localStorage.removeItem(DIRTY_KEY);
     await loadAccount();
+  });
+  window.accountSaveProfile = () => action(async () => {
+    if(!user) throw Error("Sign in to edit your profile.");
+    const name = byId("accountDisplayName").value.trim();
+    if(!name || name.length > 60) throw Error("Enter a name of up to 60 characters.");
+    const {data:result,error} = await client.auth.updateUser({data:{display_name:name}});
+    if(error) throw error;
+    user = result.user;
+    status("Name saved.");
+  });
+  window.accountChangeEmail = () => action(async () => {
+    if(!user) throw Error("Sign in to edit your email.");
+    const email = byId("accountNewEmail").value.trim();
+    if(!email || !byId("accountNewEmail").checkValidity()) throw Error("Enter a valid new email address.");
+    if(email.toLowerCase() === user.email?.toLowerCase()) throw Error("That is already your email address.");
+    const {error} = await client.auth.updateUser({email},{emailRedirectTo:location.origin + location.pathname});
+    if(error) throw error;
+    byId("accountNewEmail").value = "";
+    status("Check your current and new email inboxes for confirmation links. Your current email remains active until confirmed.");
+  });
+  window.accountRequestPasswordCode = () => action(async () => {
+    if(!user) throw Error("Sign in to change your password.");
+    const {error} = await client.auth.reauthenticate();
+    if(error) throw error;
+    status("Check your email for a verification code, then enter it here with your new password.");
+  });
+  window.accountChangePassword = () => action(async () => {
+    if(!user) throw Error("Sign in to change your password.");
+    const password = byId("accountNewPassword").value;
+    const confirmPassword = byId("accountConfirmPassword").value;
+    if(password.length < 6) throw Error("Use at least 6 characters for your new password.");
+    if(password !== confirmPassword) throw Error("The new passwords do not match.");
+    const nonce = byId("accountPasswordCode").value.trim();
+    const {error} = await client.auth.updateUser(nonce ? {password,nonce} : {password});
+    if(error) throw error;
+    byId("accountNewPassword").value = "";
+    byId("accountConfirmPassword").value = "";
+    byId("accountPasswordCode").value = "";
+    status("Password changed.");
   });
   window.accountCreate = () => action(async () => {
     const {error} = await client.rpc("create_household");
