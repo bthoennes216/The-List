@@ -1033,6 +1033,18 @@ input,textarea,select{
 .projectNoteSwipe.open .projectNote{transform:translateX(-88px)}
 .projectNoteDelete{position:absolute;right:0;top:0;bottom:0;width:88px;border:0;border-radius:0;background:#a3312b;color:white;font-weight:700}
 .projectNoteSwipe:focus-within .projectNote{transform:translateX(-88px)}
+.projectOverviewProgress{height:7px;background:#e4e5da;border-radius:10px;overflow:hidden;margin:10px 0}
+.projectOverviewProgress span{display:block;height:100%;background:#55745c}
+.projectQuickLinks{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px}
+.projectQuickLinks button{flex:none;margin:0;padding:9px 13px;border-radius:22px;background:#edf2e8;color:#294734;border:1px solid #d4dece;box-shadow:none;font-size:14px}
+.projectSection{padding:0;overflow:hidden}
+.projectSection summary{list-style:none;cursor:pointer;padding:18px 20px;font-size:20px;font-weight:700;color:#27352a;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.projectSection summary::-webkit-details-marker{display:none}
+.projectSection summary::after{content:'⌄';font-size:22px;line-height:1;color:#55745c;transition:transform .2s}
+.projectSection[open] summary::after{transform:rotate(180deg)}
+.projectSection summary:focus-visible{outline:2px solid #31543d;outline-offset:-3px}
+.projectSectionBody{padding:0 20px 20px}
+.projectSectionBody>*:first-child{margin-top:0}
 body{padding-bottom:80px}
 @supports(padding:max(0px)){body{padding-bottom:max(80px,calc(72px + env(safe-area-inset-bottom)))}}
 /* Keep the title and navigation visible without covering the content. */
@@ -3099,6 +3111,8 @@ function openProject(id){
   const completed =
     project.tasks.filter(t => t.done).length;
 
+  const nextTask = project.tasks.find(task => !task.done);
+
   box.innerHTML = `
 
     <div class="card">
@@ -3121,11 +3135,22 @@ function openProject(id){
         ${escapeHTML(project.description || "")}
       </p>
 
+      <div class="smallText">${completed} of ${total} tasks complete</div>
+      <div class="projectOverviewProgress" role="progressbar" aria-label="Project tasks complete" aria-valuenow="${completed}" aria-valuemin="0" aria-valuemax="${total || 1}"><span style="width:${total ? Math.round(completed / total * 100) : 0}%"></span></div>
+      ${nextTask ? `<p><strong>Next task:</strong> ${escapeHTML(nextTask.text || nextTask.name || "Task")}</p>` : ""}
+      <nav class="projectQuickLinks" aria-label="Project sections">
+        <button type="button" onclick="openProjectSection('tasks')">Tasks</button>
+        <button type="button" onclick="openProjectSection('notes')">Notes</button>
+        <button type="button" onclick="openProjectSection('materials')">Materials</button>
+        <button type="button" onclick="openProjectSection('photos')">Photos</button>
+        <button type="button" onclick="openProjectSection('records')">Records</button>
+      </nav>
+
       <button type="button" class="secondary" onclick="openSageForProject('${escapeAttribute(project.id)}')">
         ✦ Discuss this project with Sage
       </button>
 
-      <details class="sageBriefCard" ${project.sageBrief ? "" : "open"}>
+      <details class="sageBriefCard">
         <summary>✦ What Sage should remember</summary>
         <p class="smallText">Save details Sage should use in this project's chats and visual ideas. You can change them anytime.</p>
         <label for="sageBriefChoices">Design choices</label>
@@ -3199,10 +3224,6 @@ function openProject(id){
           `
         }
 
-      </div>
-
-      <div class="smallText">
-        ${completed} of ${total} tasks complete
       </div>
 
     </div>
@@ -3390,11 +3411,61 @@ function openProject(id){
 
   `;
 
+  organizeProjectSections(box,project.id);
+
   renderProjectTasks(project);
   renderProjectMaterials(project);
   renderProjectPhotos(project);
   renderSageBriefPhotoOptions(project);
 
+}
+
+function organizeProjectSections(box,projectId){
+  const names = [
+    ["Project notes","notes"],["Material Takeoff","takeoff"],
+    ["Tools for this project","tools"],["DIY Instructions","instructions"],
+    ["Measurements to check","measurements"],["Project Photos","photos"],
+    ["Tasks","tasks"],["Materials","materials"],["Budget","budget"],
+    ["Project Details & Answers","answers"],["Permanent Home Records","records"]
+  ];
+  const saved = JSON.parse(localStorage.getItem("theListProjectSectionsV1:" + projectId) || "{}");
+  const sections = {};
+  Array.from(box.children).forEach(card => {
+    if(!card.classList.contains("card")) return;
+    const heading = Array.from(card.children).find(child => child.tagName === "H2");
+    if(!heading) return;
+    const match = names.find(([label]) => heading.textContent.includes(label));
+    if(!match) return;
+    const key = match[1];
+    const details = document.createElement("details");
+    details.className = "card projectSection";
+    details.id = "project-section-" + key;
+    details.open = Object.hasOwn(saved,key) ? saved[key] : (key === "tasks" || key === "notes");
+    const summary = document.createElement("summary");
+    summary.textContent = heading.textContent;
+    const body = document.createElement("div");
+    body.className = "projectSectionBody";
+    heading.remove();
+    while(card.firstChild) body.appendChild(card.firstChild);
+    details.append(summary,body);
+    card.replaceWith(details);
+    sections[key] = details;
+    details.addEventListener("toggle",() => {
+      const state = {};
+      box.querySelectorAll(".projectSection").forEach(section => {
+        state[section.id.replace("project-section-","")] = section.open;
+      });
+      localStorage.setItem("theListProjectSectionsV1:" + projectId,JSON.stringify(state));
+    });
+  });
+  if(sections.tasks && sections.notes) box.insertBefore(sections.tasks,sections.notes);
+}
+
+function openProjectSection(key){
+  const section = document.getElementById("project-section-" + key);
+  if(!section) return;
+  section.open = true;
+  section.scrollIntoView({behavior:"smooth",block:"start"});
 }
 async function compressProjectPhoto(file){
   return photoToJpeg(file,960,0.65);
@@ -4369,13 +4440,13 @@ function deleteProjectDiscussionNote(projectId,noteId){
   document.getElementById("projectNoteStatus").textContent = "Note deleted.";
 }
 
-document.addEventListener("touchstart", event => {
+if(typeof document.addEventListener === "function") document.addEventListener("touchstart", event => {
   const row = event.target.closest?.(".projectNoteSwipe");
   if(!row || event.target.closest("button")) return;
   const touch = event.touches[0];
   row._swipeStart = {x:touch.clientX,y:touch.clientY};
 },{passive:true});
-document.addEventListener("touchend", event => {
+if(typeof document.addEventListener === "function") document.addEventListener("touchend", event => {
   const row = event.target.closest?.(".projectNoteSwipe");
   if(!row?._swipeStart || !event.changedTouches.length) return;
   const dx = event.changedTouches[0].clientX - row._swipeStart.x;
