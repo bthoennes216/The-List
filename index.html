@@ -1027,6 +1027,12 @@ input,textarea,select{
 .projectNote{padding:12px 0;border-bottom:1px solid #e6e1d5;overflow-wrap:anywhere}
 .projectNote:last-child{border-bottom:0}
 .projectNote p{margin:8px 0 0;white-space:pre-wrap}
+.projectNoteSwipe{position:relative;overflow:hidden;border-bottom:1px solid #e6e1d5}
+.projectNoteSwipe:last-child{border-bottom:0}
+.projectNoteSwipe .projectNote{position:relative;z-index:1;background:#faf7f0;border-bottom:0;transition:transform .2s ease;touch-action:pan-y}
+.projectNoteSwipe.open .projectNote{transform:translateX(-88px)}
+.projectNoteDelete{position:absolute;right:0;top:0;bottom:0;width:88px;border:0;border-radius:0;background:#a3312b;color:white;font-weight:700}
+.projectNoteSwipe:focus-within .projectNote{transform:translateX(-88px)}
 body{padding-bottom:80px}
 @supports(padding:max(0px)){body{padding-bottom:max(80px,calc(72px + env(safe-area-inset-bottom)))}}
 /* Keep the title and navigation visible without covering the content. */
@@ -4346,11 +4352,41 @@ function renderProjectDiscussionNotes(project){
   return notes.slice().reverse().map(note => {
     const date = new Date(note.createdAt);
     const when = Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
-    return `<article class="projectNote"><strong>${escapeHTML(note.author || "Household member")}</strong>` +
+    return `<div class="projectNoteSwipe" data-note-id="${escapeAttribute(note.id)}"><button type="button" class="projectNoteDelete" onclick="deleteProjectDiscussionNote('${escapeAttribute(project.id)}','${escapeAttribute(note.id)}')" aria-label="Delete note by ${escapeAttribute(note.author || "Household member")}">Delete</button><article class="projectNote"><strong>${escapeHTML(note.author || "Household member")}</strong>` +
       `${when ? ` <span class="smallText">· ${escapeHTML(when)}</span>` : ""}` +
-      `<p>${escapeHTML(note.text)}</p></article>`;
+      `<p>${escapeHTML(note.text)}</p></article></div>`;
   }).join("");
 }
+
+function deleteProjectDiscussionNote(projectId,noteId){
+  const project = data.projects.find(p => String(p.id) === String(projectId));
+  if(!project || !Array.isArray(project.discussionNotes)) return;
+  const index = project.discussionNotes.findIndex(note => String(note.id) === String(noteId));
+  if(index < 0 || !confirm("Delete this note for everyone sharing this household?")) return;
+  project.discussionNotes.splice(index,1);
+  saveData();
+  document.getElementById("projectDiscussionNotes").innerHTML = renderProjectDiscussionNotes(project);
+  document.getElementById("projectNoteStatus").textContent = "Note deleted.";
+}
+
+document.addEventListener("touchstart", event => {
+  const row = event.target.closest?.(".projectNoteSwipe");
+  if(!row || event.target.closest("button")) return;
+  const touch = event.touches[0];
+  row._swipeStart = {x:touch.clientX,y:touch.clientY};
+},{passive:true});
+document.addEventListener("touchend", event => {
+  const row = event.target.closest?.(".projectNoteSwipe");
+  if(!row?._swipeStart || !event.changedTouches.length) return;
+  const dx = event.changedTouches[0].clientX - row._swipeStart.x;
+  const dy = event.changedTouches[0].clientY - row._swipeStart.y;
+  row._swipeStart = null;
+  if(Math.abs(dx) < 35 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+  document.querySelectorAll(".projectNoteSwipe.open").forEach(other => {
+    if(other !== row) other.classList.remove("open");
+  });
+  row.classList.toggle("open",dx < 0);
+},{passive:true});
 
 function addProjectDiscussionNote(projectId){
   const project = data.projects.find(p => String(p.id) === String(projectId));
