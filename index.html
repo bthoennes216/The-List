@@ -55,7 +55,7 @@ header p{
   font-size:14px;
 }
 
-nav{
+#mainNav{
   display:flex;
   overflow-x:auto;
   gap:8px;
@@ -73,7 +73,7 @@ nav{
   box-shadow:0 -3px 10px rgba(0,0,0,.10);
 }
 
-nav button{
+#mainNav button{
   white-space:nowrap;
   flex:0 0 auto;
   padding:9px 13px;
@@ -84,7 +84,7 @@ nav button{
   font-weight:600;
 }
 
-nav button.active{
+#mainNav button.active{
   background:#556B2F;
   color:#fff;
   border-color:#556B2F;
@@ -585,7 +585,7 @@ header::after{
   opacity:.35;
 }
 
-nav{
+#mainNav{
   background:rgba(247,245,238,.97);
   border-top:1px solid var(--border);
   padding:9px 12px calc(9px + env(safe-area-inset-bottom));
@@ -595,7 +595,7 @@ nav{
   -webkit-backdrop-filter:blur(10px);
 }
 
-nav button{
+#mainNav button{
   background:var(--forest);
   border:1px solid rgba(255,255,255,.18);
   border-color:var(--forest);
@@ -607,11 +607,11 @@ nav button{
   transition:transform .15s ease, box-shadow .15s ease;
 }
 
-nav button:active{
+#mainNav button:active{
   transform:scale(.97);
 }
 
-nav button.active{
+#mainNav button.active{
   background:var(--forest);
   border-color:var(--forest);
   color:#fff;
@@ -1082,10 +1082,12 @@ body.calendarDayOpen{overflow:hidden}
 body{background:#f8f5ed;color:#282e29}
 header{background:#303d25;color:#fff;padding:13px 16px;min-height:62px;border:0;box-shadow:0 2px 12px rgba(32,44,30,.13)}
 header h1{justify-content:center;font-family:Georgia,serif;font-size:25px;min-height:36px;color:#fff}
-header .appLogo{position:absolute;left:16px;top:10px;width:39px;height:39px}
+header .homeLogo{position:absolute;left:16px;top:10px;width:39px;height:39px;padding:0;border:0;background:transparent;box-shadow:none;border-radius:10px}
+header .homeLogo:focus-visible{outline:2px solid #fff;outline-offset:3px}
+header .appLogo{width:39px;height:39px}
 header p,header .homeMeta,header::after{display:none}
 header.isCompact{padding:10px 16px;min-height:54px}
-header.isCompact .appLogo{top:8px}
+header.isCompact .homeLogo{top:8px}
 .headerSage{position:absolute;right:16px;top:11px;width:38px;height:38px;border:1px solid #ced7c3;border-radius:50%;padding:0;background:#e3e8d8;color:#304a34;box-shadow:none;font-family:Georgia,serif;font-size:21px}
 .headerSage img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover}
 header.isCompact .headerSage{top:8px}
@@ -1251,7 +1253,7 @@ body.sageChatOpen main{padding-top:0}
 <body>
 
 <header>
-  <h1><img class="appLogo" src="the-list-icon.png" alt="" width="44" height="44">The List</h1>
+  <h1><button type="button" class="homeLogo" onclick="showPage('homePage')" aria-label="Go to Home"><img class="appLogo" src="the-list-icon.png" alt="" width="44" height="44"></button>The List</h1>
   <p>Your home. Your projects. All in one place.</p>
   <div id="homeHeaderMeta" class="homeMeta"></div>
   <button type="button" class="headerSage" onclick="showPage('aiChatPage')" aria-label="Open Sage"><img src="sage-avatar.webp" alt=""></button>
@@ -2319,6 +2321,7 @@ function showPage(pageId){
   const map = {
     homePage:"navHome",
     projectsPage:"navProjects",
+    projectDetailPage:"navProjects",
     shoppingPage:"navMore",
     aiChatPage:"navAIChat",
     morePage:"navMore",
@@ -3148,6 +3151,7 @@ function openProject(id){
       <div class="projectOverviewProgress" role="progressbar" aria-label="Project tasks complete" aria-valuenow="${completed}" aria-valuemin="0" aria-valuemax="${total || 1}"><span style="width:${total ? Math.round(completed / total * 100) : 0}%"></span></div>
       ${nextTask ? `<p><strong>Next task:</strong> ${escapeHTML(nextTask.text || nextTask.name || "Task")}</p>` : ""}
       <nav class="projectQuickLinks" aria-label="Project sections">
+        <button type="button" onclick="showPage('homePage')">⌂ Home</button>
         <button type="button" onclick="openProjectSection('tasks')">Tasks</button>
         <button type="button" onclick="openProjectSection('notes')">Notes</button>
         <button type="button" onclick="openProjectSection('materials')">Materials</button>
