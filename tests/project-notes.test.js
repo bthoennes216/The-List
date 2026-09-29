@@ -13,6 +13,8 @@ const notes = script.slice(script.indexOf("function renderProjectDiscussionNotes
   script.indexOf("function saveProjectNotes("));
 const escape = script.slice(script.indexOf("function escapeHTML("),
   script.indexOf("function escapeAttribute("));
+const escapeAttr = script.slice(script.indexOf("function escapeAttribute("),
+  script.indexOf("function ",script.indexOf("function escapeAttribute(") + 1));
 const original = JSON.stringify({
   home:{},family:{note:"Old family reminder"},
   projects:[{id:"kitchen",name:"Kitchen",notes:"Paint: forest green"}],
@@ -31,7 +33,7 @@ const context = vm.createContext({
   crypto:{randomUUID:() => "note-id"},
   Date,console,structuredClone
 });
-vm.runInContext(`${startup}\n${storage}\n${escape}\n${notes}`,context);
+vm.runInContext(`${startup}\n${storage}\n${escape}\n${escapeAttr}\n${notes}`,context);
 assert.equal(stored,original,"loading old projects should not rewrite their data");
 vm.runInContext("addProjectDiscussionNote('kitchen')",context);
 assert.equal(elements.newProjectNote.value,"");
