@@ -1045,6 +1045,14 @@ input,textarea,select{
 .projectSection summary:focus-visible{outline:2px solid #31543d;outline-offset:-3px}
 .projectSectionBody{padding:0 20px 20px}
 .projectSectionBody>*:first-child{margin-top:0}
+.projectToolActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.projectToolActions button{width:auto;margin:0;padding:8px 10px;font-size:13px}
+.budgetGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+.budgetMetric{background:#f5f4eb;border:1px solid #e1dfd1;border-radius:12px;padding:12px}
+.budgetMetric strong{display:block;font-size:19px;margin-top:4px}
+.budgetExpense{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #e6e1d5}
+.budgetExpense span{flex:1;min-width:0;overflow-wrap:anywhere}
+.budgetExpense button{width:auto;margin:0}
 body{padding-bottom:80px}
 @supports(padding:max(0px)){body{padding-bottom:max(80px,calc(72px + env(safe-area-inset-bottom)))}}
 /* Keep the title and navigation visible without covering the content. */
@@ -3104,6 +3112,7 @@ function openProject(id){
 
   const box =
     document.getElementById("projectDetail");
+  box.dataset.projectId = String(project.id);
 
   const total =
     project.tasks.length;
@@ -3248,11 +3257,8 @@ function openProject(id){
 
     ${project.aiPlan ? `<div class="card">
       <h2>🔨 Tools for this project</h2>
-      ${(project.aiPlan.toolsAlreadyHave || []).length ? `<p class="smallText">Already owned: ${escapeHTML(project.aiPlan.toolsAlreadyHave.join(", "))}</p>` : ""}
-      ${(project.aiPlan.toolsNeeded || []).length
-        ? project.aiPlan.toolsNeeded.map(item => `<div class="toolRow"><span><strong>${escapeHTML(item.tool)}</strong> ${item.required ? "· Required" : "· Optional"}${item.reason ? `<div class="smallText">${escapeHTML(item.reason)}</div>` : ""}</span></div>`).join("")
-        : `<p class="smallText">No extra tools listed.</p>`}
-      <button type="button" onclick="addMissingToolsToShopping('${escapeAttribute(project.id)}')">🛒 Add missing required tools to Shopping</button>
+      <p class="smallText">Owned tools need no action. For each missing tool, choose whether you already have it or need to buy it.</p>
+      <div id="projectToolList">${renderProjectToolRows(project)}</div>
     </div>` : ""}
 
     ${project.aiPlan?.buildSteps?.length ? `<div class="card">
@@ -3336,18 +3342,10 @@ function openProject(id){
 
     </div>
 
-      ${
-      (project.budget || projectEstimatedMaterials(project))
-      ? `
-        <div class="card">
-          <h2>💰 Budget</h2>
-          ${project.budget ? `<p>Target: <strong>$${Number(project.budget).toFixed(2)}</strong></p>` : ""}
-          <p>Estimated materials: <strong>$${projectEstimatedMaterials(project).toFixed(2)}</strong></p>
-          ${project.budget ? `<p>Target less estimated materials: <strong>$${(Number(project.budget)-projectEstimatedMaterials(project)).toFixed(2)}</strong></p>` : ""}
-        </div>
-      `
-      : ""
-    }
+    <div class="card">
+      <h2>💰 Budget</h2>
+      ${renderProjectBudget(project)}
+    </div>
 
     ${
       project.answers && project.answers.length
@@ -4340,6 +4338,161 @@ function projectEstimatedMaterials(project){
   return (project.materials || []).reduce((sum,item) =>
     sum + (Number.isFinite(Number(item.estimatedCost)) && Number(item.estimatedCost) > 0
       ? Number(item.estimatedCost) : 0),0);
+}
+
+function projectToolItems(project){
+  const found = new Map();
+  (project.aiPlan?.toolsNeeded || []).forEach(item => {
+    if(!item?.tool || !toolKey(item.tool)) return;
+    found.set(toolKey(item.tool),{tool:String(item.tool),required:!!item.required,reason:item.reason || ""});
+  });
+  (project.aiPlan?.toolsAlreadyHave || []).forEach(name => {
+    if(typeof name !== "string" || !toolKey(name) || found.has(toolKey(name))) return;
+    found.set(toolKey(name),{tool:name,required:true,reason:""});
+  });
+  return [...found.values()];
+}
+
+function renderProjectToolRows(project){
+  const items = projectToolItems(project);
+  if(!items.length) return '<p class="smallText">No tools listed in this plan.</p>';
+  return items.map((item,index) => {
+    const owned = data.tools.some(tool => toolKey(tool.name) === toolKey(item.tool));
+    const shopping = data.shopping.some(row => row.kind === "tool" && !row.done && toolKey(row.name) === toolKey(item.tool));
+    return `<div class="toolRow"><div><strong>${escapeHTML(item.tool)}</strong> · ${owned ? "Have tool" : shopping ? "On shopping list" : item.required ? "Needed" : "Optional"}` +
+      `${item.reason ? `<div class="smallText">${escapeHTML(item.reason)}</div>` : ""}` +
+      `${!owned ? `<div class="projectToolActions"><button type="button" class="secondary" onclick="addProjectToolToInventory('${escapeAttribute(project.id)}',${index})">I have this</button>` +
+        `${!shopping ? `<button type="button" onclick="addProjectToolToShopping('${escapeAttribute(project.id)}',${index})">Add to Shopping</button>` : ""}</div>` : ""}` +
+      `</div></div>`;
+  }).join("");
+}
+
+function refreshProjectToolRows(project){
+  const box = document.getElementById("projectToolList");
+  if(box && document.getElementById("projectDetail").dataset.projectId === String(project.id))
+    box.innerHTML = renderProjectToolRows(project);
+}
+
+function addProjectToolToInventory(projectId,index){
+  const project = data.projects.find(item => String(item.id) === String(projectId));
+  const item = project && projectToolItems(project)[index];
+  if(!item) return;
+  addTool(item.tool);
+  refreshProjectToolRows(project);
+}
+
+function addProjectToolToShopping(projectId,index){
+  const project = data.projects.find(item => String(item.id) === String(projectId));
+  const item = project && projectToolItems(project)[index];
+  if(!item || data.tools.some(tool => toolKey(tool.name) === toolKey(item.tool))) return;
+  if(!data.shopping.some(row => row.kind === "tool" && !row.done && toolKey(row.name) === toolKey(item.tool))){
+    data.shopping.push({id:crypto.randomUUID(),name:item.tool,quantity:"1",project:project.name,
+      projectId:project.id,done:false,kind:"tool"});
+    saveData();renderToolsToBuy();
+  }
+  refreshProjectToolRows(project);
+}
+
+function budgetMoney(value){return "$" + Number(value || 0).toFixed(2);}
+
+function renderProjectBudget(project){
+  const expenses = Array.isArray(project.expenses) ? project.expenses : [];
+  const spent = expenses.reduce((sum,item) => sum + (Number(item.amount) || 0),0);
+  const estimate = project.costEstimate;
+  const midpoint = estimate ? (Number(estimate.low) + Number(estimate.high)) / 2 : 0;
+  const materialEstimate = projectEstimatedMaterials(project);
+  const targetLeft = Number(project.budget || 0) - spent;
+  return `<div class="budgetGrid">
+    <div class="budgetMetric">Spent<strong>${budgetMoney(spent)}</strong></div>
+    <div class="budgetMetric">${project.budget ? targetLeft < 0 ? "Over target" : "Target remaining" : "Target"}<strong>${project.budget ? budgetMoney(Math.abs(targetLeft)) : "Not set"}</strong></div>
+  </div>
+  ${estimate ? `<p><strong>Sage planning estimate:</strong> ${budgetMoney(estimate.low)}–${budgetMoney(estimate.high)}</p>
+    <p><strong>Estimated still needed:</strong> about ${budgetMoney(Math.max(0,midpoint-spent))} based on the midpoint, before any new scope changes.</p>
+    ${estimate.assumptions ? `<p class="smallText">${escapeHTML(estimate.assumptions)}</p>` : ""}`
+    : `<p class="smallText">Ask Sage for a rough DIY cost range based on the current materials and missing tools.</p>`}
+  ${materialEstimate ? `<p class="smallText">Material amounts entered so far: ${budgetMoney(materialEstimate)}. This may cover only part of the project.</p>` : ""}
+  <button type="button" class="secondary" onclick="estimateProjectBudget('${escapeAttribute(project.id)}')">✦ ${estimate ? "Update Sage estimate" : "Estimate with Sage"}</button>
+  <p id="budgetEstimateStatus" class="smallText" role="status"></p>
+  <label for="projectBudgetTarget">Your budget target</label>
+  <div class="row"><input id="projectBudgetTarget" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Amount in dollars" value="${project.budget || ""}"><button type="button" onclick="saveProjectBudgetTarget('${escapeAttribute(project.id)}')">Save target</button></div>
+  <h3>Spending</h3>
+  <p class="smallText">Record what you actually paid here. Checking off a shopping item does not add an expense.</p>
+  ${expenses.length ? expenses.slice().reverse().map(item => `<div class="budgetExpense"><span>${escapeHTML(item.description)}<small class="smallText"> · ${escapeHTML(item.date || "")}</small></span><strong>${budgetMoney(item.amount)}</strong><button type="button" class="small secondary" onclick="deleteProjectExpense('${escapeAttribute(project.id)}','${escapeAttribute(item.id)}')" aria-label="Remove expense ${escapeAttribute(item.description)}">×</button></div>`).join("")
+    : '<p class="smallText">No expenses recorded yet.</p>'}
+  <label for="projectExpenseDescription">Add an expense</label>
+  <input id="projectExpenseDescription" maxlength="100" placeholder="What did you buy or pay for?">
+  <input id="projectExpenseAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="Amount paid">
+  <button type="button" onclick="addProjectExpense('${escapeAttribute(project.id)}')">＋ Record expense</button>
+  <p id="projectBudgetStatus" class="smallText" role="status"></p>`;
+}
+
+function refreshProjectBudget(project){
+  const body = document.querySelector("#project-section-budget .projectSectionBody");
+  if(body && document.getElementById("projectDetail").dataset.projectId === String(project.id))
+    body.innerHTML = renderProjectBudget(project);
+}
+
+function saveProjectBudgetTarget(projectId){
+  const project = data.projects.find(item => String(item.id) === String(projectId));
+  if(!project) return;
+  const field = document.getElementById("projectBudgetTarget");
+  const amount = Number(field.value);
+  if(field.value.trim() && (!Number.isFinite(amount) || amount < 0)){
+    document.getElementById("projectBudgetStatus").textContent = "Enter a valid budget amount.";return;
+  }
+  project.budget = field.value.trim() ? Math.round(amount*100)/100 : 0;
+  saveData();refreshProjectBudget(project);
+  document.getElementById("projectBudgetStatus").textContent = "Budget target saved.";
+}
+
+function addProjectExpense(projectId){
+  const project = data.projects.find(item => String(item.id) === String(projectId));
+  if(!project) return;
+  const description = document.getElementById("projectExpenseDescription").value.trim();
+  const amount = Number(document.getElementById("projectExpenseAmount").value);
+  if(!description || !Number.isFinite(amount) || amount <= 0){
+    document.getElementById("projectBudgetStatus").textContent = "Enter what you paid for and an amount above zero.";return;
+  }
+  if(!Array.isArray(project.expenses)) project.expenses = [];
+  project.expenses.push({id:crypto.randomUUID(),description:description.slice(0,100),amount:Math.round(amount*100)/100,date:new Date().toLocaleDateString()});
+  saveData();refreshProjectBudget(project);
+  document.getElementById("projectBudgetStatus").textContent = "Expense recorded.";
+}
+
+function deleteProjectExpense(projectId,expenseId){
+  const project = data.projects.find(item => String(item.id) === String(projectId));
+  if(!project?.expenses || !confirm("Remove this expense from the project budget?")) return;
+  project.expenses = project.expenses.filter(item => String(item.id) !== String(expenseId));
+  saveData();refreshProjectBudget(project);
+}
+
+async function estimateProjectBudget(projectId){
+  const project = data.projects.find(item => String(item.id) === String(projectId));
+  if(!project) return;
+  const status = document.getElementById("budgetEstimateStatus");
+  const button = status.previousElementSibling;
+  button.disabled = true;
+  status.textContent = "Sage is estimating materials and missing tools…";
+  try{
+    const missing = projectToolItems(project).filter(item =>
+      !data.tools.some(tool => toolKey(tool.name) === toolKey(item.tool))).map(item => item.tool);
+    const message = `Estimate a rough DIY cost range in USD for this project. Include materials, missing tools, tax and a sensible contingency; exclude hired labor unless the project explicitly needs it. Location: ${data.home?.location || "United States"}. Project: ${project.name}. Description: ${project.description || ""}. Materials: ${JSON.stringify((project.materials || []).map(item => ({name:item.name,quantity:item.quantity,knownTotal:item.estimatedCost || 0})).slice(0,60))}. Missing tools: ${JSON.stringify(missing.slice(0,30))}. Known homeowner target: ${project.budget || "none"}. Respond ONLY as JSON with numeric low and high total dollar estimates and a short assumptions string. Do not treat the target as the estimated price. State missing dimensions or unknown prices in assumptions.`;
+    const response = await fetch(AI_BACKEND_URL.replace(/\/$/,"") + "/chat",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({message,history:[],project:{name:project.name,description:project.description || ""},homeContext:data.home || {}})
+    });
+    const result = await response.json();
+    if(!response.ok || !result.ok || typeof result.reply !== "string") throw new Error(result.error || "Sage is unavailable.");
+    const match = result.reply.match(/\{[\s\S]*\}/);
+    if(!match) throw new Error("Sage did not return a usable cost range. Try again.");
+    const estimate = JSON.parse(match[0]);
+    const low = Number(estimate.low), high = Number(estimate.high);
+    if(!Number.isFinite(low) || !Number.isFinite(high) || low < 0 || high < low || high > 100000000)
+      throw new Error("Sage did not return a valid cost range. Try again.");
+    project.costEstimate = {low:Math.round(low),high:Math.round(high),assumptions:String(estimate.assumptions || "Planning range only; check prices before purchasing.").slice(0,500),createdAt:new Date().toISOString()};
+    saveData();refreshProjectBudget(project);
+    document.getElementById("budgetEstimateStatus").textContent = "Sage estimate saved. Check local prices before buying.";
+  }catch(error){status.textContent = error.message || "Could not estimate the budget right now.";button.disabled = false;}
 }
 
 function deleteMaterial(projectId,index){
