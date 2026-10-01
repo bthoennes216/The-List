@@ -33,7 +33,7 @@ const context = vm.createContext({
   crypto:{randomUUID:() => "note-id"},
   Date,console,structuredClone
 });
-vm.runInContext(`${startup}\n${storage}\n${escape}\n${escapeAttr}\n${notes}`,context);
+vm.runInContext(`${startup}\n${storage}\ndata = loadData(); ensureProjectStatuses();\n${escape}\n${escapeAttr}\n${notes}`,context);
 assert.equal(stored,original,"loading old projects should not rewrite their data");
 vm.runInContext("addProjectDiscussionNote('kitchen')",context);
 assert.equal(elements.newProjectNote.value,"");

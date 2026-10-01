@@ -48,6 +48,9 @@ const context = vm.createContext({
 vm.runInContext(`let sagePendingPhoto = {key:"bathroom",image:${JSON.stringify(original)}};
   ${storage}\n${memory}\n${sending}`,context);
 
+// Unit harness omits browser IndexedDB; persistence is exercised by image-storage.browser.js.
+context.storeLocalImages = async () => {};
+
 (async () => {
   await vm.runInContext("sendSagePhoto()",context);
   assert.equal(receivedPhoto,true,"the image service must get the homeowner's photo");

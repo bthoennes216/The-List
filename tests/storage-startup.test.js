@@ -20,7 +20,7 @@ function boot(saved){
     structuredClone,alert:message => alerts.push(message),console:{error:() => {}}
   });
   let error;
-  try{vm.runInContext(startup + "\n" + storage,context);}
+  try{vm.runInContext(startup + "\n" + storage + "\ndata = loadData(); ensureProjectStatuses();",context);}
   catch(caught){error = caught;}
   return {context,alerts,error,get stored(){return stored;},get writes(){return writes;}};
 }
