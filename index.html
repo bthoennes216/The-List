@@ -1873,8 +1873,7 @@ const defaultData = {
 
 };
 
-let data = loadData();
-ensureProjectStatuses();
+let data; // Loaded after the separate image store is ready.
 
 let currentCalendarDate = new Date();
 let selectedCalendarDate = null;
@@ -1912,6 +1911,11 @@ function parseStoredData(saved){
   function expand(value){
     if(typeof value === "string" && value.startsWith(STORED_IMAGE_PREFIX)){
       const image = images[value.slice(STORED_IMAGE_PREFIX.length)];
+      if(typeof image === "string" && image.startsWith(LOCAL_IMAGE_PREFIX)){
+        const uri = localImageUris.get(image.slice(LOCAL_IMAGE_PREFIX.length));
+        if(!uri) throw new Error("A saved photo could not be opened. Your saved data has not been changed.");
+        return uri;
+      }
       return typeof image === "string" && image.startsWith("data:image/") ? image : value;
     }
     if(Array.isArray(value)) return value.map(expand);
@@ -2078,12 +2082,111 @@ function loadData(){
 }
 
 function saveData(){
-  const saved = serializeStoredData(data);
+  const saved = serializeLocalStoredData(data);
   localStorage.setItem(STORAGE_KEY,saved);
-  if(typeof scheduleRecoverySnapshot === "function") scheduleRecoverySnapshot(saved);
+  if(typeof scheduleRecoverySnapshot === "function") scheduleRecoverySnapshot(serializeStoredData(data));
   if(typeof window !== "undefined" && typeof window.queueCloudSync === "function") window.queueCloudSync();
 }
 
+
+// Photos live in IndexedDB; localStorage holds small project/chat records and photo IDs.
+// Portable backups and household uploads still contain actual image data.
+const LOCAL_IMAGE_PREFIX = "the-list-device-photo:v1:";
+const localImageUris = new Map();
+const localImageIds = new Map();
+let imageSaveQueue = Promise.resolve();
+
+function serializeLocalStoredData(snapshot){
+  const compact = JSON.parse(serializeStoredData(snapshot));
+  const images = compact[STORED_IMAGE_POOL] || {};
+  for(const key of Object.keys(images)){
+    const id = localImageIds.get(images[key]);
+    if(id) images[key] = LOCAL_IMAGE_PREFIX + id;
+  }
+  return JSON.stringify(compact);
+}
+
+function openImageDB(){
+  return new Promise((resolve,reject) => {
+    const request = indexedDB.open("theListPhotosV1",1);
+    request.onupgradeneeded = () => request.result.createObjectStore("images");
+    request.onerror = () => reject(request.error || new Error("Photo storage is unavailable."));
+    let blocked = false;
+    request.onblocked = () => {blocked = true;reject(new Error("Close other The List tabs and try again."));};
+    request.onsuccess = () => {
+      if(blocked){request.result.close();return;}
+      request.result.onversionchange = () => request.result.close();
+      resolve(request.result);
+    };
+  });
+}
+
+async function loadLocalImages(saved){
+  if(!saved) return;
+  const compact = JSON.parse(saved);
+  const images = compact[STORED_IMAGE_POOL] || {};
+  const ids = [...new Set(Object.values(images).filter(value =>
+    typeof value === "string" && value.startsWith(LOCAL_IMAGE_PREFIX))
+    .map(value => value.slice(LOCAL_IMAGE_PREFIX.length)))];
+  if(!ids.length) return;
+  const db = await openImageDB();
+  try{
+    const photos = await new Promise((resolve,reject) => {
+      const tx = db.transaction("images","readonly");
+      const found = new Map();
+      for(const id of ids){
+        const request = tx.objectStore("images").get(id);
+        request.onsuccess = () => found.set(id,request.result);
+      }
+      tx.oncomplete = () => resolve(found);
+      tx.onabort = tx.onerror = () => reject(tx.error || new Error("Could not open saved photos."));
+    });
+    for(const [id,uri] of photos){
+      if(typeof uri !== "string" || !uri.startsWith("data:image/"))
+        throw new Error("A saved photo is unavailable. Your projects and chats have not been replaced.");
+      localImageUris.set(id,uri);
+      localImageIds.set(uri,id);
+    }
+  }finally{db.close();}
+}
+
+async function storeLocalImages(snapshot){
+  const compact = JSON.parse(serializeStoredData(snapshot));
+  const fresh = [...new Set(Object.values(compact[STORED_IMAGE_POOL] || {}))]
+    .filter(uri => !localImageIds.has(uri));
+  if(!fresh.length) return;
+  const photos = await Promise.all(fresh.map(async uri => {
+    const digest = await crypto.subtle.digest("SHA-256",new TextEncoder().encode(uri));
+    const id = Array.from(new Uint8Array(digest),b => b.toString(16).padStart(2,"0")).join("");
+    return {id,uri};
+  }));
+  const db = await openImageDB();
+  try{
+    await new Promise((resolve,reject) => {
+      const tx = db.transaction("images","readwrite");
+      for(const {id,uri} of photos) tx.objectStore("images").put(uri,id);
+      // Only publish IDs after the entire transaction commits.
+      tx.oncomplete = resolve;
+      tx.onabort = tx.onerror = () => reject(tx.error || new Error("Could not save photos."));
+    });
+    for(const {id,uri} of photos){localImageUris.set(id,uri);localImageIds.set(uri,id);}
+  }finally{db.close();}
+}
+
+function saveImageData(){
+  const write = imageSaveQueue.catch(() => {}).then(async () => {
+    await storeLocalImages(data);
+    saveData();
+  });
+  imageSaveQueue = write;
+  return write;
+}
+
+async function persistLocalSnapshot(snapshot){
+  await storeLocalImages(snapshot);
+  // Image writes finish first. A failure leaves the old primary save intact.
+  localStorage.setItem(STORAGE_KEY,serializeLocalStoredData(snapshot));
+}
 
 /* =========================================================
    BACKUP / RESTORE
@@ -2261,12 +2364,12 @@ async function restoreBackup(){
   if(!confirm("Replace the current The List data on this device with this backup? This cannot be undone unless you saved a separate backup.")) return;
   try{
     clearTimeout(recoverySaveTimer);
-    const current = localStorage.getItem(STORAGE_KEY);
+    const current = serializeStoredData(parseStoredData(localStorage.getItem(STORAGE_KEY)));
     try{await saveRecoverySnapshot(current,true);}
     catch{
       if(!confirm("An on-device recovery copy could not be saved. Continue only if you have downloaded a backup of your current data.")) return;
     }
-    localStorage.setItem(STORAGE_KEY,serializeStoredData(chosenBackup));
+    await persistLocalSnapshot(chosenBackup);
     if(typeof window !== "undefined" && typeof window.pauseCloudSyncForRestore === "function") window.pauseCloudSyncForRestore();
     status.textContent = "Backup restored. Reloading...";
     location.reload();
@@ -3023,7 +3126,7 @@ async function reviseQuickProject(){
   }
 }
 
-function saveQuickProjectDraft(){
+async function saveQuickProjectDraft(){
   if(!quickProjectDraft || aiPlanningBusy) return;
   const draft = quickProjectDraft;
   const status = document.getElementById("quickDraftStatus");
@@ -3038,7 +3141,7 @@ function saveQuickProjectDraft(){
       roomPhotos:draft.photos,aiPlan:draft.plan,aiImage:""};
     data.projects.push(project);
     data.aiChats[id] = [{role:"user",content:draft.prompt},{role:"assistant",content:description || name}];
-    try{saveData();}
+    try{await saveImageData();}
     catch(err){data.projects.pop();delete data.aiChats[id];status.textContent = `Could not save this project. ${err.message || "Please try again."}`;return;}
     quickProjectDraft = null;
     document.getElementById("quickProjectPrompt").value = "";
@@ -3544,7 +3647,7 @@ async function addProjectPhotos(projectId,input){
   try{
     const photos = await Promise.all([...input.files].slice(0,available).map(compressProjectPhoto));
     project.roomPhotos = [...oldPhotos,...photos];
-    saveData();
+    await saveImageData();
     renderProjectPhotos(project);
     renderSageBriefPhotoOptions(project);
     status.textContent = `${photos.length} photo${photos.length === 1 ? "" : "s"} added. Build your plan to use them.`;
@@ -3675,7 +3778,7 @@ async function generateSavedProjectImage(projectId){
   try{
     const image = await requestProjectImage(project.aiPlan.imagePrompt,project.roomPhotos || []);
     project.aiImage = image;
-    saveData();
+    await saveImageData();
     openProject(projectId);
   }catch(err){status.textContent = err.message || "Could not create image.";}
 }
@@ -9922,7 +10025,7 @@ function removeAIPlanMaterial(index){
    SAVE PLAN TO PROJECTS
    ========================================================= */
 
-function addAIPlanToProjects(){
+async function addAIPlanToProjects(){
 
   if(!editingPlan){
     return;
@@ -10006,7 +10109,7 @@ function addAIPlanToProjects(){
     data.projects.push(project);
   }
 
-  saveData();
+  await saveImageData();
   editingPlan = null;
   planningProjectId = null;
   openProject(existingProject ? existingProject.id : project.id);
@@ -10660,7 +10763,7 @@ async function createProjectFromChat(index){
       notes:plan ? "Created from AI Chat." : "Started from AI Chat: AI planning limit reached. Organize this conversation later.",
       aiPlan:plan,aiImage:(reply.images || []).at(-1) || "",roomPhotos});
     data.aiChats[id] = projectConversation;
-    try{saveData();}
+    try{await saveImageData();}
     catch(error){
       data.projects.pop();
       delete data.aiChats[id];
@@ -10711,31 +10814,33 @@ async function generateAIChatImage(index){
   const earlier = aiThread().slice(0,index).reverse().find(item => item.role === "user");
   const status = document.getElementById("aiChatStatus");
   const prompt = `Photorealistic visual example of this completed home project or design idea. Preserve the supplied room layout and camera angle when a photo is provided. No labels, diagrams, or text overlays. ${project ? `Project details to preserve: ${sageBriefText(project)}. ` : ""}Earlier homeowner requests: ${sageDesignContext(aiThread().slice(0,index))}. Latest request: ${String(earlier?.content || project?.name || "Home project").slice(0,700)}. Proposed idea: ${reply.content.slice(0,1600)}`;
+  let generatedImage = false;
   aiImageBusy = true;
   status.textContent = "Creating a visual idea…";
   try{
     const photo = sageRoomPhoto(aiThread().slice(0,index),project);
     const image = await requestProjectImage(prompt,photo ? [photo] : []);
+    generatedImage = true;
     const source = image.startsWith("data:image/") ? await (await fetch(image)).blob() : null;
     const previousImages = reply.images;
     let saved = false;
-    for(const [size,quality] of source ? [[680,.6],[480,.48],[360,.4]] : [[0,0]]){
+    for(const [size,quality] of source ? [[1600,.82],[1000,.7],[680,.6]] : [[0,0]]){
       const compact = source ? await photoToJpeg(source,size,quality) : image;
       reply.images = [...(previousImages || []),compact].slice(-3);
-      try{saveData();saved = true;break;}
+      try{await saveImageData();saved = true;break;}
       catch(error){
         reply.images = previousImages;
         if(!source || !/quota|storage/i.test(error.message || "")) throw error;
       }
     }
-    if(!saved) throw new Error("This device has no room for another image. Free up storage or remove an unused image, then try again.");
+    if(!saved) throw new Error("The visual idea was generated, but browser photo storage could not save it. Your existing projects and chats are safe. Download a backup before removing saved photos.");
     status.textContent = "Visual idea ready. Tap Another idea to see a different example.";
     if(aiThreadKey() === key) renderAIChat();
   }catch(err){
     const reason = err.message || "Try again.";
-    status.textContent = /quota|credit|limit/i.test(reason)
+    status.textContent = !generatedImage && /quota|credit|billing|limit/i.test(reason)
       ? "Image generation has reached its limit for now. Sage text chat still works; try an image again later."
-      : `Could not save the visual idea. ${reason}`;
+      : `${generatedImage ? "Could not save" : "Could not generate"} the visual idea. ${reason}`;
   }
   finally{aiImageBusy = false;}
 }
@@ -10899,7 +11004,7 @@ async function sendSagePhoto(savedPhoto=""){
     const previousPhotos = project?.roomPhotos;
     const previousActiveThread = data.sageActiveThread;
     let saved = false;
-    for(const [size,quality] of source ? [[680,.6],[480,.48],[360,.4]] : [[0,0]]){
+    for(const [size,quality] of source ? [[1600,.82],[1000,.7],[680,.6]] : [[0,0]]){
       const concept = source ? await photoToJpeg(source,size,quality) : image;
       data.aiChats[key] = [...(previousMessages || []),
         {role:"user",content:message,...(newPhoto ? {images:[photo]} : {})},
@@ -10907,7 +11012,7 @@ async function sendSagePhoto(savedPhoto=""){
       data.sageActiveThread = key;
       if(project && newPhoto && (previousPhotos || []).length < 3 && !(previousPhotos || []).includes(photo))
         project.roomPhotos = [...(previousPhotos || []),photo];
-      try{saveData();saved = true;break;}
+      try{await saveImageData();saved = true;break;}
       catch(error){
         if(previousMessages) data.aiChats[key] = previousMessages;
         else delete data.aiChats[key];
@@ -10916,7 +11021,7 @@ async function sendSagePhoto(savedPhoto=""){
         if(!source || !/quota|storage/i.test(error.message || "")) throw error;
       }
     }
-    if(!saved) throw new Error("This device has no room for another photo. Try a smaller photo or remove an unused image.");
+    if(!saved) throw new Error("The photo was generated, but browser photo storage could not save it. Your existing projects and chats are safe.");
     input.value = "";
     if(newPhoto) removeSagePhoto();
     status.textContent = "Visual idea ready. Your original photo and Sage's idea are saved in this conversation.";
@@ -10979,7 +11084,7 @@ async function reviewSageReply(index){
     status.textContent = "Could not prepare suggestions. " + (error.message || "Try again.");
   }finally{aiPlanningBusy = false;}
 }
-function saveSageReview(){
+async function saveSageReview(){
   if(!sageReview) return;
   const status = document.getElementById("aiReviewStatus");
   const project = data.projects.find(item => String(item.id) === sageReview.projectId);
@@ -11033,7 +11138,7 @@ function saveSageReview(){
     status.textContent = "Those tasks, materials, and reminders are already saved in this project.";return;
   }
   try{
-    localStorage.setItem(STORAGE_KEY,serializeStoredData(next));
+    await persistLocalSnapshot(next);
     data = next;
     if(typeof window !== "undefined" && typeof window.queueCloudSync === "function") window.queueCloudSync();
     closeSageReview();
@@ -11129,20 +11234,45 @@ function updateHeaderSize(){
 window.addEventListener("scroll",updateHeaderSize,{passive:true});
 updateHeaderSize();
 
-const restoredSageThread = data.sageActiveThread || "general";
-const restoredSageProject = data.projects.find(p => String(p.id) === restoredSageThread);
-if(restoredSageProject){
-  document.getElementById("aiProjectSelect").dataset.pendingProjectId = restoredSageThread;
-}else{
-  sageGeneralThread = restoredSageThread in data.aiChats || restoredSageThread === "general"
-    ? restoredSageThread : "general";
+async function initializeTheList(){
+  document.body.inert = true;
+  try{
+    await loadLocalImages(localStorage.getItem(STORAGE_KEY));
+    data = loadData();
+    ensureProjectStatuses();
+    // Migrate existing photos only after they have been read successfully.
+    // Keep the legacy save untouched if the new photo store is unavailable.
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const hasInlineImages = saved && Object.values(JSON.parse(saved)[STORED_IMAGE_POOL] || {})
+      .some(value => typeof value === "string" && value.startsWith("data:image/"));
+    const hasLegacyImages = saved && !JSON.parse(saved)[STORED_IMAGE_POOL] && saved.includes("data:image/");
+    if(hasInlineImages || hasLegacyImages){
+      try{await persistLocalSnapshot(data);}
+      catch(error){console.warn("Photo storage migration postponed:",error);}
+    }
+    const restoredSageThread = data.sageActiveThread || "general";
+    const restoredSageProject = data.projects.find(p => String(p.id) === restoredSageThread);
+    if(restoredSageProject){
+      document.getElementById("aiProjectSelect").dataset.pendingProjectId = restoredSageThread;
+    }else{
+      sageGeneralThread = restoredSageThread in data.aiChats || restoredSageThread === "general"
+        ? restoredSageThread : "general";
+    }
+    showPage("homePage");
+    // Copy existing data without changing the primary save during startup.
+    scheduleRecoverySnapshot(serializeStoredData(data));
+    document.body.inert = false;
+  }catch(error){
+    console.error(error);
+    alert("The List could not open your saved photos or projects. Nothing was replaced. Keep this browser data and reload to try again.");
+    throw error;
+  }
 }
-showPage("homePage");
-// Copy existing data without changing the primary save during startup.
-scheduleRecoverySnapshot(localStorage.getItem(STORAGE_KEY));
+window.appStorageReady = initializeTheList();
+window.appStorageReady.catch(() => {});
 
 </script>
-<script src="sync.js?v=3"></script>
+<script src="sync.js?v=4"></script>
 
 </body>
 </html>

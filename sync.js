@@ -231,8 +231,8 @@
     if(!row.payload) throw Error("There is no shared data to load yet.");
     syncStatus("Loading shared data and photos…");
     const next = await localPayload(row.payload);
-    if(hasLocalData()) await saveRecoverySnapshot(localStorage.getItem(STORAGE_KEY),true);
-    localStorage.setItem(STORAGE_KEY,serializeStoredData(next));
+    if(hasLocalData()) await saveRecoverySnapshot(serializeStoredData(parseStoredData(localStorage.getItem(STORAGE_KEY))),true);
+    await persistLocalSnapshot(next);
     revision = Number(row.revision);
     remember();
     localStorage.removeItem(DIRTY_KEY);
@@ -325,6 +325,7 @@
   }
   (async () => {
     try {
+      await window.appStorageReady;
       const {createClient} = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm");
       client = createClient(PROJECT_URL,PUBLISHABLE_KEY);
       await loadAccount();
