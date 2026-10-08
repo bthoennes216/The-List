@@ -3267,6 +3267,18 @@ function openProject(id){
       </button>
 
       <details class="sageBriefCard">
+        <summary>Print / Export PDF</summary>
+        <p class="smallText">Create a printable file from this project's saved information. Unverified plans are marked Preliminary.</p>
+        <div class="row" style="flex-wrap:wrap">
+          <button type="button" onclick="exportProjectPDF('${escapeAttribute(project.id)}','overview')">One-page overview</button>
+          <button type="button" onclick="exportProjectPDF('${escapeAttribute(project.id)}','binder')">Complete DIY binder</button>
+        </div>
+        <p id="projectPDFStatus" class="smallText" role="status"></p>
+        <a id="projectPDFDownload" hidden style="display:inline-block;padding:12px;color:var(--forest);font-weight:700" target="_blank" rel="noopener">Open / save PDF</a>
+        <button id="projectPDFShare" type="button" class="secondary" hidden>Share PDF</button>
+      </details>
+
+      <details class="sageBriefCard">
         <summary>✦ What Sage should remember</summary>
         <p class="smallText">Save details Sage should use in this project's chats and visual ideas. You can change them anytime.</p>
         <label for="sageBriefChoices">Design choices</label>
@@ -11272,7 +11284,9 @@ window.appStorageReady = initializeTheList();
 window.appStorageReady.catch(() => {});
 
 </script>
+<script src="project-pdf.js?v=1"></script>
 <script src="sync.js?v=4"></script>
 
 </body>
 </html>
+
