@@ -26,7 +26,7 @@ assert.equal(importer.parseProject('{"name":"x","__proto__":{"polluted":true}}')
 assert.match(importer.exportPrompt(),/the-list-project/);
 
 const fields={};
-for(const id of ['projectImportDialog','projectImportText','projectImportFile','projectImportPreview','projectImportSave','projectImportStatus','projectImportPrompt'])fields[id]={value:'',innerHTML:'',textContent:'',hidden:false,disabled:false,addEventListener(){},querySelectorAll(){return [fields.projectImportSave];},showModal(){this.open=true;},close(){this.open=false;},select(){}};
+for(const id of ['projectImportDialog','projectImportText','projectImportFile','projectImportPreview','projectImportSave','projectImportStatus','projectImportPrompt','projectImportBudget'])fields[id]={value:'',innerHTML:'',textContent:'',hidden:false,disabled:false,addEventListener(){},querySelectorAll(){return [fields.projectImportSave];},showModal(){this.open=true;},close(){this.open=false;},select(){}};
 const original={projects:[{id:'existing',name:'Existing'}],tools:[{name:'Drill'}],shopping:[],aiChats:{}};
 let fail=true,writes=0,syncs=0,opened='';
 const context=vm.createContext({TextEncoder,Date,JSON,Math,Number,String,Array,Error,RegExp,crypto:{randomUUID:()=> 'new-id'},window:{queueCloudSync(){syncs++;}},document:{getElementById:id=>fields[id]},navigator:{clipboard:{writeText:async()=>{}}},data:original,escapeHTML:s=>String(s??'').replaceAll('<','&lt;').replaceAll('>','&gt;'),toolKey:s=>String(s).trim().toLowerCase(),persistLocalSnapshot:async next=>{if(fail)throw Error('disk full');writes++;assert.equal(next.projects.length,2);},setProjectFilter(){},openProject:id=>opened=id});

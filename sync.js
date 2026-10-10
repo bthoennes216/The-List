@@ -7,6 +7,8 @@
   const DIRTY_KEY = "theListCloudDirtyV1";
   const PHOTO_PREFIX = "the-list-cloud-photo:v1:";
   const BUCKET = "the-list-photos";
+  const FILE_BUCKET = "the-list-files";
+  const fileBucket = path => /\.(pdf|docx|txt|md|csv|json)$/.test(path) ? FILE_BUCKET : BUCKET;
   let client, user, household, revision = 0, linked = false;
   let pending = 0, timer, writing = false, polling = false;
   const uploaded = new Map(), downloaded = new Map();
@@ -180,13 +182,13 @@
   async function photoToPath(uri) {
     if(uploaded.has(uri)) return uploaded.get(uri);
     const blob = await (await fetch(uri)).blob();
-    const extensions = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif"};
+    const extensions = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif","application/pdf":"pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document":"docx","text/plain":"txt","text/markdown":"md","text/csv":"csv","application/json":"json"};
     const ext = extensions[blob.type];
-    if(!ext || blob.size > 10485760) throw Error("A photo is too large or has an unsupported format. Your local copy is safe.");
+    if(!ext || blob.size > 10485760) throw Error("A file is too large or has an unsupported format. Your local copy is safe.");
     const digest = await crypto.subtle.digest("SHA-256",await blob.arrayBuffer());
     const hash = Array.from(new Uint8Array(digest),b => b.toString(16).padStart(2,"0")).join("");
     const path = household.id + "/" + hash + "." + ext;
-    const {error} = await client.storage.from(BUCKET).upload(path,blob,{contentType:blob.type,upsert:false});
+    const {error} = await client.storage.from(fileBucket(path)).upload(path,blob,{contentType:blob.type,upsert:false});
     if(error && String(error.statusCode || error.status) !== "409") throw error;
     uploaded.set(uri,path);
     downloaded.set(path,uri);
@@ -209,9 +211,9 @@
       const value = photos[id];
       if(!value.startsWith(PHOTO_PREFIX)) continue;
       const path = value.slice(PHOTO_PREFIX.length);
-      if(!path.startsWith(household.id + "/")) throw Error("Photo belongs to another household.");
+      if(!path.startsWith(household.id + "/")) throw Error("File belongs to another household.");
       if(!downloaded.has(path)) {
-        const {data:blob,error} = await client.storage.from(BUCKET).download(path);
+        const {data:blob,error} = await client.storage.from(fileBucket(path)).download(path);
         if(error) throw error;
         const uri = await new Promise((resolve,reject) => {
           const reader = new FileReader();
