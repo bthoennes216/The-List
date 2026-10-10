@@ -1327,6 +1327,7 @@ body.sageChatOpen main{padding-top:0}
     </div>
   </div>
 
+  <button type="button" class="secondary" onclick="openProjectImport()">↓ Import from ChatGPT</button>
   <div id="projectsList"></div>
 
   <details class="card quickProjectCard" id="quickProjectDetails">
@@ -1425,6 +1426,7 @@ body.sageChatOpen main{padding-top:0}
   </div>
   <div id="aiChatGPTPanel" class="card aiPanel" hidden>
     <h3>Continue in ChatGPT</h3>
+    <button type="button" class="secondary" onclick="openProjectImport()">↓ Import a project file</button>
     <p class="aiNote">Uses your own ChatGPT access. Conversations stay in ChatGPT; The List cannot read your account or use your ChatGPT subscription for in-app AI.</p>
     <label for="chatGPTPrompt">What would you like help with?</label>
     <textarea id="chatGPTPrompt" maxlength="4000" placeholder="Example: Plan a backyard fire pit with materials and build steps"></textarea>
@@ -3389,6 +3391,13 @@ function openProject(id){
       ${project.aiPlan.warnings?.length ? `<div class="warning"><strong>Before you begin</strong>${project.aiPlan.warnings.map(note => `<p>${escapeHTML(note)}</p>`).join("")}</div>` : ""}
     </div>` : ""}
 
+    ${project.aiPlan?.cutList?.length ? `<div class="card">
+      <h2>🪚 Cut List</h2>
+      <div style="overflow-x:auto"><table class="cutList"><thead><tr><th>Qty</th><th>Piece</th><th>Dimensions</th><th>Material</th><th>Notes</th></tr></thead><tbody>
+      ${project.aiPlan.cutList.map(row => `<tr>${[row.quantity,row.piece,row.dimensions,row.material,row.notes].map(value => `<td>${escapeHTML(value)}</td>`).join("")}</tr>`).join("")}
+      </tbody></table></div>
+    </div>` : ""}
+
     ${project.aiPlan?.measurementsNeeded?.length ? `<div class="card">
       <h2>📏 Measurements to check</h2>
       <p class="smallText">Confirm these before buying materials or starting work.</p>
@@ -3540,7 +3549,7 @@ function openProject(id){
 function organizeProjectSections(box,projectId){
   const names = [
     ["Project notes","notes"],["Material Takeoff","takeoff"],
-    ["Tools for this project","tools"],["DIY Instructions","instructions"],
+    ["Tools for this project","tools"],["DIY Instructions","instructions"],["Cut List","cuts"],
     ["Measurements to check","measurements"],["Project Photos","photos"],
     ["Tasks","tasks"],["Materials","materials"],["Budget","budget"],
     ["Project Details & Answers","answers"],["Permanent Home Records","records"]
@@ -11284,6 +11293,22 @@ window.appStorageReady = initializeTheList();
 window.appStorageReady.catch(() => {});
 
 </script>
+<dialog id="projectImportDialog" aria-labelledby="projectImportTitle" style="width:min(620px,calc(100% - 32px));max-height:85vh;overflow:auto;border:1px solid #d6d0c5;border-radius:18px;background:#faf8f3;color:#342f27;padding:20px;box-sizing:border-box">
+  <h2 id="projectImportTitle">Import from ChatGPT</h2>
+  <p>Bring a project you planned in ChatGPT into The List.</p>
+  <p class="smallText">Copy the export prompt into your project conversation in ChatGPT. Save the JSON file it provides, then choose it below or paste the JSON.</p>
+  <button type="button" class="secondary" onclick="copyProjectExportPrompt()">Copy export prompt</button>
+  <textarea id="projectImportPrompt" aria-label="Export prompt to copy" readonly hidden></textarea>
+  <label for="projectImportFile">Choose a project JSON file</label>
+  <input id="projectImportFile" type="file" accept=".json,application/json" onchange="readProjectImportFile(this)">
+  <label for="projectImportText">Or paste project JSON</label>
+  <textarea id="projectImportText" maxlength="1048576" rows="5" placeholder="Paste the project JSON from ChatGPT" oninput="invalidateProjectImport()"></textarea>
+  <button type="button" onclick="previewProjectImport()">Preview project</button>
+  <div id="projectImportPreview"></div>
+  <p id="projectImportStatus" class="smallText" role="status"></p>
+  <div class="row"><button id="projectImportSave" type="button" hidden onclick="saveImportedProject()">Save as new project</button><button type="button" class="secondary" onclick="closeProjectImport()">Cancel</button></div>
+</dialog>
+<script src="project-import.js?v=1"></script>
 <script src="project-pdf.js?v=1"></script>
 <script src="sync.js?v=4"></script>
 
