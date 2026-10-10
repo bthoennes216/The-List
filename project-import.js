@@ -99,11 +99,11 @@
 })(typeof window !== 'undefined' ? window : globalThis);
 
 if(typeof document !== 'undefined'){
-  let importDraft=null,importBusy=false,importRead=0;
+  let importDraft=null,importBusy=false,importRead=0,sourceAttachment=null;
   const field=id=>document.getElementById(id);
   window.openProjectImport=function(){
     if(importBusy) return;
-    importDraft=null;importRead++;
+    importDraft=null;sourceAttachment=null;importRead++;
     field('projectImportText').value='';field('projectImportFile').value='';
     field('projectImportPreview').innerHTML='';field('projectImportSave').hidden=true;
     field('projectImportStatus').textContent='';field('projectImportDialog').showModal();
@@ -131,7 +131,9 @@ if(typeof document !== 'undefined'){
     invalidateProjectImport();
     try{
       importDraft=TheListProjectImport.parseProject(field('projectImportText').value);
+      if(sourceAttachment){importDraft.attachments=[sourceAttachment];importDraft.importedFrom='File';}
       const p=importDraft,plan=p.aiPlan;
+      field('projectImportBudget').value=p.budget || '';
       const list=(title,items)=>items.length?`<details><summary>${title} (${items.length})</summary><ul>${items.map(item=>`<li>${escapeHTML(item)}</li>`).join('')}</ul></details>`:'';
       field('projectImportPreview').innerHTML=`<h3>${escapeHTML(p.name)}</h3><p>${escapeHTML(p.description)}</p><p>${escapeHTML(p.category)} · ${p.budget?`Estimated budget: $${p.budget.toFixed(2)}`:'Budget not provided'}</p>`+
         list('Tasks',p.tasks.map(t=>t.text+(t.dueDate?` · Due ${t.dueDate}`:'')))+
@@ -146,12 +148,20 @@ if(typeof document !== 'undefined'){
       field('projectImportSave').hidden=false;
     }catch(error){field('projectImportStatus').textContent=error.message;}
   };
+  window.stageProjectFileImport=function(raw,attachment){
+    openProjectImport();sourceAttachment=attachment;field('projectImportText').value=raw;previewProjectImport();
+    if(importDraft)field('projectImportStatus').textContent=`Review the extracted project. ${attachment.name} will be attached to the new project. Check measurements and prices against the original.`;
+  };
   window.saveImportedProject=async function(){
     if(!importDraft || importBusy)return;
+    const budgetField=field('projectImportBudget');
+    const budget=Number(budgetField.value);
+    if(!Number.isFinite(budget) || budget<0 || budget>100000000){field('projectImportStatus').textContent='Enter a valid nonnegative budget.';return;}
+    importDraft.budget=budget;
     importBusy=true;
     const controls=Array.from(field('projectImportDialog').querySelectorAll('button,input,textarea'));
     controls.forEach(control=>control.disabled=true);
-    const project={...importDraft,id:`project-${crypto.randomUUID()}`,status:'planned',startedAt:'',completedAt:'',records:[],roomPhotos:[],aiImage:'',importedFrom:'ChatGPT',importedAt:new Date().toISOString()};
+    const project={...importDraft,id:`project-${crypto.randomUUID()}`,status:'planned',startedAt:'',completedAt:'',records:[],roomPhotos:[],aiImage:'',importedFrom:importDraft.importedFrom || 'ChatGPT',importedAt:new Date().toISOString()};
     const next=JSON.parse(JSON.stringify(data));
     next.projects.push(project);
     try{

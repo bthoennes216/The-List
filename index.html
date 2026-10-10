@@ -1327,7 +1327,7 @@ body.sageChatOpen main{padding-top:0}
     </div>
   </div>
 
-  <button type="button" class="secondary" onclick="openProjectImport()">↓ Import from ChatGPT</button>
+  <div class="row"><button type="button" class="secondary" onclick="openProjectImport()">↓ Import from ChatGPT</button><button type="button" class="secondary" onclick="openFileProjectReader()">📄 Create from a file</button></div>
   <div id="projectsList"></div>
 
   <details class="card quickProjectCard" id="quickProjectDetails">
@@ -1426,7 +1426,7 @@ body.sageChatOpen main{padding-top:0}
   </div>
   <div id="aiChatGPTPanel" class="card aiPanel" hidden>
     <h3>Continue in ChatGPT</h3>
-    <button type="button" class="secondary" onclick="openProjectImport()">↓ Import a project file</button>
+    <button type="button" class="secondary" onclick="openProjectImport()">↓ Import a project file</button><button type="button" class="secondary" onclick="openFileProjectReader()">Read a PDF, document or photo</button>
     <p class="aiNote">Uses your own ChatGPT access. Conversations stay in ChatGPT; The List cannot read your account or use your ChatGPT subscription for in-app AI.</p>
     <label for="chatGPTPrompt">What would you like help with?</label>
     <textarea id="chatGPTPrompt" maxlength="4000" placeholder="Example: Plan a backyard fire pit with materials and build steps"></textarea>
@@ -1887,13 +1887,13 @@ let planningProjectId = null;
    LOAD / SAVE
    ========================================================= */
 
-// Store repeated image data once, while keeping the in-memory and backup formats unchanged.
+// Store repeated photos and supported attachment data once; retain portable backups.
 
 function serializeStoredData(snapshot){
   const imageIds = new Map();
   const images = {};
   const compact = JSON.parse(JSON.stringify(snapshot, (key,value) => {
-    if(typeof value !== "string" || !value.startsWith("data:image/")) return value;
+    if(typeof value !== "string" || !/^data:(?:image\/|application\/(?:pdf|json|vnd\.openxmlformats-officedocument\.wordprocessingml\.document);|text\/(?:plain|markdown|csv);)/.test(value)) return value;
     if(!imageIds.has(value)){
       const id = String(imageIds.size);
       imageIds.set(value,id);
@@ -1915,10 +1915,10 @@ function parseStoredData(saved){
       const image = images[value.slice(STORED_IMAGE_PREFIX.length)];
       if(typeof image === "string" && image.startsWith(LOCAL_IMAGE_PREFIX)){
         const uri = localImageUris.get(image.slice(LOCAL_IMAGE_PREFIX.length));
-        if(!uri) throw new Error("A saved photo could not be opened. Your saved data has not been changed.");
+        if(!uri) throw new Error("A saved photo or file could not be opened. Your saved data has not been changed.");
         return uri;
       }
-      return typeof image === "string" && image.startsWith("data:image/") ? image : value;
+      return typeof image === "string" && /^data:(?:image\/|application\/(?:pdf|json|vnd\.openxmlformats-officedocument\.wordprocessingml\.document);|text\/(?:plain|markdown|csv);)/.test(image) ? image : value;
     }
     if(Array.isArray(value)) return value.map(expand);
     if(value && typeof value === "object"){
@@ -2002,6 +2002,7 @@ function loadData(){
         p.materials = [];
       }
 
+      if(!Array.isArray(p.attachments)) p.attachments = [];
       if(!Array.isArray(p.records)){
         p.records = [];
       }
@@ -2144,8 +2145,8 @@ async function loadLocalImages(saved){
       tx.onabort = tx.onerror = () => reject(tx.error || new Error("Could not open saved photos."));
     });
     for(const [id,uri] of photos){
-      if(typeof uri !== "string" || !uri.startsWith("data:image/"))
-        throw new Error("A saved photo is unavailable. Your projects and chats have not been replaced.");
+      if(typeof uri !== "string" || !/^data:(?:image\/|application\/(?:pdf|json|vnd\.openxmlformats-officedocument\.wordprocessingml\.document);|text\/(?:plain|markdown|csv);)/.test(uri))
+        throw new Error("A saved photo or file is unavailable. Your projects and chats have not been replaced.");
       localImageUris.set(id,uri);
       localImageIds.set(uri,id);
     }
@@ -3404,6 +3405,8 @@ function openProject(id){
       ${project.aiPlan.measurementsNeeded.map(item => `<div class="toolRow"><span><strong>${escapeHTML(item.name)}</strong>${item.whyNeeded ? `<div class="smallText">${escapeHTML(item.whyNeeded)}</div>` : ""}</span></div>`).join("")}
     </div>` : ""}
 
+    ${renderProjectFiles(project)}
+
     <div class="card">
       <h2>📷 Project Photos</h2>
       <p class="smallText">Add up to 3 photos of the room or space. The AI will use them to plan and picture the finished project.</p>
@@ -3550,7 +3553,7 @@ function organizeProjectSections(box,projectId){
   const names = [
     ["Project notes","notes"],["Material Takeoff","takeoff"],
     ["Tools for this project","tools"],["DIY Instructions","instructions"],["Cut List","cuts"],
-    ["Measurements to check","measurements"],["Project Photos","photos"],
+    ["Measurements to check","measurements"],["Project Files","files"],["Project Photos","photos"],
     ["Tasks","tasks"],["Materials","materials"],["Budget","budget"],
     ["Project Details & Answers","answers"],["Permanent Home Records","records"]
   ];
@@ -11298,6 +11301,7 @@ window.appStorageReady.catch(() => {});
   <p>Bring a project you planned in ChatGPT into The List.</p>
   <p class="smallText">Copy the export prompt into your project conversation in ChatGPT. Save the JSON file it provides, then choose it below or paste the JSON.</p>
   <button type="button" class="secondary" onclick="copyProjectExportPrompt()">Copy export prompt</button>
+  <button type="button" class="secondary" onclick="closeProjectImport();openFileProjectReader()">Read a PDF, document or photo instead</button>
   <textarea id="projectImportPrompt" aria-label="Export prompt to copy" readonly hidden></textarea>
   <label for="projectImportFile">Choose a project JSON file</label>
   <input id="projectImportFile" type="file" accept=".json,application/json" onchange="readProjectImportFile(this)">
@@ -11305,12 +11309,27 @@ window.appStorageReady.catch(() => {});
   <textarea id="projectImportText" maxlength="1048576" rows="5" placeholder="Paste the project JSON from ChatGPT" oninput="invalidateProjectImport()"></textarea>
   <button type="button" onclick="previewProjectImport()">Preview project</button>
   <div id="projectImportPreview"></div>
+  <label for="projectImportBudget">Project budget in USD (optional; confirm from the source)</label><input id="projectImportBudget" type="number" min="0" max="100000000" step="0.01" placeholder="Budget not provided">
   <p id="projectImportStatus" class="smallText" role="status"></p>
   <div class="row"><button id="projectImportSave" type="button" hidden onclick="saveImportedProject()">Save as new project</button><button type="button" class="secondary" onclick="closeProjectImport()">Cancel</button></div>
 </dialog>
-<script src="project-import.js?v=1"></script>
+<dialog id="fileReaderDialog" aria-labelledby="fileReaderTitle" style="width:min(620px,calc(100% - 32px));max-height:85vh;overflow:auto;border:1px solid #d6d0c5;border-radius:18px;background:#faf8f3;color:#342f27;padding:20px;box-sizing:border-box">
+  <h2 id="fileReaderTitle">Create a project from a file</h2>
+  <p>Choose a plan, document, photo or screenshot saved on your phone. Sage will organize it into a project for you to review.</p>
+  <label for="fileReaderInput">Choose a file (up to 10 MB)</label>
+  <input id="fileReaderInput" type="file" accept=".pdf,.docx,.txt,.md,.csv,.json,image/*" onchange="prepareProjectFile(this.files[0])">
+  <p id="fileReaderStatus" class="smallText" role="status"></p>
+  <div id="fileReaderImages"></div>
+  <label for="fileReaderText">Review or edit the text Sage will use</label>
+  <textarea id="fileReaderText" rows="8" maxlength="10000" placeholder="Text extracted from your file appears here"></textarea>
+  <p class="smallText">Preview with Sage sends this text and any page images shown above to The List’s AI service. Nothing is saved until you review and save the project. The original file is attached to the new project.</p>
+  <div class="row"><button id="fileReaderBuild" type="button" hidden onclick="buildProjectFromFile()">Preview project with Sage</button><button type="button" class="secondary" onclick="closeFileProjectReader()">Cancel</button></div>
+</dialog>
+<script src="vendor/fflate-0.8.3.js"></script>
+<script src="project-files.js?v=1"></script>
+<script src="project-import.js?v=2"></script>
 <script src="project-pdf.js?v=1"></script>
-<script src="sync.js?v=4"></script>
+<script src="sync.js?v=5"></script>
 
 </body>
 </html>
