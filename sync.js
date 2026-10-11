@@ -4,6 +4,21 @@
   const PROJECT_URL = "https://pllquupnlhzgguvmnxsc.supabase.co";
   const PUBLISHABLE_KEY = "sb_publishable_iIQLOtnQEK7dpQ575opPFg_DnqWcVvl";
   const LINK_KEY = "theListCloudLinkV1";
+  const INVITE_KEY = "theListPendingInviteV1";
+  let outgoingInvite = "", outgoingInviteUser = "", outgoingInviteHome = "", outgoingInviteExpires = 0;
+  let incomingInvite = "";
+  try {
+    const url = new URL(location.href);
+    const code = url.searchParams.get("invite");
+    if(code && /^[a-zA-Z0-9-]{1,200}$/.test(code)) {
+      incomingInvite = code;
+      sessionStorage.setItem(INVITE_KEY,code);
+    } else incomingInvite = sessionStorage.getItem(INVITE_KEY) || "";
+    if(url.searchParams.has("invite")) {
+      url.searchParams.delete("invite");
+      history.replaceState(history.state,"",url.href);
+    }
+  } catch {}
   const DIRTY_KEY = "theListCloudDirtyV1";
   const PHOTO_PREFIX = "the-list-cloud-photo:v1:";
   const BUCKET = "the-list-photos";
@@ -41,6 +56,11 @@
       if(result.error) throw result.error;
       user = result.data.user;
     } else user = null;
+    if(outgoingInviteUser !== user?.id) {
+      outgoingInvite = "";
+      byId("accountInviteShareActions").hidden = true;
+      byId("accountInviteResult").textContent = "";
+    }
     byId("accountSignedOut").hidden = !!user;
     byId("accountSignedIn").hidden = !user;
     byId("accountPassword").value = "";
@@ -170,15 +190,58 @@
     const {error} = await client.rpc("join_household",{invite_code:code});
     if(error) throw error;
     byId("accountInviteCode").value = "";
+    incomingInvite = "";
+    try { sessionStorage.removeItem(INVITE_KEY); } catch {}
     await loadAccount();
   });
   window.accountInvite = () => action(async () => {
     const {data:code,error} = await client.rpc("create_household_invite");
     if(error) throw error;
+    outgoingInvite = String(code);
+    outgoingInviteUser = user.id;
+    outgoingInviteHome = household.id;
+    outgoingInviteExpires = Date.now() + 24 * 60 * 60 * 1000;
+    byId("accountInviteShareActions").hidden = false;
     byId("accountInviteResult").textContent =
       "Send this one-time code to your partner. It expires in 24 hours: " + code;
     status("Invite code ready.");
   });
+  function inviteMessage() {
+    if(!outgoingInvite || outgoingInviteUser !== user?.id || outgoingInviteHome !== household?.id)
+      throw Error("Make an invite code first.");
+    if(Date.now() >= outgoingInviteExpires) throw Error("This invite has expired. Make a new invite code.");
+    const url = new URL(location.origin + location.pathname);
+    url.searchParams.set("invite",outgoingInvite);
+    return "Join our family on The List! Open this link, sign in or create an account, then tap Join household.\n\n" +
+      url.href + "\n\nInvite code: " + outgoingInvite + "\nThis one-time invite expires in 24 hours.";
+  }
+  window.accountCopyInvite = async () => {
+    try {
+      const text = inviteMessage();
+      if(!navigator.clipboard?.writeText) {
+        byId("accountInviteMessage").value = text;
+        byId("accountInviteMessage").hidden = false;
+        byId("accountInviteMessage").focus();
+        byId("accountInviteMessage").select();
+        status("Select and copy the invitation below.");
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      status("Invitation copied. Paste it into a message.");
+    } catch(error) { status("Could not copy: " + message(error)); }
+  };
+  window.accountShareInvite = async () => {
+    try {
+      const text = inviteMessage();
+      if(!navigator.share) { await window.accountCopyInvite(); return; }
+      // Call immediately from the tap; no network request before the share sheet.
+      await navigator.share({title:"Join our family on The List",text});
+      status("Invitation opened in your chosen app.");
+    } catch(error) {
+      if(error?.name === "AbortError") status("Sharing canceled. Your invite code is still ready.");
+      else status("Could not open sharing. Use Copy invite instead. " + message(error));
+    }
+  };
   async function photoToPath(uri) {
     if(uploaded.has(uri)) return uploaded.get(uri);
     const blob = await (await fetch(uri)).blob();
@@ -328,6 +391,10 @@
   (async () => {
     try {
       await window.appStorageReady;
+      if(incomingInvite) {
+        byId("accountInviteCode").value = incomingInvite;
+        showPage("accountPage");
+      }
       const {createClient} = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm");
       client = createClient(PROJECT_URL,PUBLISHABLE_KEY);
       await loadAccount();
