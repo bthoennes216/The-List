@@ -1646,6 +1646,10 @@ body.sageChatOpen main{padding-top:0}
       <div id="accountHousehold" hidden>
         <p id="accountFamilyConnection" style="font-weight:600">Connected to your shared household</p>
         <p id="accountSyncStatus" role="status" aria-live="polite"></p>
+        <h3>Family members</h3>
+        <div id="accountFamilyMembers" aria-label="Family members"></div>
+        <p id="accountFamilyMembersStatus" class="smallText" role="status"></p>
+        <button type="button" class="secondary small" onclick="refreshFamilyMembers()">Refresh members</button>
         <div id="accountFamilyProjectChoices" hidden>
           <p id="accountFamilyProjectNote"></p>
           <div class="backupActions">
@@ -2506,6 +2510,7 @@ function showPage(pageId){
   }
 
   if(pageId === "accountPage"){
+    window.refreshFamilyMembers?.();
     const previous = String(data.family?.note || "").trim();
     document.getElementById("previousHouseholdNote").hidden = !previous;
     document.getElementById("previousHouseholdNoteText").textContent = previous;
@@ -11348,7 +11353,7 @@ window.appStorageReady.catch(() => {});
 <script src="project-files.js?v=1"></script>
 <script src="project-import.js?v=2"></script>
 <script src="project-pdf.js?v=1"></script>
-<script src="sync.js?v=7"></script>
+<script src="sync.js?v=8"></script>
 
 </body>
 </html>
