@@ -1651,6 +1651,11 @@ body.sageChatOpen main{padding-top:0}
         <div id="accountOwnerActions" hidden>
           <button type="button" class="secondary" onclick="accountInvite()">Make invite code</button>
           <p id="accountInviteResult" class="smallText"></p>
+          <div id="accountInviteShareActions" class="backupActions" hidden>
+            <button type="button" onclick="accountShareInvite()">Share invite</button>
+            <button type="button" class="secondary" onclick="accountCopyInvite()">Copy invite</button>
+          </div>
+          <textarea id="accountInviteMessage" aria-label="Invitation to copy" readonly hidden></textarea>
         </div>
       </div>
       </div>
@@ -11329,7 +11334,7 @@ window.appStorageReady.catch(() => {});
 <script src="project-files.js?v=1"></script>
 <script src="project-import.js?v=2"></script>
 <script src="project-pdf.js?v=1"></script>
-<script src="sync.js?v=5"></script>
+<script src="sync.js?v=6"></script>
 
 </body>
 </html>
