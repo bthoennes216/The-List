@@ -20,6 +20,7 @@
     }
   } catch {}
   const DIRTY_KEY = "theListCloudDirtyV1";
+  let pendingFamilyRow = null, pendingFamilyProjects = [], waitingForFamily = false;
   const PHOTO_PREFIX = "the-list-cloud-photo:v1:";
   const BUCKET = "the-list-photos";
   const FILE_BUCKET = "the-list-files";
@@ -36,7 +37,10 @@
     try { return hasRecoveryContent(localStorage.getItem(STORAGE_KEY) || ""); }
     catch { return true; }
   };
-  function choices(show) { byId("accountDataChoices").hidden = !show; }
+  function choices(show) {
+    byId("accountDataChoices").hidden = false;
+    if(show) byId("accountRecovery").open = true;
+  }
   function remember() {
     localStorage.setItem(LINK_KEY,JSON.stringify({householdId:household.id,revision}));
   }
@@ -48,6 +52,7 @@
   }
   async function loadAccount() {
     linked = false;
+    waitingForFamily = false;
     clearTimeout(timer);
     const sessionResult = await client.auth.getSession();
     if(sessionResult.error) throw sessionResult.error;
@@ -61,12 +66,13 @@
       byId("accountInviteShareActions").hidden = true;
       byId("accountInviteResult").textContent = "";
     }
+    byId("accountFamilyProjectChoices").hidden = true;
     byId("accountSignedOut").hidden = !!user;
     byId("accountSignedIn").hidden = !user;
     byId("accountPassword").value = "";
     if(!user) {
       household = null;
-      status("Your projects are saved on this device. Sign in to share them.");
+      status(incomingInvite ? "You have a family invitation. Sign in or create an account, then tap Join family." : "Your projects are saved on this device. Sign in to share them.");
       return;
     }
     byId("accountIdentity").textContent = user.email || "Signed in";
@@ -76,7 +82,12 @@
     if(memberResult.error) throw memberResult.error;
     byId("accountNoHousehold").hidden = !!memberResult.data;
     byId("accountHousehold").hidden = !memberResult.data;
-    if(!memberResult.data) { household = null; status("Start a household or enter your partner's invite code."); return; }
+    if(!memberResult.data) {
+      household = null;
+      byId("accountJoinIntro").textContent = incomingInvite ? "Your invitation is ready. Tap Join family to load your shared projects." : "Have an invitation? Enter its code below.";
+      status("Signed in. Invite your family or join with an invitation.");
+      return;
+    }
     const homeResult = await client.from("households")
       .select("id,owner_user_id").eq("id",memberResult.data.household_id).single();
     if(homeResult.error) throw homeResult.error;
@@ -87,26 +98,50 @@
     const saved = JSON.parse(localStorage.getItem(LINK_KEY) || "null");
     const sameHousehold = saved?.householdId === household.id;
     const dirty = localStorage.getItem(DIRTY_KEY) === household.id;
-    if(row.payload && !hasLocalData() && !dirty) {
-      await useCloud(row);
+    byId("accountFamilyConnection").textContent = "Connected to your shared household";
+    if(!row.payload) {
+      if(household.owner_user_id === user.id) { await uploadDevice(false); return; }
+      waitingForFamily = true;
+      choices(false);
+      syncStatus("Connected. Waiting for your partner to share their projects.");
+      status("Your family is connected.");
       return;
     }
-    if(sameHousehold && !dirty && row.payload && saved.revision < revision) {
-      await useCloud(row);
+    if(sameHousehold && dirty) {
+      if(saved.revision === revision) {
+        linked = true;
+        choices(false);
+        await flush();
+      } else {
+        choices(true);
+        byId("accountRecovery").open = true;
+        syncStatus("Both copies have changes. Review them in Advanced recovery before continuing.");
+      }
       return;
     }
-    if(sameHousehold && !dirty && saved.revision === revision) {
+    if(sameHousehold && saved.revision === revision) {
       linked = true;
       choices(false);
-      syncStatus("Your household is synced.");
-      status("Signed in.");
+      syncStatus("Saved");
+      status("Your family is connected.");
       return;
     }
-    choices(true);
-    syncStatus(row.payload
-      ? "Choose which copy to use. Your current device data stays here until you choose."
-      : "This household has no shared data yet. Upload this device's data to begin.");
-    status("Signed in. Finish setting up your shared household below.");
+    if(!sameHousehold && hasLocalData()) {
+      const cloud = await localPayload(row.payload);
+      const ids = new Set((cloud.projects || []).map(project => String(project.id)));
+      pendingFamilyProjects = (data.projects || []).filter(project => !ids.has(String(project.id)));
+      if(pendingFamilyProjects.length) {
+        pendingFamilyRow = row;
+        byId("accountFamilyProjectChoices").hidden = false;
+        byId("accountFamilyProjectNote").textContent = "This phone has " + pendingFamilyProjects.length +
+          " additional project(s). Add them to your family, or load the family projects and keep this phone’s copy in recovery.";
+        choices(false);
+        syncStatus("Choose what to do with this phone’s existing projects.");
+        status("Your family is connected. Finish the project choice below.");
+        return;
+      }
+    }
+    await useCloud(row);
   }
   function credentials() {
     const email = byId("accountEmail").value.trim();
@@ -183,6 +218,7 @@
     const {error} = await client.rpc("create_household");
     if(error) throw error;
     await loadAccount();
+    await prepareFamilyInvite();
   });
   window.accountJoin = () => action(async () => {
     const code = byId("accountInviteCode").value.trim();
@@ -194,7 +230,8 @@
     try { sessionStorage.removeItem(INVITE_KEY); } catch {}
     await loadAccount();
   });
-  window.accountInvite = () => action(async () => {
+  async function prepareFamilyInvite() {
+    if(!household || !linked) throw Error("Finish connecting your projects before inviting family.");
     const {data:code,error} = await client.rpc("create_household_invite");
     if(error) throw error;
     outgoingInvite = String(code);
@@ -204,15 +241,16 @@
     byId("accountInviteShareActions").hidden = false;
     byId("accountInviteResult").textContent =
       "Send this one-time code to your partner. It expires in 24 hours: " + code;
-    status("Invite code ready.");
-  });
+    status("Family invite ready. Tap Share invite and choose Messages.");
+  }
+  window.accountInvite = () => action(prepareFamilyInvite);
   function inviteMessage() {
     if(!outgoingInvite || outgoingInviteUser !== user?.id || outgoingInviteHome !== household?.id)
       throw Error("Make an invite code first.");
     if(Date.now() >= outgoingInviteExpires) throw Error("This invite has expired. Make a new invite code.");
     const url = new URL(location.origin + location.pathname);
     url.searchParams.set("invite",outgoingInvite);
-    return "Join our family on The List! Open this link, sign in or create an account, then tap Join household.\n\n" +
+    return "Join our family on The List! Open this link, sign in or create an account, then tap Join family.\n\n" +
       url.href + "\n\nInvite code: " + outgoingInvite + "\nThis one-time invite expires in 24 hours.";
   }
   window.accountCopyInvite = async () => {
@@ -296,7 +334,7 @@
     if(!row.payload) throw Error("There is no shared data to load yet.");
     syncStatus("Loading shared data and photos…");
     const next = await localPayload(row.payload);
-    if(hasLocalData()) await saveRecoverySnapshot(serializeStoredData(parseStoredData(localStorage.getItem(STORAGE_KEY))),true);
+    if(hasLocalData()) await saveRecoverySnapshot(serializeStoredData(data),true);
     await persistLocalSnapshot(next);
     revision = Number(row.revision);
     remember();
@@ -309,10 +347,11 @@
     }
     await useCloud();
   });
-  window.accountUpload = () => action(async () => {
+  async function uploadDevice(askToReplace = true) {
     const row = await getSnapshot();
     const replacing = !!row.payload;
-    if(replacing && !confirm("Replace the shared household copy with this device's data? Changes made on another device may be lost. Keep backups from both devices before continuing.")) {
+    if(replacing && !askToReplace) throw Error("Family data appeared during setup. Refresh to load it safely.");
+    if(replacing && askToReplace && !confirm("Replace the shared household copy with this device's data? Changes made on another device may be lost. Keep backups from both devices before continuing.")) {
       status("Shared data was not changed.");return;
     }
     const savedAtStart = localStorage.getItem(STORAGE_KEY);
@@ -329,15 +368,35 @@
     localStorage.removeItem(DIRTY_KEY);
     linked = true;
     choices(false);
-    syncStatus("Your household is synced.");
-    status("Shared data uploaded.");
+    syncStatus("Saved");
+    status("Your projects are shared with your family.");
     if(localStorage.getItem(STORAGE_KEY) !== savedAtStart) window.queueCloudSync();
+  }
+  window.accountUpload = () => action(() => uploadDevice(true));
+  window.accountKeepFamilyProjects = () => action(async () => {
+    if(!pendingFamilyRow) throw Error("Refresh Account to load your family projects.");
+    await useCloud(pendingFamilyRow);
+  });
+  window.accountAddFamilyProjects = () => action(async () => {
+    if(!pendingFamilyRow) throw Error("Refresh Account to load your family projects.");
+    const row = await getSnapshot();
+    const shared = await localPayload(row.payload);
+    const ids = new Set((shared.projects || []).map(project => String(project.id)));
+    shared.projects = [...(shared.projects || []), ...pendingFamilyProjects.filter(project => !ids.has(String(project.id)))];
+    await saveRecoverySnapshot(serializeStoredData(data),true);
+    const payload = await cloudPayload(shared);
+    const {data:updated,error} = await client.from("household_snapshots")
+      .update({payload,revision:Number(row.revision)+1,updated_at:new Date().toISOString()})
+      .eq("household_id",household.id).eq("revision",row.revision).select("revision");
+    if(error) throw error;
+    if(!updated?.length) throw Error("Family projects changed. Tap Add my projects again to use the latest copy.");
+    await useCloud({payload,revision:updated[0].revision});
   });
   window.queueCloudSync = () => {
     if(!linked || !household) return;
     pending++;
     localStorage.setItem(DIRTY_KEY,household.id);
-    syncStatus("Saving to household…");
+    syncStatus("Syncing…");
     clearTimeout(timer);
     timer = setTimeout(flush,1200);
   };
@@ -368,24 +427,32 @@
       remember();
       if(generation === pending) {
         localStorage.removeItem(DIRTY_KEY);
-        syncStatus("Your household is synced.");
+        syncStatus("Saved");
       }
     } catch(error) {
-      syncStatus("Could not sync: " + message(error) + ". Your edits remain on this device.");
+      syncStatus("Offline or sync unavailable — saved on this phone. " + message(error));
     } finally {
       writing = false;
       if(linked && generation !== pending) { clearTimeout(timer);timer = setTimeout(flush,1200); }
     }
   }
   async function poll() {
-    if(polling || !linked || writing || !household) return;
+    if(polling || writing || !household) return;
+    if(waitingForFamily) {
+      polling = true;
+      try { const row = await getSnapshot(); if(row.payload) await loadAccount(); }
+      catch(error) { syncStatus("Waiting for family data. " + message(error)); }
+      finally { polling = false; }
+      return;
+    }
+    if(!linked) return;
     if(localStorage.getItem(DIRTY_KEY)) { await flush(); return; }
     polling = true;
     try {
       const row = await getSnapshot();
       if(Number(row.revision) !== revision) await useCloud(row);
     } catch(error) {
-      syncStatus("Cannot check for updates: " + message(error));
+      syncStatus("Offline or sync unavailable — saved on this phone. " + message(error));
     } finally { polling = false; }
   }
   (async () => {
@@ -400,6 +467,8 @@
       await loadAccount();
       setInterval(poll,15000);
       document.addEventListener("visibilitychange",() => { if(!document.hidden) poll(); });
+      window.addEventListener("online",poll);
+      window.addEventListener("offline",() => { if(household) syncStatus("Offline — saved on this phone"); });
     } catch(error) { status("Account connection unavailable: " + message(error)); }
   })();
 })();
