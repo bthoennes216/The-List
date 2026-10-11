@@ -27,6 +27,7 @@
   const fileBucket = path => /\.(pdf|docx|txt|md|csv|json)$/.test(path) ? FILE_BUCKET : BUCKET;
   let client, user, household, revision = 0, linked = false;
   let pending = 0, timer, writing = false, polling = false;
+  let membersCheckedAt = 0, membersRequest = 0;
   const uploaded = new Map(), downloaded = new Map();
   const byId = id => document.getElementById(id);
   const status = message => { byId("accountStatus").textContent = message; };
@@ -51,6 +52,9 @@
     return row;
   }
   async function loadAccount() {
+    membersRequest++;
+    byId("accountFamilyMembers").replaceChildren();
+    byId("accountFamilyMembersStatus").textContent = "Loading family members…";
     linked = false;
     waitingForFamily = false;
     clearTimeout(timer);
@@ -71,6 +75,8 @@
     byId("accountSignedIn").hidden = !user;
     byId("accountPassword").value = "";
     if(!user) {
+      membersRequest++;
+      byId("accountFamilyMembers").replaceChildren();
       household = null;
       status(incomingInvite ? "You have a family invitation. Sign in or create an account, then tap Join family." : "Your projects are saved on this device. Sign in to share them.");
       return;
@@ -92,6 +98,7 @@
       .select("id,owner_user_id").eq("id",memberResult.data.household_id).single();
     if(homeResult.error) throw homeResult.error;
     household = homeResult.data;
+    await refreshFamilyMembers(true);
     byId("accountOwnerActions").hidden = household.owner_user_id !== user.id;
     const row = await getSnapshot();
     revision = Number(row.revision);
@@ -182,6 +189,7 @@
     const {data:result,error} = await client.auth.updateUser({data:{display_name:name}});
     if(error) throw error;
     user = result.user;
+    await refreshFamilyMembers(true);
     status("Name saved.");
   });
   window.accountChangeEmail = () => action(async () => {
@@ -280,6 +288,43 @@
       else status("Could not open sharing. Use Copy invite instead. " + message(error));
     }
   };
+  async function refreshFamilyMembers(force = false) {
+    if(!user || !household) return;
+    if(!force && Date.now() - membersCheckedAt < 60000) return;
+    membersCheckedAt = Date.now();
+    const request = ++membersRequest;
+    const homeId = household.id, currentUser = user.id;
+    const box = byId("accountFamilyMembers");
+    try {
+      const {data:members,error} = await client.rpc("list_family_members");
+      if(error) throw error;
+      if(request !== membersRequest || household?.id !== homeId || user?.id !== currentUser) return;
+      box.replaceChildren();
+      for(const member of members || []) {
+        const row = document.createElement("div");
+        row.className = "toolRow";
+        const name = document.createElement("strong");
+        name.textContent = member.display_name || "Family member";
+        const labels = document.createElement("span");
+        const role = document.createElement("span");
+        role.className = "badge";
+        role.textContent = member.member_role === "Owner" ? "Owner" : "Member";
+        labels.append(role);
+        if(member.user_id === currentUser) {
+          const you = document.createElement("span");
+          you.className = "badge";
+          you.textContent = "You";
+          labels.append(you);
+        }
+        row.append(name,labels);
+        box.append(row);
+      }
+      byId("accountFamilyMembersStatus").textContent = (members || []).length + " family member(s)";
+    } catch(error) {
+      if(request === membersRequest) byId("accountFamilyMembersStatus").textContent = "Could not refresh family members. " + message(error);
+    }
+  }
+  window.refreshFamilyMembers = () => refreshFamilyMembers(true);
   async function photoToPath(uri) {
     if(uploaded.has(uri)) return uploaded.get(uri);
     const blob = await (await fetch(uri)).blob();
@@ -438,6 +483,7 @@
   }
   async function poll() {
     if(polling || writing || !household) return;
+    await refreshFamilyMembers();
     if(waitingForFamily) {
       polling = true;
       try { const row = await getSnapshot(); if(row.payload) await loadAccount(); }
