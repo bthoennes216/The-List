@@ -2528,11 +2528,18 @@ function openHomeInfo(section){
    HOME
    ========================================================= */
 
+function renderHomeGreeting(){
+  const greeting = document.getElementById("homeGreeting");
+  if(!greeting) return;
+  const hour = new Date().getHours();
+  const salutation = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const name = typeof window.accountDisplayName === "function" ? window.accountDisplayName() : "";
+  greeting.textContent = name ? `${salutation}, ${name}` : salutation;
+}
+
 function renderHome(){
 
-  const hour = new Date().getHours();
-  document.getElementById("homeGreeting").textContent =
-    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  renderHomeGreeting();
 
   const activeProjectCount =
   data.projects.filter(
@@ -11353,7 +11360,7 @@ window.appStorageReady.catch(() => {});
 <script src="project-files.js?v=1"></script>
 <script src="project-import.js?v=2"></script>
 <script src="project-pdf.js?v=3"></script>
-<script src="sync.js?v=8"></script>
+<script src="sync.js?v=9"></script>
 
 </body>
 </html>
