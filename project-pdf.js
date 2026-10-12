@@ -119,7 +119,7 @@
         ctx.fillText(text(step.title||'Construction step').slice(0,47),M+16,y+35);y+=82;
         // Never crop illustrations: letterbox the entire image inside a dedicated panel.
         const pictureSource=step.imageUrl||step.image||step.photoUrl||(Array.isArray(step.images)?step.images[0]:null);
-        if(pictureSource && /^(data:image\\/|https?:\\/\\/|blob:)/i.test(pictureSource)){
+        if(typeof pictureSource==='string' && (pictureSource.startsWith('data:image/') || pictureSource.startsWith('https://') || pictureSource.startsWith('http://') || pictureSource.startsWith('blob:'))){
           const im=await new Promise(resolve=>{
             const photo=new Image();photo.crossOrigin='anonymous';
             const timeout=setTimeout(()=>resolve(null),6500);
