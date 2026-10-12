@@ -152,14 +152,63 @@
     pages.forEach((canvas,i)=>{const c=canvas.getContext('2d');c.save();c.setTransform(2,0,0,2,0,0);c.fillStyle='#756f65';c.font='11px Arial';c.fillText(`The List | ${new Date().toLocaleDateString()} | Preliminary`,M,H-28);c.textAlign='right';c.fillText(`${i+1} / ${pages.length}`,W-M,H-28);c.restore();});
     return {blob:pdfBlob(pages),imageMissing,pages:pages.length};
   }
+
+  function stepArtPrompt(project,step,index,total){
+    const plan=project.aiPlan||{},brief=project.sageBrief||{};
+    const asText=value=>Array.isArray(value)?value.join(', '):text(value);
+    return [
+      'Create one realistic photorealistic 3D instructional illustration for a professional DIY construction manual.',
+      'This is illustration '+(index+1)+' of '+total+' for the project: '+text(project.name||'Home project')+'.',
+      'PROJECT: '+text(project.description||plan.summary||''),
+      'FINISHES: '+text(brief.choices||''),
+      'MEASUREMENTS PROVIDED BY USER: '+text(brief.measurements||'Not confirmed'),
+      'ACTION: '+text(step.title||'Build step')+'. '+text(step.instructions||''),
+      'MATERIALS: '+asText(step.materials||''), 'TOOLS: '+asText(step.tools||''),
+      'STEP DIMENSIONS: '+asText(step.measurements||'Not confirmed'),
+      'Show the actual parts involved in this particular action at an understandable angle, as one complete uncropped assembly.',
+      'A clean workshop or construction setting. Photorealistic materials, sharp focus, realistic joinery, consistent perspective.',
+      'Place construction labels in the PDF, not within this image. No typography, captions, symbols, logos, watermarks, measurements, or numbers in the picture.',
+      'Do not invent or visually imply exact hole locations, fastener specifications, or measurements not provided.',
+      'Keep every part of the main assembly visible with generous space around its edges; no collage or multi-panel layouts.',
+      'No people. Portrait-friendly composition.'
+    ].join('\n');
+  }
+  async function generateMissingBuildImages(project,status){
+    const steps=list(project.aiPlan?.buildSteps);
+    if(!steps.length)return {generated:0,failed:0};
+    if(typeof requestProjectImage!=='function')throw new Error('The Sage image generator is not available.');
+    let generated=0,failed=0;
+    for(let i=0;i<steps.length;i++){
+      const step=steps[i];
+      if(!step || typeof step!=='object')continue;
+      if(step.image||step.imageUrl||step.photoUrl||list(step.images).length)continue;
+      status.textContent='Sage is creating illustrations: '+(i+1)+' of '+steps.length+'…';
+      try{
+        const prompt=stepArtPrompt(project,step,i,steps.length);
+        const image=await requestProjectImage(prompt,[]);
+        if(!/^data:image\/|^https?:\/\//i.test(image))throw new Error('Unsupported illustration data');
+        step.image=image;
+        step.imagePrompt=prompt;
+        if(typeof saveImageData==='function')await saveImageData();
+        generated++;
+      }catch(error){
+        failed++;
+        console.warn('Sage build image failed at step '+(i+1),error);
+      }
+    }
+    return {generated,failed};
+  }
+
   let activeURL='',exportBusy=false;
   window.buildProjectPDF=buildProjectPDF;
   window.exportProjectPDF=async function(projectId,kind){
     if(exportBusy)return;
     const project=data.projects.find(row=>String(row.id)===String(projectId));if(!project)return;
     const status=document.getElementById('projectPDFStatus');exportBusy=true;
-    status.textContent='Creating your printable PDF…';
+    status.textContent=kind==='overview'?'Creating your printable overview…':'Preparing your complete illustrated instruction manual…';
     try{
+      const art=kind==='overview'?{generated:0,failed:0}:await generateMissingBuildImages(project,status);
+      status.textContent='Assembling the printable PDF…';
       const result=await buildProjectPDF(project,kind,data.tools || []);
       const name=(project.name || 'Project').replace(/[^a-z0-9_-]+/gi,'_').slice(0,80)+'_'+(kind==='overview'?'Overview':'DIY_Binder')+'.pdf';
       if(activeURL)URL.revokeObjectURL(activeURL);activeURL=URL.createObjectURL(result.blob);
@@ -167,7 +216,7 @@
       const share=document.getElementById('projectPDFShare');const file=new File([result.blob],name,{type:'application/pdf'});
       share.hidden=!navigator.canShare?.({files:[file]});
       share.onclick=async()=>{try{await navigator.share({files:[file],title:project.name});}catch(error){if(error.name!=='AbortError')status.textContent='Use Open / save PDF to save or share this file.';}};
-      status.textContent=`${result.pages} ${result.pages===1?'page':'pages'} ready. Open the PDF to print or save it.${result.imageMissing?' The design image could not be included.':''}${kind==='overview'?' The overview is condensed; the binder includes full saved details.':''}`;
+      status.textContent=result.pages+' pages ready. Open or save the PDF.'+(art.generated?' '+art.generated+' new step illustration(s) created.':'')+(art.failed?' '+art.failed+' image(s) could not be generated; those steps still include written instructions.':'')+(result.imageMissing?' Some saved images could not be included.':'');
     }catch(error){status.textContent='Could not create the PDF. Your project has not changed. Please try again.';console.error(error);}
     finally{exportBusy=false;}
   };
