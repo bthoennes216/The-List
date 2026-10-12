@@ -1247,6 +1247,18 @@ body.sageChatOpen main{padding-top:0}
 #aiChatPage #aiChatGPTPanel{margin-top:18px}
 @media(max-width:360px){#aiChatPage .aiWelcome strong{font-size:21px}}
 
+
+/* Personal welcome inside an empty Sage conversation. */
+#aiChatPage .sageChatWelcome{width:100%;max-width:560px;text-align:center;padding:30px 12px}
+#aiChatPage .sageWelcomePortrait{display:block;width:116px;height:116px;object-fit:cover;border-radius:50%;margin:0 auto 16px;box-shadow:0 0 0 5px #e7ecdf}
+#aiChatPage .sageWelcomeIntro{margin:0 0 8px;color:#62715c;font-size:15px}
+#aiChatPage .sageChatWelcome h2{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(28px,7vw,40px);line-height:1.16;letter-spacing:-.6px;color:#293e30;overflow-wrap:anywhere}
+#aiChatPage .sageWelcomeSubtitle{margin:16px auto 22px;color:#697165;font-size:16px;line-height:1.5;max-width:350px}
+#aiChatPage .sageWelcomePrompts{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
+#aiChatPage .sageWelcomePrompts button{width:auto;min-height:44px;margin:0;padding:10px 13px;border-radius:24px;border:1px solid #dce2d4;background:#f8f8f1;color:#37523f;font-size:13px;box-shadow:none}
+#aiChatPage .sageWelcomePrompts button:focus-visible{outline:2px solid #537454;outline-offset:3px}
+@media(max-height:700px){#aiChatPage .sageChatWelcome{padding:16px 10px}#aiChatPage .sageWelcomePortrait{width:88px;height:88px;margin-bottom:12px}}
+
 </style>
 </head>
 
@@ -2535,6 +2547,8 @@ function renderHomeGreeting(){
   const salutation = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const name = typeof window.accountDisplayName === "function" ? window.accountDisplayName() : "";
   greeting.textContent = name ? `${salutation}, ${name}` : salutation;
+  const chatGreeting = document.getElementById("sageWelcomeGreeting");
+  if(chatGreeting) chatGreeting.textContent = sagePersonalGreeting();
 }
 
 function renderHome(){
@@ -10940,6 +10954,35 @@ function scrollToSageReply(index){
     window.scrollTo({top:Math.max(0,window.scrollY+reply.getBoundingClientRect().top-header.offsetHeight-12),behavior:"smooth"});
   });
 }
+function sagePersonalGreeting(){
+  const hour = new Date().getHours();
+  const salutation = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const name = typeof window.accountDisplayName === "function" ? window.accountDisplayName() : "";
+  return name ? `${salutation}, ${name}` : salutation;
+}
+function renderSageWelcome(){
+  const hour = new Date().getHours();
+  return `<div class="aiWelcome sageChatWelcome">
+    <img class="sageWelcomePortrait" src="sage-avatar.webp" alt="Sage">
+    <p class="sageWelcomeIntro">Hi, I’m Sage</p>
+    <h2 id="sageWelcomeGreeting">${escapeHTML(sagePersonalGreeting())}</h2>
+    <p class="sageWelcomeSubtitle">What would you like to work on ${hour >= 17 ? "tonight" : "today"}?</p>
+    <div class="sageWelcomePrompts" aria-label="Start a conversation">
+      <button type="button" onclick="startSageWelcomePrompt('plan')">Plan a project</button>
+      <button type="button" onclick="startSageWelcomePrompt('design')">Design my space</button>
+      <button type="button" onclick="startSageWelcomePrompt('question')">Ask a question</button>
+    </div>
+  </div>`;
+}
+function startSageWelcomePrompt(kind){
+  if(aiBusy) return;
+  const prompts = {plan:"Help me plan a project. ",design:"Help me design my space. ",question:""};
+  const input = document.getElementById("aiMessageInput");
+  input.value = prompts[kind] || "";
+  resizeSageInput();
+  input.focus();
+}
+
 function renderAIChat({replyIndex=null}={}){
   const select = document.getElementById("aiProjectSelect");
   const previous = select.dataset.pendingProjectId || select.value;
@@ -10957,7 +11000,7 @@ function renderAIChat({replyIndex=null}={}){
   label.hidden = !project && !messages.length;
   label.title = label.textContent;
   box.innerHTML = messages.length ? messages.map(renderAIMessage).join("")
-    : `<div class="aiWelcome"><strong>What can I help you with?</strong></div>`;
+    : renderSageWelcome();
   renderAISuggestions(messages.length > 0,Boolean(project));
   if(replyIndex === null) scrollToSageLatest();
   else scrollToSageReply(replyIndex);
