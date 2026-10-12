@@ -107,9 +107,42 @@
       section('Cut list - verify before cutting');
       if(!list(plan.cutList).length)paragraph('No cut list saved. Confirm site measurements with Sage before preparing one.');
       list(plan.cutList).forEach(row=>paragraph(`${row.quantity || '?'} × ${row.piece || 'Piece'}\nSize: ${row.dimensions || 'not specified'} | Material: ${row.material || 'not specified'}${row.notes?'\n'+row.notes:''}`));
-      section('Build instructions');
-      if(!list(plan.buildSteps).length)paragraph('No detailed build instructions saved yet.');
-      list(plan.buildSteps).forEach((row,i)=>{paragraph(`${i+1}. ${row.title || 'Step'}`,{bold:true});paragraph(row.instructions || 'Instructions not recorded.');if(row.safety)paragraph(row.safety,{color:'#80532c'});});
+      // Each saved Sage construction action gets its own full illustrated page.
+      const buildSteps=list(plan.buildSteps);
+      if(!buildSteps.length){section('Build instructions');paragraph('No build steps saved yet. Ask Sage to create a project plan.');}
+      for(let i=0;i<buildSteps.length;i++){
+        const step=buildSteps[i] || {};
+        page();
+        ctx.fillStyle='#31543d';ctx.fillRect(M,y-18,W-2*M,66);
+        ctx.fillStyle='#fff';ctx.font='bold 14px Arial';ctx.fillText('SAGE BUILD GUIDE  /  STEP '+(i+1)+' OF '+buildSteps.length,M+16,y+6);
+        ctx.font='bold 22px Arial';
+        ctx.fillText(text(step.title||'Construction step').slice(0,47),M+16,y+35);y+=82;
+        // Never crop illustrations: letterbox the entire image inside a dedicated panel.
+        const pictureSource=step.imageUrl||step.image||step.photoUrl||(Array.isArray(step.images)?step.images[0]:null);
+        if(pictureSource && /^(data:image\\/|https?:\\/\\/|blob:)/i.test(pictureSource)){
+          const im=await new Promise(resolve=>{
+            const photo=new Image();photo.crossOrigin='anonymous';
+            const timeout=setTimeout(()=>resolve(null),6500);
+            photo.onload=()=>{clearTimeout(timeout);resolve(photo);};
+            photo.onerror=()=>{clearTimeout(timeout);resolve(null);};photo.src=pictureSource;
+          });
+          if(im){
+            const boxWidth=W-2*M,boxHeight=320,scale=Math.min(boxWidth/im.width,boxHeight/im.height);
+            ctx.fillStyle='#f7f3e9';ctx.fillRect(M,y,boxWidth,boxHeight);
+            try{ctx.drawImage(im,M+(boxWidth-im.width*scale)/2,y+(boxHeight-im.height*scale)/2,im.width*scale,im.height*scale);ctx.getImageData(0,0,1,1);}
+            catch{imageMissing=true;}
+            y+=boxHeight+22;
+          } else imageMissing=true;
+        }
+        section('Step-by-step instructions');
+        paragraph(step.instructions||'No instructions saved for this step.',{size:16});
+        if(step.measurements)paragraph('Measurements: '+(Array.isArray(step.measurements)?step.measurements.join('; '):step.measurements));
+        if(step.tools)paragraph('Tools: '+(Array.isArray(step.tools)?step.tools.join(', '):step.tools));
+        if(step.materials)paragraph('Parts: '+(Array.isArray(step.materials)?step.materials.join(', '):step.materials));
+        if(step.safety){section('Safety');paragraph(step.safety,{color:'#80532c'});}
+        section('Check before moving on');
+        paragraph('□ Verify marks and measurements.   □ Check alignment and fasteners.   □ Confirm the next step.');
+      }
       section('Project task checklist');
       list(project.tasks).forEach(row=>paragraph(`${row.done?'☑':'☐'} ${row.text || row.title || 'Task'}${row.dueDate?' | Due: '+row.dueDate:''}`));
       if(list(plan.warnings).length){section('Before you begin');list(plan.warnings).forEach(row=>paragraph(row));}
