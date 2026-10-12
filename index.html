@@ -2433,7 +2433,7 @@ const pageIds = [
   "projectDetailPage"
 ];
 
-function showPage(pageId){
+function showPage(pageId,{resumeSage=false}={}){
   document.body.classList.toggle("sageChatOpen",pageId === "aiChatPage");
   closeSageMenus();
 
@@ -2495,6 +2495,7 @@ function showPage(pageId){
   }
 
   if(pageId === "aiChatPage"){
+    if(!resumeSage) startFreshSageWelcome();
     renderAIChat();
   }
 
@@ -2658,7 +2659,7 @@ function renderHomeRecent(){
     arrow.textContent = "›";
     arrow.setAttribute("aria-hidden","true");
     button.append(icon,details,arrow);
-    button.onclick = () => {showPage("aiChatPage");chooseSageConversation(key);};
+    button.onclick = () => {showPage("aiChatPage",{resumeSage:true});chooseSageConversation(key);};
     box.append(button);
   });
 }
@@ -2676,7 +2677,6 @@ function askSageFromHome(event){
 
 function openSageFromHome(prompt){
   showPage("aiChatPage");
-  if(selectedAIProject()) chooseSageConversation(sageGeneralThread);
   focusSageChat(prompt);
 }
 
@@ -10511,6 +10511,15 @@ function chooseSageConversation(key){
   document.getElementById("aiMessageInput").value = sageDrafts[key] || "";
   resizeSageInput();
 }
+function startFreshSageWelcome(){
+  // Keep an in-flight reply attached to the conversation that requested it.
+  if(aiBusy || aiPlanningBusy || aiImageBusy) return;
+  const key = "chat-" + Date.now() + "-" + Math.random().toString(36).slice(2,8);
+  chooseSageConversation(key);
+  document.getElementById("aiMessageInput").value = "";
+  document.getElementById("aiChatStatus").textContent = "";
+  resizeSageInput();
+}
 function newSageConversation(){
   if(aiBusy || aiPlanningBusy || aiImageBusy) return;
   const current = aiThreadKey();
@@ -10577,13 +10586,12 @@ function focusSageChat(prompt){
 }
 function openSageFromProjects(){
   showPage("aiChatPage");
-  chooseSageConversation(sageGeneralThread);
   focusSageChat();
 }
 function openSageForProject(projectId){
   if(aiBusy || aiPlanningBusy || aiImageBusy ||
     !data.projects.some(item => String(item.id) === String(projectId))) return;
-  showPage("aiChatPage");
+  showPage("aiChatPage",{resumeSage:true});
   chooseSageConversation(String(projectId));
   focusSageChat();
 }
