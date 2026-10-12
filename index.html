@@ -1259,6 +1259,61 @@ body.sageChatOpen main{padding-top:0}
 #aiChatPage .sageWelcomePrompts button:focus-visible{outline:2px solid #537454;outline-offset:3px}
 @media(max-height:700px){#aiChatPage .sageChatWelcome{padding:16px 10px}#aiChatPage .sageWelcomePortrait{width:88px;height:88px;margin-bottom:12px}}
 
+
+/* Approved Home refresh: color and depth, with the existing layout retained. */
+body:has(#homePage:not(.hidden)){background:#f4efe4}
+#homePage .homeSageHero{
+  background:#294734;
+  border:1px solid #365741;
+  box-shadow:0 5px 16px rgba(35,55,39,.14);
+}
+#homePage .homeSageHello h2{color:#fffdf6}
+#homePage .homeSageHello p{color:#f0f2e9}
+#homePage .homeSageAvatar{box-shadow:0 0 0 2px #e9ecdc}
+#homePage .homeSageForm{background:#fffdf8;border-color:#d9dfd0}
+#homePage .homeSageForm textarea{color:#294734}
+#homePage .homeSageForm textarea::placeholder{color:#697266;opacity:1}
+#homePage .homeSageForm button{background:#294734;color:#fffdf6}
+#homePage .homeSageIdeas button{
+  background:#f8f5eb;
+  color:#294734;
+  border-color:#d5dece;
+}
+#homePage .homeHubGrid button{
+  background:#fffdf8;
+  border:1px solid #dfd8c9;
+  box-shadow:0 3px 10px rgba(48,56,37,.09);
+}
+#homePage .homeHubGrid strong{color:#294734;font-family:Georgia,serif;font-size:20px}
+#homePage .homeHubGrid small{color:#626b61}
+#homePage .homeHubGrid .hubIcon{background:#e8efdf;color:#294734}
+#homePage .homeHubGrid button:nth-child(3) .hubIcon{background:#f6ddce}
+#homePage .homeHubGrid button:nth-child(4) .hubIcon{background:#f5e4c4}
+#homePage > .card.upcomingCard{
+  background:#fffdf8 !important;
+  border:1px solid #dfd8c9;
+  box-shadow:0 3px 10px rgba(48,56,37,.09) !important;
+}
+#homePage .upcomingCard h2{color:#294734}
+#homePage .upcomingCard .upcomingActions > button{
+  border:2px solid #193e2a;
+  background:#f8f5eb !important;
+  color:#193e2a !important;
+}
+#homePage .upcomingCard .upcomingActions > button[aria-pressed="true"]{
+  border-color:#193e2a;
+  background:#193e2a !important;
+  color:#fffdf6 !important;
+}
+#homePage .homeHubGrid button:focus-visible,
+#homePage .homeSageIdeas button:focus-visible,
+#homePage .upcomingActions button:focus-visible{
+  outline:3px solid #ba7656;
+  outline-offset:3px;
+}
+#homePage .homeSageForm:focus-within{outline:2px solid #e5c6aa;outline-offset:3px}
+body:has(#homePage:not(.hidden)) #mainNav button.active{background:#294734;color:#fffdf6}
+
 </style>
 </head>
 
