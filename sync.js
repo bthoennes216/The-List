@@ -33,6 +33,8 @@
   const status = message => { byId("accountStatus").textContent = message; };
   const syncStatus = message => { byId("accountSyncStatus").textContent = message; };
   const message = error => error?.message || String(error);
+  window.accountDisplayName = () => typeof user?.user_metadata?.display_name === "string" ? user.user_metadata.display_name.trim() : "";
+  const refreshGreeting = () => { if(typeof renderHomeGreeting === "function") renderHomeGreeting(); };
   window.accountNoteAuthor = () => user?.user_metadata?.display_name || user?.email || "On this device";
   const hasLocalData = () => {
     try { return hasRecoveryContent(localStorage.getItem(STORAGE_KEY) || ""); }
@@ -65,6 +67,7 @@
       if(result.error) throw result.error;
       user = result.data.user;
     } else user = null;
+    refreshGreeting();
     if(outgoingInviteUser !== user?.id) {
       outgoingInvite = "";
       byId("accountInviteShareActions").hidden = true;
@@ -189,6 +192,7 @@
     const {data:result,error} = await client.auth.updateUser({data:{display_name:name}});
     if(error) throw error;
     user = result.user;
+    refreshGreeting();
     await refreshFamilyMembers(true);
     status("Name saved.");
   });
