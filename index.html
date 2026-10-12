@@ -1607,6 +1607,11 @@ body:has(#homePage:not(.hidden)) #mainNav button.active{background:#294734;color
 </section>
 
 <section id="maintenancePage" class="hidden">
+  <div class="backupActions" role="group" aria-label="Maintenance sections">
+    <button type="button" id="maintenanceTasksTab" aria-pressed="true" onclick="showMaintenanceSection('tasks')">Maintenance</button>
+    <button type="button" id="maintenanceAppliancesTab" aria-pressed="false" class="secondary" onclick="showMaintenanceSection('appliances')">Appliances</button>
+  </div>
+  <div id="maintenanceTasksSection">
 
   <div class="card">
 
@@ -1644,7 +1649,35 @@ body:has(#homePage:not(.hidden)) #mainNav button.active{background:#294734;color
   </div>
 
   <div id="maintenanceList"></div>
-
+  </div>
+  <div id="maintenanceAppliancesSection" class="hidden">
+    <div class="card">
+      <h2>My appliances</h2>
+      <p class="smallText">Save the model once. Review care tasks, see them on your calendar, and keep a service history.</p>
+      <button type="button" onclick="openApplianceEditor()">＋ Add appliance</button>
+    </div>
+    <div id="applianceEditor" class="card hidden">
+      <h3 id="applianceEditorTitle">Add appliance</h3>
+      <label for="appliancePhoto">Scan the model label</label>
+      <input id="appliancePhoto" type="file" accept="image/*" capture="environment" onchange="scanApplianceLabel(this)">
+      <p class="smallText">Take a clear photo of the label inside the door or on the back. Check every field after scanning.</p>
+      <label for="applianceName">Name / location</label><input id="applianceName" maxlength="100" placeholder="Kitchen dishwasher">
+      <label for="applianceType">Appliance type</label><select id="applianceType"><option>Refrigerator</option><option>Dishwasher</option><option>Washer</option><option>Dryer</option><option>Range / oven</option><option>Microwave</option><option>Other</option></select>
+      <label for="applianceBrand">Brand</label><input id="applianceBrand" maxlength="100">
+      <label for="applianceModel">Model number</label><input id="applianceModel" maxlength="100" autocapitalize="characters">
+      <label for="applianceSerial">Serial number (optional)</label><input id="applianceSerial" maxlength="100">
+      <label for="appliancePurchase">Purchase date (optional)</label><input id="appliancePurchase" type="date">
+      <label for="applianceWarranty">Warranty notes (optional)</label><textarea id="applianceWarranty" maxlength="2000"></textarea>
+      <button type="button" class="secondary" onclick="findApplianceManual()">Find manufacturer manual ↗</button>
+      <p class="smallText">Opens a model search. Choose the manufacturer's website and confirm the exact model.</p>
+      <label for="applianceManualUrl">Manufacturer manual link (optional)</label><input id="applianceManualUrl" type="url" placeholder="https://…">
+      <label for="applianceManualText">Maintenance instructions from the matching manual (optional)</label><textarea id="applianceManualText" maxlength="16000" placeholder="Paste the manual’s care instructions here so Sage can suggest a schedule from them."></textarea>
+      <div class="backupActions"><button type="button" onclick="saveAppliance()">Save appliance</button><button type="button" class="secondary" onclick="closeApplianceEditor()">Cancel</button></div>
+      <p id="applianceEditorStatus" role="status" aria-live="polite"></p>
+    </div>
+    <div id="applianceScheduleReview" class="card hidden"></div>
+    <div id="applianceList"></div>
+  </div>
 </section>
 
 <section id="morePage" class="hidden">
@@ -1930,6 +1963,7 @@ const defaultData = {
   aiChats:{},
   sageActiveThread:"general",
   maintenance:[],
+  appliances:[],
   calendar:[],
 
   family:{
@@ -2027,6 +2061,7 @@ function loadData(){
     parsed.maintenance = Array.isArray(parsed.maintenance)
       ? parsed.maintenance
       : [];
+    parsed.appliances = Array.isArray(parsed.appliances) ? parsed.appliances : [];
 
     parsed.calendar = Array.isArray(parsed.calendar)
       ? parsed.calendar
@@ -5925,6 +5960,7 @@ function saveMaintenanceSchedule(index){
 }
 
 function renderMaintenance(){
+  if(typeof renderAppliances === 'function') renderAppliances();
 
   const box =
     document.getElementById("maintenanceList");
@@ -11315,8 +11351,10 @@ window.appStorageReady.catch(() => {});
 <script src="project-files.js?v=1"></script>
 <script src="project-import.js?v=2"></script>
 <script src="project-pdf.js?v=3"></script>
+<script src="appliances.js?v=1"></script>
 <script src="sync.js?v=9"></script>
 
 </body>
 </html>
+
 
