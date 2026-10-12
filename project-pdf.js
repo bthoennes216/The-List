@@ -37,6 +37,7 @@
       image.onerror=()=>{clearTimeout(timer);resolve(null);};image.src=source;
     });
   }
+  // Sage Printable Build Guide: project-specific, print-ready PDF export.
   async function buildProjectPDF(project,kind,inventory=[]){
     const overview=kind==='overview',pages=[];let ctx,y;
     function page(){
