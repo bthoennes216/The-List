@@ -3295,10 +3295,10 @@ function openProject(id){
 
       <details class="sageBriefCard">
         <summary>Print / Export PDF</summary>
-        <p class="smallText">Create a printable file from this project's saved information. Unverified plans are marked Preliminary.</p>
+        <p class="smallText">Create a printable Sage Build Guide with one full page per saved construction step. Saved illustrations are shown uncropped; unverified measurements are marked Preliminary.</p>
         <div class="row" style="flex-wrap:wrap">
           <button type="button" onclick="exportProjectPDF('${escapeAttribute(project.id)}','overview')">One-page overview</button>
-          <button type="button" onclick="exportProjectPDF('${escapeAttribute(project.id)}','binder')">Complete DIY binder</button>
+          <button type="button" onclick="exportProjectPDF('${escapeAttribute(project.id)}','binder')">Sage Illustrated Build Guide</button>
         </div>
         <p id="projectPDFStatus" class="smallText" role="status"></p>
         <a id="projectPDFDownload" hidden style="display:inline-block;padding:12px;color:var(--forest);font-weight:700" target="_blank" rel="noopener">Open / save PDF</a>
@@ -11352,7 +11352,7 @@ window.appStorageReady.catch(() => {});
 <script src="vendor/fflate-0.8.3.js"></script>
 <script src="project-files.js?v=1"></script>
 <script src="project-import.js?v=2"></script>
-<script src="project-pdf.js?v=1"></script>
+<script src="project-pdf.js?v=2"></script>
 <script src="sync.js?v=8"></script>
 
 </body>
