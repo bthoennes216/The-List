@@ -3298,7 +3298,7 @@ function openProject(id){
         <p class="smallText">Create a printable Sage Build Guide with one full page per saved construction step. Saved illustrations are shown uncropped; unverified measurements are marked Preliminary.</p>
         <div class="row" style="flex-wrap:wrap">
           <button type="button" onclick="exportProjectPDF('${escapeAttribute(project.id)}','overview')">One-page overview</button>
-          <button type="button" onclick="exportProjectPDF('${escapeAttribute(project.id)}','binder')">Sage Illustrated Build Guide</button>
+          <button type="button" onclick="exportProjectPDF('${escapeAttribute(project.id)}','binder')">Complete Instruction Manual</button>
         </div>
         <p id="projectPDFStatus" class="smallText" role="status"></p>
         <a id="projectPDFDownload" hidden style="display:inline-block;padding:12px;color:var(--forest);font-weight:700" target="_blank" rel="noopener">Open / save PDF</a>
