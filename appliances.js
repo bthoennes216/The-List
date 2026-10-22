@@ -24,6 +24,7 @@ function openApplianceEditor(id=null){
     document.getElementById("appliance"+field).value = a[key] || (field === "Type" ? "Refrigerator" : "");
   document.getElementById("applianceEditorTitle").textContent = id ? "Edit appliance" : "Add appliance";
   document.getElementById("applianceEditorStatus").textContent = "";
+  document.getElementById("applianceManualFile").value = "";
   document.getElementById("applianceEditor").classList.remove("hidden");
   document.getElementById("applianceName").focus();
 }
@@ -63,6 +64,10 @@ async function saveAppliance(){
     }else if(existing?.manualFile) values.manualFile=existing.manualFile;
     const duplicate = appliances().find(a => a.id !== applianceEditingId && a.model.toLowerCase() === values.model.toLowerCase() && a.name.toLowerCase() === values.name.toLowerCase());
     if(duplicate) throw Error("This appliance is already saved. Edit its existing card.");
+    status.textContent = "Saving appliance and manual…";
+    // Store PDF bytes in IndexedDB before saveData writes compact file references.
+    // Do this before changing appliance records so a storage failure is safe to retry.
+    await storeLocalImages({appliances:[values]});
     const previous = structuredClone(appliances());
     if(existing) Object.assign(existing,values);
     else appliances().push({id:crypto.randomUUID(),...values});
@@ -70,7 +75,9 @@ async function saveAppliance(){
     input.value="";
     applianceBusy=false;
     closeApplianceEditor(); renderAppliances();
-  }catch(error){status.textContent=error.message || "Could not save the appliance.";}
+  }catch(error){status.textContent=error.name === "QuotaExceededError"
+    ? "Your device could not store this manual. Your existing saved appliances are unchanged. Keep the PDF on your phone; you can remove the attachment and save the manual link instead."
+    : error.message || "Could not save the appliance.";}
   finally{applianceBusy=false;}
 }
 function applianceManualFileLink(a){
