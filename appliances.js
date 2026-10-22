@@ -68,6 +68,7 @@ async function saveAppliance(){
     else appliances().push({id:crypto.randomUUID(),...values});
     try{saveData();}catch(error){data.appliances=previous;throw error;}
     input.value="";
+    applianceBusy=false;
     closeApplianceEditor(); renderAppliances();
   }catch(error){status.textContent=error.message || "Could not save the appliance.";}
   finally{applianceBusy=false;}
