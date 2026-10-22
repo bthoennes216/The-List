@@ -55,9 +55,32 @@ function saveAppliance(){
   }catch(error){status.textContent=error.message;}
 }
 function findApplianceManual(){
-  const query = ["applianceBrand","applianceModel"].map(id => document.getElementById(id).value.trim()).join(" ").trim();
-  if(!query){document.getElementById("applianceEditorStatus").textContent="Enter a brand and model first.";return;}
-  window.open("https://www.google.com/search?q="+encodeURIComponent(query+" manufacturer owner manual maintenance"),"_blank","noopener,noreferrer");
+  const brand = document.getElementById("applianceBrand").value.trim();
+  const model = document.getElementById("applianceModel").value.trim();
+  const status = document.getElementById("applianceEditorStatus");
+  if(!brand || !model){status.textContent="Enter the brand and model number first.";return;}
+  const b = brand.toLowerCase();
+  const officialSites = [
+    {match:["whirlpool"],domain:"whirlpool.com"},
+    {match:["maytag"],domain:"maytag.com"},
+    {match:["kitchenaid","kitchen aid"],domain:"kitchenaid.com"},
+    {match:["ge appliances","ge"],domain:"geappliances.com"},
+    {match:["bosch"],domain:"bosch-home.com"},
+    {match:["miele"],domain:"mieleusa.com"},
+    {match:["samsung"],domain:"samsung.com"},
+    {match:["lg"],domain:"lg.com"},
+    {match:["frigidaire"],domain:"frigidaire.com"},
+    {match:["electrolux"],domain:"electrolux.com"},
+    {match:["beko"],domain:"beko.com"},
+    {match:["viking"],domain:"vikingrange.com"}
+  ];
+  const source = officialSites.find(item => item.match.some(name => b === name || b.includes(name)));
+  const terms = source
+    ? `site:${source.domain} "${brand}" "${model}" manual OR owners manual`
+    : `"${brand}" "${model}" owner manual manufacturer support`;
+  const opened = window.open("https://www.google.com/search?q="+encodeURIComponent(terms),"_blank","noopener,noreferrer");
+  if(!opened) status.textContent="Your browser blocked the search window. Allow pop-ups for The List, then try again.";
+  else status.textContent="Search opened. Confirm the exact model on the manufacturer's site, copy the manual link here, then save the appliance to share it with your household.";
 }
 async function applianceAsk(message,image=""){
   const controller = new AbortController();
