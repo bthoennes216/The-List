@@ -57,7 +57,7 @@ async function saveAppliance(){
     values.manualUrl = applianceHttps(values.manualUrl);
     const existing = applianceById(applianceEditingId);
     if(file){
-      if(file.type!=="application/pdf" && !/\\.pdf$/i.test(file.name)) throw Error("Choose a PDF manual.");
+      if(file.type!=="application/pdf" && !/\.pdf$/i.test(file.name)) throw Error("Choose a PDF manual.");
       if(!file.size || file.size>10485760) throw Error("Choose a nonempty PDF up to 10 MB.");
       values.manualFile={name:String(file.name).slice(0,200),mime:"application/pdf",size:file.size,uri:await applianceFileDataUrl(file)};
     }else if(existing?.manualFile) values.manualFile=existing.manualFile;
@@ -74,7 +74,7 @@ async function saveAppliance(){
 }
 function applianceManualFileLink(a){
   const file=a.manualFile;
-  if(!file || file.mime!=="application/pdf" || !/^data:application\\/pdf;base64,/i.test(file.uri || "")) return "";
+  if(!file || file.mime!=="application/pdf" || !/^data:application\/pdf;base64,/i.test(file.uri || "")) return "";
   return '<a href="'+escapeAttribute(file.uri)+'" download="'+escapeAttribute(file.name || "appliance-manual.pdf")+'">Open saved manual PDF ↗</a>';
 }
 function findApplianceManual(){
