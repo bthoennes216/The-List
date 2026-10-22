@@ -41,6 +41,50 @@ if(typeof document!=='undefined'){
     }
     return pdfLibrary;
   }
+  window.readApplianceManualPDF=async function(file,onProgress=()=>{}){
+    if(!file?.uri || !/^data:application\/pdf;base64,/.test(file.uri)) throw Error("The saved PDF is unavailable. Attach it again in Edit.");
+    const lib=await pdfJS();
+    const bytes=new Uint8Array(await (await fetch(file.uri)).arrayBuffer());
+    if(bytes.length>10*1024*1024) throw Error("Choose a PDF up to 10 MB.");
+    const task=lib.getDocument({data:bytes,isEvalSupported:false,stopAtErrors:true});
+    task.onPassword=()=>{task.destroy();};
+    const excerpts=[];let scanned=0,total=0,read=0;
+    try{
+      const pdf=await task.promise;total=pdf.numPages;
+      const count=Math.min(total,200);
+      for(let pageNo=1;pageNo<=count;pageNo++){
+        onProgress("Reading manual page "+pageNo+" of "+count+"…");
+        const page=await pdf.getPage(pageNo);
+        try{
+          const content=await page.getTextContent();
+          const text=content.items.map(item=>item.str+(item.hasEOL?"\n":" ")).join("").replace(/\s+/g," ").trim();
+          read++;
+          if(text.length<60){scanned++;continue;}
+          // Read every page in the limit, then prioritize care passages instead of truncating the introduction.
+          for(let offset=0;offset<text.length;offset+=900){
+            const chunk=text.slice(offset,offset+1500);
+            const care=(chunk.match(/\b(clean(?:ing)?|maintenan(?:ce|t)|care|filter|replace(?:ment)?|inspect|lubricat\w*|defrost)\b/gi)||[]).length;
+            const timing=(chunk.match(/\b(months?|weeks?|years?|annually|monthly|weekly|every|regularly|as needed)\b/gi)||[]).length;
+            if(care) excerpts.push({page:pageNo,text:chunk,score:care+timing*3});
+          }
+        }finally{page.cleanup();}
+      }
+    }catch(error){throw Error("The PDF could not be read. It may be locked or damaged. Paste its care instructions in Edit instead.");}
+    finally{await task.destroy();}
+    if(!excerpts.length) throw Error("No readable care instructions were found. For scanned manuals, paste the care instructions into Edit and remove the unreadable attachment before trying again.");
+    excerpts.sort((a,b)=>b.score-a.score || a.page-b.page);
+    const selected=[];let used=0;
+    for(const part of excerpts){
+      if(used+part.text.length>24000)continue;
+      selected.push(part);used+=part.text.length;
+    }
+    selected.sort((a,b)=>a.page-b.page);
+    const notice="Read "+read+" of "+total+" PDF pages; selected care-related passages for review."+
+      (total>200?" Pages after 200 were not read.":"")+
+      (scanned?" "+scanned+" pages had little or no selectable text; image-only instructions may be missing.":"")+
+      " Check the original manual; this is not a complete maintenance audit.";
+    return {excerpts:selected,notice};
+  };
   async function prepare(file,readPlan){
     const kind=TheListProjectFiles.fileType(file);
     let uri;
