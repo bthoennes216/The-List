@@ -1673,7 +1673,7 @@ body:has(#homePage:not(.hidden)) #mainNav button.active{background:#294734;color
       <p class="smallText">Opens a manufacturer manual/support page for supported brands; otherwise opens a focused web search. Copy your model number and enter it on the manufacturer's page. Choose the matching owner's manual or use-and-care guide, then paste its link below or attach the PDF. A parts listing is not a manual.</p>
       <label for="applianceManualUrl">Manufacturer manual link (optional)</label><input id="applianceManualUrl" type="url" placeholder="https://…">
       <label for="applianceManualFile">Attach manual PDF (optional)</label><input id="applianceManualFile" type="file" accept=".pdf,application/pdf">
-      <p class="smallText">Saving the appliance uploads this PDF so your household can open it on shared devices. Up to 10 MB. Leave blank to keep an existing PDF.</p>
+      <p class="smallText">The PDF is saved on this device and synced to your household when connected. Up to 10 MB. Leave blank to keep an existing PDF.</p>
       <label for="applianceManualText">Maintenance instructions from the matching manual (optional)</label><textarea id="applianceManualText" maxlength="16000" placeholder="Paste the manual’s care instructions here so Sage can suggest a schedule from them."></textarea>
       <div class="backupActions"><button type="button" onclick="saveAppliance()">Save appliance</button><button type="button" class="secondary" onclick="closeApplianceEditor()">Cancel</button></div>
       <p id="applianceEditorStatus" role="status" aria-live="polite"></p>
@@ -11354,7 +11354,7 @@ window.appStorageReady.catch(() => {});
 <script src="project-files.js?v=1"></script>
 <script src="project-import.js?v=2"></script>
 <script src="project-pdf.js?v=3"></script>
-<script src="appliances.js?v=2"></script>
+<script src="appliances.js?v=3"></script>
 <script src="sync.js?v=9"></script>
 
 </body>
