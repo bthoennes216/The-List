@@ -1671,6 +1671,8 @@ body:has(#homePage:not(.hidden)) #mainNav button.active{background:#294734;color
       <button type="button" class="secondary" onclick="findApplianceManual()">Find manufacturer manual ↗</button>
       <p class="smallText">Searches the manufacturer’s support site when recognized. Confirm the exact model, copy the official manual link into the field below, and save the appliance to share it with your household.</p>
       <label for="applianceManualUrl">Manufacturer manual link (optional)</label><input id="applianceManualUrl" type="url" placeholder="https://…">
+      <label for="applianceManualFile">Attach manual PDF (optional)</label><input id="applianceManualFile" type="file" accept=".pdf,application/pdf">
+      <p class="smallText">Saving the appliance uploads this PDF so your household can open it on shared devices. Up to 10 MB. Leave blank to keep an existing PDF.</p>
       <label for="applianceManualText">Maintenance instructions from the matching manual (optional)</label><textarea id="applianceManualText" maxlength="16000" placeholder="Paste the manual’s care instructions here so Sage can suggest a schedule from them."></textarea>
       <div class="backupActions"><button type="button" onclick="saveAppliance()">Save appliance</button><button type="button" class="secondary" onclick="closeApplianceEditor()">Cancel</button></div>
       <p id="applianceEditorStatus" role="status" aria-live="polite"></p>
