@@ -78,33 +78,49 @@ function applianceManualFileLink(a){
   if(!file || file.mime!=="application/pdf" || !/^data:application\/pdf;base64,/i.test(file.uri || "")) return "";
   return '<a href="'+escapeAttribute(file.uri)+'" download="'+escapeAttribute(file.name || "appliance-manual.pdf")+'">Open saved manual PDF ↗</a>';
 }
+function applianceManualDestination(brand,model){
+  const normalized = brand.toLowerCase().replace(/[^a-z0-9]/g,"");
+  const portals = [
+    {names:["whirlpool"],url:"https://www.whirlpool.com/services/manuals.html"},
+    {names:["maytag"],url:"https://www.maytag.com/services/manuals.html"},
+    {names:["kitchenaid"],url:"https://www.kitchenaid.com/content/kitchenaid/en_us/service-and-support/manuals.html"},
+    {names:["ge","geappliances","generalelectric","geprofile","gecafe","cafe"],url:"https://www.geappliances.com/ge/service-and-support/literature.htm"},
+    {names:["bosch"],url:"https://www.bosch-home.com/us/owner-support/owner-manuals/"},
+    {names:["miele"],url:"https://www.miele.com/f/us/manuals-125.aspx"},
+    {names:["samsung","samsungelectronics"],url:"https://www.samsung.com/us/support/downloads/"},
+    {names:["lg","lgelectronics"],url:"https://www.lg.com/us/support"},
+    {names:["beko"],url:"https://www.beko.com/us-en/support/user-manual"}
+  ];
+  const portal = portals.find(item => item.names.includes(normalized));
+  if(portal) return {url:portal.url,official:true};
+  const domains = {frigidaire:"frigidaire.com",frigidairegallery:"frigidaire.com",frigidaireprofessional:"frigidaire.com",electrolux:"electrolux.com",viking:"vikingrange.com",vikingrange:"vikingrange.com"};
+  const domain = domains[normalized];
+  const quote = value => '"'+value.replace(/["\\]/g," ").trim()+'"';
+  const terms = (domain ? "site:"+domain+" " : quote(brand)+" ")+quote(model)+' ("owner manual" OR "owner\'s manual" OR "use and care" OR "user manual" OR "owner\'s guide") -"parts diagram" -"parts catalog" -"replacement parts"';
+  return {url:"https://www.google.com/search?q="+encodeURIComponent(terms),official:false};
+}
 function findApplianceManual(){
   const brand = document.getElementById("applianceBrand").value.trim();
   const model = document.getElementById("applianceModel").value.trim();
   const status = document.getElementById("applianceEditorStatus");
   if(!brand || !model){status.textContent="Enter the brand and model number first.";return;}
-  const b = brand.toLowerCase();
-  const officialSites = [
-    {match:["whirlpool"],domain:"whirlpool.com"},
-    {match:["maytag"],domain:"maytag.com"},
-    {match:["kitchenaid","kitchen aid"],domain:"kitchenaid.com"},
-    {match:["ge appliances","ge"],domain:"geappliances.com"},
-    {match:["bosch"],domain:"bosch-home.com"},
-    {match:["miele"],domain:"mieleusa.com"},
-    {match:["samsung"],domain:"samsung.com"},
-    {match:["lg"],domain:"lg.com"},
-    {match:["frigidaire"],domain:"frigidaire.com"},
-    {match:["electrolux"],domain:"electrolux.com"},
-    {match:["beko"],domain:"beko.com"},
-    {match:["viking"],domain:"vikingrange.com"}
-  ];
-  const source = officialSites.find(item => item.match.some(name => b === name || b.includes(name)));
-  const terms = source
-    ? `site:${source.domain} "${brand}" "${model}" manual OR owners manual`
-    : `"${brand}" "${model}" owner manual manufacturer support`;
-  const opened = window.open("https://www.google.com/search?q="+encodeURIComponent(terms),"_blank","noopener,noreferrer");
-  if(!opened) status.textContent="Your browser blocked the search window. Allow pop-ups for The List, then try again.";
-  else status.textContent="Search opened. Confirm the exact model on the manufacturer's site, copy the manual link here, then save the appliance to share it with your household.";
+  const destination = applianceManualDestination(brand,model);
+  window.open(destination.url,"_blank","noopener,noreferrer");
+  status.textContent = destination.official
+    ? "Manufacturer lookup requested. Enter model "+model+" on that page and choose Manuals or Use and Care. Check that the manual covers your exact model, then paste its link here or attach its PDF. If no tab appeared, allow pop-ups and try again."
+    : "Web search requested for model "+model+". Results are not verified manuals. Choose the manufacturer's owner manual or use-and-care guide, not a part listing. Confirm the model, then paste the manual link here or attach its PDF. If no tab appeared, allow pop-ups and try again.";
+}
+async function copyApplianceModel(){
+  const input = document.getElementById("applianceModel");
+  const status = document.getElementById("applianceEditorStatus");
+  if(!input.value.trim()){status.textContent="Enter the model number first.";return;}
+  try{
+    await navigator.clipboard.writeText(input.value.trim());
+    status.textContent="Model copied. Paste it into the manufacturer's manual lookup.";
+  }catch(error){
+    input.focus();input.select();
+    status.textContent="Model selected. Copy it, then paste it into the manufacturer's manual lookup.";
+  }
 }
 async function applianceAsk(message,image=""){
   const controller = new AbortController();
