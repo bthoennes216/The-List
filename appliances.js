@@ -37,22 +37,45 @@ function applianceHttps(value){
   if(url.protocol !== "https:") throw Error("Use an https link for the manual.");
   return url.href;
 }
-function saveAppliance(){
+function applianceFileDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(reader.error || Error("Could not read the manual file."));
+    reader.readAsDataURL(file);
+  });
+}
+async function saveAppliance(){
   if(applianceBusy) return;
   const status = document.getElementById("applianceEditorStatus");
+  const input=document.getElementById("applianceManualFile");
+  const file=input.files?.[0] || null;
+  applianceBusy=true;
   try{
     const values = Object.fromEntries(Object.entries(applianceFields).map(([field,key]) => [key,document.getElementById("appliance"+field).value.trim()]));
     if(!values.name || !values.brand || !values.model) throw Error("Enter the appliance name, brand, and model number.");
     values.manualUrl = applianceHttps(values.manualUrl);
+    const existing = applianceById(applianceEditingId);
+    if(file){
+      if(file.type!=="application/pdf" && !/\\.pdf$/i.test(file.name)) throw Error("Choose a PDF manual.");
+      if(!file.size || file.size>10485760) throw Error("Choose a nonempty PDF up to 10 MB.");
+      values.manualFile={name:String(file.name).slice(0,200),mime:"application/pdf",size:file.size,uri:await applianceFileDataUrl(file)};
+    }else if(existing?.manualFile) values.manualFile=existing.manualFile;
     const duplicate = appliances().find(a => a.id !== applianceEditingId && a.model.toLowerCase() === values.model.toLowerCase() && a.name.toLowerCase() === values.name.toLowerCase());
     if(duplicate) throw Error("This appliance is already saved. Edit its existing card.");
     const previous = structuredClone(appliances());
-    const existing = applianceById(applianceEditingId);
     if(existing) Object.assign(existing,values);
     else appliances().push({id:crypto.randomUUID(),...values});
     try{saveData();}catch(error){data.appliances=previous;throw error;}
+    input.value="";
     closeApplianceEditor(); renderAppliances();
-  }catch(error){status.textContent=error.message;}
+  }catch(error){status.textContent=error.message || "Could not save the appliance.";}
+  finally{applianceBusy=false;}
+}
+function applianceManualFileLink(a){
+  const file=a.manualFile;
+  if(!file || file.mime!=="application/pdf" || !/^data:application\\/pdf;base64,/i.test(file.uri || "")) return "";
+  return '<a href="'+escapeAttribute(file.uri)+'" download="'+escapeAttribute(file.name || "appliance-manual.pdf")+'">Open saved manual PDF ↗</a>';
 }
 function findApplianceManual(){
   const brand = document.getElementById("applianceBrand").value.trim();
@@ -126,7 +149,7 @@ function renderAppliances(){
       ${a.serial ? `<p class="smallText">Serial: ${escapeHTML(a.serial)}</p>` : ""}
       ${a.purchaseDate ? `<p class="smallText">Purchased ${formatDate(a.purchaseDate)}</p>` : ""}
       ${a.warranty ? `<p class="smallText">${escapeHTML(a.warranty)}</p>` : ""}
-      ${/^https:\/\//i.test(a.manualUrl || "") ? `<a href="${escapeAttribute(a.manualUrl)}" target="_blank" rel="noopener noreferrer">Open saved manual ↗</a>` : ""}
+      ${/^https:\/\//i.test(a.manualUrl || "") ? `<a href="${escapeAttribute(a.manualUrl)}" target="_blank" rel="noopener noreferrer">Open saved manual link ↗</a>` : ""}\n      ${applianceManualFileLink(a)}
       <div class="backupActions"><button type="button" onclick="suggestApplianceSchedule(${index})" ${applianceBusy ? "disabled" : ""}>Ask Sage for care tasks</button><button type="button" class="secondary" onclick="openApplianceEditor(appliances()[${index}].id)">Edit</button></div>
       <p class="smallText">${tasks.length ? "Scheduled care" : "No care tasks scheduled yet."}</p>
       ${tasks.map(t => `<div class="task"><div class="taskText"><strong>${escapeHTML(t.name)}</strong><div class="smallText">${t.dueDate ? "Due "+formatDate(t.dueDate) : "Completed"} · ${escapeHTML(maintenanceRepeatLabel(t.repeat) || "One time")}</div><p class="smallText">${escapeHTML(t.notes || "")}</p></div>${t.dueDate ? `<button class="small" type="button" onclick="completeApplianceTask('${escapeAttribute(t.id)}')">Complete</button>` : ""}</div>`).join("")}
